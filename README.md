@@ -33,5 +33,6 @@ Don't forget to add/update your **.secrets** then run:
   rufo .
   ```
 
-### Resources:
+### Resources & solutions to follow:
 [Subreddit](https://www.reddit.com/r/adventofcode/)
+[Jose Valim](https://github.com/josevalim/aoc)
