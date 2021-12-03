@@ -7,7 +7,7 @@
 YEAR=${1}
 DAY=${2}
 
-echo "${YEAR}: getting inputs for day ${1}..."
+echo "${YEAR}: getting inputs for day ${DAY}..."
 
 if [ ! -f ./${YEAR}/inputs/day${DAY} ]; then
   curl --cookie session=$(cat .secrets) -o ./${YEAR}/inputs/day${DAY} https://adventofcode.com/${YEAR}/day/${DAY}/input

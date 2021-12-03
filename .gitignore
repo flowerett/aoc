@@ -2,3 +2,5 @@
 .secrets
 tmp
 tmp/*
+
+**/python/__pycache__
