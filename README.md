@@ -4,6 +4,7 @@ https://adventofcode.com
 
 ## My solutions for Advent of Code
 - [2015](2015/README.md)
+- [2019](2019/README.md)
 - [2021](2021/README.md)
 
 ## Getting inputs:
