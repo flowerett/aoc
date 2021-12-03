@@ -4,6 +4,7 @@ https://adventofcode.com
 
 ## My solutions for Advent of Code
 - [2015](2015/README.md)
+- [2018](2018/README.md)
 - [2019](2019/README.md)
 - [2021](2021/README.md)
 
@@ -22,16 +23,16 @@ Don't forget to add/update your **.secrets** then run:
   ```
 
 ### ruby
-  Install [rufo](https://github.com/ruby-formatter/rufo)
 
   ```sh
   gem install rufo
+  rufo .
   ```
 
-  and run:
+### elixir
 
   ```sh
-  rufo .
+  mix format
   ```
 
 ### Resources & solutions to follow:
