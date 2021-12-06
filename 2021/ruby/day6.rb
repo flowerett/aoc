@@ -25,7 +25,7 @@ def grow(data, days)
     data.push([8, num_new]) if num_new > 0
   end
 
-  data.map { |f| f[1] }.sum
+  data.reduce(0) { |sum, f| sum + f[1] }
 end
 
 pp "res1: #{grow(data, 80)}"

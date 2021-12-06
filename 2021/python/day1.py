@@ -1,13 +1,6 @@
 #! /usr/bin/env python
 
-'''
-t1 - O(n)
-x + y = 2020
-
-t2 - O(n^2)
-x + y + z = 2020
-'''
-import itertools
+# import itertools
 import minitest
 
 
