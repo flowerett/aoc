@@ -1,4 +1,4 @@
-defmodule Day3 do
+defmodule Day5 do
   def parse_input(input) do
     input
     |> Enum.map(&String.trim/1)
@@ -70,16 +70,16 @@ input = "../inputs/day5" |> File.stream!()
 
 # T1/2
 input
-|> Day3.parse_input()
-|> Day3.overlaps(:t1)
+|> Day5.parse_input()
+|> Day5.overlaps(:t1)
 # |> IO.inspect(label: "overlaps")
 |> length()
 |> IO.inspect(label: "res1")
 
 # T2
 input
-|> Day3.parse_input()
-|> Day3.overlaps(:t2)
+|> Day5.parse_input()
+|> Day5.overlaps(:t2)
 # |> IO.inspect(label: "overlaps")
 |> length()
 |> IO.inspect(label: "res2")
