@@ -18,10 +18,11 @@ https://adventofcode.com/2021
 | 09 |           | [✓][09rb] |            |
 | 10 |           | [✓][10rb] |            |
 | 11 |           | [✓][11rb] |            |
-| 12*|           | [✓][12rb] |            |
+| 12 | [✓][12py] | [✓][12rb][(*)][12rb2] |            |
 
 [01py]:  python/day1.py
 [06py]:  python/day6.py
+[12py]:  python/day12.py
 
 [01rb]:  ruby/day1.rb
 [02rb]:  ruby/day2.rb
@@ -35,6 +36,7 @@ https://adventofcode.com/2021
 [10rb]:  ruby/day10.rb
 [11rb]:  ruby/day11.rb
 [12rb]:  ruby/day12.rb
+[12rb2]: ruby/d12-neat.rb
 
 [01exs]:  elixir/day1.exs
 [02exs]:  elixir/day2.exs
