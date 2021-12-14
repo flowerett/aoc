@@ -5,21 +5,22 @@ https://adventofcode.com/2021
 
 ## My solutions in different languages:
 
-|    | python    | ruby      | elixir     |
-| -  | -         | -         | -          |
-| 01 | [✓][01py] | [✓][01rb] | [✓][01exs] |
-| 02 |           | [✓][02rb] | [✓][02exs] |
-| 03 |           | [✓][03rb] |            |
-| 04 |           | [✓][04rb] |            |
-| 05 |           | [✓][05rb] | [✓][05exs] |
-| 06 | [✓][06py] | [✓][06rb] |            |
-| 07 |           | [✓][07rb] | [✓][07exs] |
-| 08 |           | [✓][08rb] |            |
-| 09 |           | [✓][09rb] |            |
-| 10 |           | [✓][10rb] |            |
-| 11 |           | [✓][11rb] |            |
-| 12 | [✓][12py] | [✓][12rb][(*)][12rb2] |            |
-| 13 |           | [✓][13rb] | [✓][13exs] |
+|    | python    | ruby                   | elixir     |
+| -  | -         | -                      | -          |
+| 01 | [✓][01py] | [✓][01rb]              | [✓][01exs] |
+| 02 |           | [✓][02rb]              | [✓][02exs] |
+| 03 |           | [✓][03rb]              |            |
+| 04 |           | [✓][04rb]              |            |
+| 05 |           | [✓][05rb]              | [✓][05exs] |
+| 06 | [✓][06py] | [✓][06rb]              |            |
+| 07 |           | [✓][07rb]              | [✓][07exs] |
+| 08 |           | [✓][08rb]              |            |
+| 09 |           | [✓][09rb]              |            |
+| 10 |           | [✓][10rb]              |            |
+| 11 |           | [✓][11rb]              |            |
+| 12 | [✓][12py] | [✓][12rb],[(2)][12rb2] |            |
+| 13 |           | [✓][13rb]              | [✓][13exs] |
+| 14 |           | [✓][14rb]              |            |
 
 [01py]:  python/day1.py
 [06py]:  python/day6.py
@@ -39,6 +40,7 @@ https://adventofcode.com/2021
 [12rb]:  ruby/day12.rb
 [12rb2]: ruby/d12-neat.rb
 [13rb]:  ruby/day13.rb
+[14rb]:  ruby/day14.rb
 
 [01exs]:  elixir/day1.exs
 [02exs]:  elixir/day2.exs
