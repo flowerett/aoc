@@ -1,5 +1,6 @@
 #! /usr/bin/env ruby
 # require "set"
+# require "enumerator"
 require_relative "nanotest"
 
 input = <<INPUT
