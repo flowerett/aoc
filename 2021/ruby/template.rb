@@ -10,6 +10,7 @@ INPUT
 # input = File.read("../inputs/day1x")
 
 VERBOSE = ARGV.delete("-v")
+DEBUG = ARGV.delete("-d")
 
 def prep_data(input)
   input.strip.split("\n").map { |r| r }
