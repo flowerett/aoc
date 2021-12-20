@@ -105,12 +105,8 @@ end
 # end
 
 def task1(data)
-  st = data[0]
-
-  snum = data[1..-1].reduce(st) { |acc, n|
-    do_reduce([acc, n])
-  }
-
+  st, *rest = data
+  snum = rest.reduce(st) { |acc, n| do_reduce([acc, n]) }
   magnitude(snum)
 end
 
