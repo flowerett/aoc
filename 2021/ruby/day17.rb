@@ -33,7 +33,7 @@ end
 # 3. To hit at least bottom of target area, at 0 velocity should be abs(DownBottom)-1
 # 4. Max height will be sum of Y pos increasing from 0 to abs(DownBottom)-1
 def solve1(xt, yt)
-  z = abs(yt[0])-1
+  z = abs(yt[0]) - 1
   (0..z).sum
 end
 

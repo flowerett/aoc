@@ -1,5 +1,5 @@
 #! /usr/bin/env ruby
-require 'set'
+require "set"
 # require "enumerator"
 require_relative "nanotest"
 
@@ -107,17 +107,17 @@ PERM = [
   [1, 0, 2],
   [1, 2, 0],
   [2, 0, 1],
-  [2, 1, 0]
+  [2, 1, 0],
 ]
 ROT = [
- [1, 1, 1],
- [1, 1, -1],
- [1, -1, 1],
- [1, -1, -1],
- [-1, 1, 1],
- [-1, 1, -1],
- [-1, -1, 1],
- [-1, -1, -1]
+  [1, 1, 1],
+  [1, 1, -1],
+  [1, -1, 1],
+  [1, -1, -1],
+  [-1, 1, 1],
+  [-1, 1, -1],
+  [-1, -1, 1],
+  [-1, -1, -1],
 ] # should be 24 ???
 
 MM = PERM.size * ROT.size
@@ -126,7 +126,7 @@ def prep_data(input)
   input.strip.split("\n\n").reduce({}) do |data, block|
     h, *r = block.strip.split("\n")
     k = h.split[2].to_i
-    beacons = r.map{ |rr| rr.split(",").map(&:to_i) }
+    beacons = r.map { |rr| rr.split(",").map(&:to_i) }
     data[k] = beacons
     data
   end
@@ -137,40 +137,40 @@ end
 # [-892, -824, -901]
 # [-364,  763,  893]
 def rdist(coord, rel)
-  coord.zip(rel).map{|a, b| a - b}.sum
+  coord.zip(rel).map { |a, b| a - b }.sum
 end
 
 # don't get why it's 24, use 48
 def mutate(row)
-  PERM.map do |x,y,z|
-    [row[x],row[y],row[z]]
+  PERM.map do |x, y, z|
+    [row[x], row[y], row[z]]
   end.map do |row|
-    ROT.map{ |rt| row.zip(rt).map{|a, r| a * r }}
+    ROT.map { |rt| row.zip(rt).map { |a, r| a * r } }
   end.flatten(1)
 end
 
 def delta(p1, p2)
-  p1.zip(p2).map {|a, b| a-b }
+  p1.zip(p2).map { |a, b| a - b }
 end
 
 def normalize(p1, p2)
-  p1.zip(p2).map {|a, b| a+b }
+  p1.zip(p2).map { |a, b| a + b }
 end
 
 def dist(p1, p2)
-  p1.zip(p2).map { |a, b| (a-b).abs }.sum
+  p1.zip(p2).map { |a, b| (a - b).abs }.sum
 end
 
 def compare(v1, v2)
   vars = v2.map { |b| mutate(b) }
 
-  res = {match: false}
+  res = { match: false }
   MM.times.each do |i|
     vars.each do |bz| #how to speedup???
       v1.each do |ba|
         off = delta(ba, bz[i]) #slow!!!
 
-        v2s = vars.map {|bb| normalize(bb[i], off)}.to_set
+        v2s = vars.map { |bb| normalize(bb[i], off) }.to_set
 
         ints = v1.intersection(v2s)
 
@@ -191,7 +191,7 @@ input = File.read("../inputs/day19t")
 data = prep_data(input)
 
 # add beacons from 0 beacon to known
-scanners = {0 => [0,0,0]}
+scanners = { 0 => [0, 0, 0] }
 known = data[0].to_set
 
 # pp data.size
@@ -229,11 +229,11 @@ end
 #T2
 if T2
   scanners = {
-    0=>[0, 0, 0],
-    1=>[68, -1246, -43],
-    3=>[-92, -2380, -20],
-    4=>[-20, -1133, 1061],
-    2=>[1105, -1205, 1229]
+    0 => [0, 0, 0],
+    1 => [68, -1246, -43],
+    3 => [-92, -2380, -20],
+    4 => [-20, -1133, 1061],
+    2 => [1105, -1205, 1229],
   }
   # scanners = {
   #   0 => [0, 0, 0],
@@ -282,7 +282,6 @@ if T2
 
   pp "res2: #{maxd}"
 end
-
 
 # if $0 == __FILE__
 #   Utils.day(2021, x)
