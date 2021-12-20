@@ -107,7 +107,7 @@ end
 
 def run(img, key, n)
   # treat test input as edgecase
-  # so either my solution or problem suck
+  # need to figure out more elegant solution
   test = key[0] == "."
 
   n.times do |i|

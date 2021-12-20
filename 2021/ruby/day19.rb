@@ -1,6 +1,5 @@
 #! /usr/bin/env ruby
 require "set"
-# require "enumerator"
 require_relative "nanotest"
 
 input = <<INPUT
@@ -87,12 +86,14 @@ input = <<INPUT
 30,-46,-14
 INPUT
 
+# I got the right answers, but I consider this day unsolved
+# as my solution is dead slow and hacky. Do not use it.
+# I will get back to this problem and will try to improve it.
+
 VERBOSE = ARGV.delete("-v")
 DEBUG = ARGV.delete("-d")
 T1 = ARGV.delete("-t1")
 T2 = ARGV.delete("-t2")
-
-# https://github.com/okainov/advent-of-code-2021/blob/master/python/day_19.py
 
 # def rotations()
 #   rot = []
@@ -132,15 +133,11 @@ def prep_data(input)
   end
 end
 
-# [-364, -763, -893]
-# [   1,   -1,   -1]
-# [-892, -824, -901]
-# [-364,  763,  893]
 def rdist(coord, rel)
   coord.zip(rel).map { |a, b| a - b }.sum
 end
 
-# don't get why it's 24, use 48
+# why it's 24, not 48 ???
 def mutate(row)
   PERM.map do |x, y, z|
     [row[x], row[y], row[z]]
@@ -193,11 +190,6 @@ data = prep_data(input)
 # add beacons from 0 beacon to known
 scanners = { 0 => [0, 0, 0] }
 known = data[0].to_set
-
-# pp data.size
-# pp "known:"
-# pp known
-# pp known.size
 
 missing = data.keys.to_set.delete(0)
 # speedup my res
@@ -282,11 +274,3 @@ if T2
 
   pp "res2: #{maxd}"
 end
-
-# if $0 == __FILE__
-#   Utils.day(2021, x)
-#   t = NanoTest.new("test")
-#   t.assert_all(tr, sol, "example 1")
-
-#   Utils.pp([r1, r2])
-# end
