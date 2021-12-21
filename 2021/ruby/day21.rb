@@ -52,7 +52,8 @@ def game1(pos)
   res
 end
 
-# how many universes where thrown score is (key) after 3 dices
+# throw quantum dice 3 times
+# count num of universes and scores in them
 DICE3by3 = Hash.new(0)
 [1, 2, 3].each do |u1|
   [1, 2, 3].each do |u2|
@@ -63,39 +64,40 @@ DICE3by3 = Hash.new(0)
 end
 pp DICE3by3 if VERBOSE
 
-def game2(pos1, pos2, sc1, sc2, p)
+def game2(pos1, pos2, sc1, sc2, cache)
   win = [0, 0]
+  key = "#{pos1}-#{pos2}-#{sc1}-#{sc2}"
 
-  cur_pos = p == 0 ? pos1 : pos2
-  cur_sc = p == 0 ? sc1 : sc2
+  # ~200 times faster with cache:
+  # from 15.287769000045955 sec
+  # to   0.0846970002166926 sec
+  unless cache.key?(key)
+    DICE3by3.each { |dice, u|
+      new_pos = pos1 + dice
+      new_pos = ((new_pos - 1) % 10) + 1
+      new_score = sc1 + new_pos
 
-  DICE3by3.each { |dice, u|
-    new_pos = cur_pos + dice
-    new_pos = ((new_pos - 1) % 10) + 1
-    new_score = cur_sc + new_pos
+      if new_score >= 21
+        win[0] += u
+      else
+        # swap positions and results
+        new_wins, cache = game2(pos2, new_pos, sc2, new_score, cache)
 
-    if new_score >= 21
-      win[p] += u
-    else
-      pp "close ==========> #{new_score}" if DEBUG
-      nxtp = 1 - p
-      win1, win2 = if p == 0
-          game2(new_pos, pos2, new_score, sc2, nxtp)
-        else
-          game2(pos1, new_pos, sc1, new_score, nxtp)
-        end
+        win2, win1 = new_wins
+        win[0] += (win1 * u)
+        win[1] += (win2 * u)
+      end
+    }
+    cache[key] = win
+  end
 
-      win[0] += (win1 * u)
-      win[1] += (win2 * u)
-    end
-  }
-  pp win if DEBUG
-  win
+  [cache[key], cache]
 end
 
 def t2(pos)
   p1, p2 = pos
-  game2(p1, p2, 0, 0, 0).max
+  wins, _ = game2(p1, p2, 0, 0, {})
+  wins.max
 end
 
 if $0 == __FILE__
@@ -103,18 +105,18 @@ if $0 == __FILE__
   testd = parse_data(test)
   data = parse_data(File.read("../inputs/day21")).freeze
 
-  puts "running T1..."
+  puts "running T1..." if VERBOSE
   st = Process.clock_gettime(Process::CLOCK_MONOTONIC)
   tr1 = game1(testd.dup)
   r1 = game1(data.dup)
   en1 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-  puts "elapsed #{en1 - st} sec"
+  puts "elapsed #{en1 - st} sec" if VERBOSE
 
-  puts "running T2..."
+  puts "running T2..." if VERBOSE
   tr2 = t2(testd.dup)
   r2 = t2(data.dup)
   en2 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-  puts "elapsed #{en2 - st} sec"
+  puts "elapsed #{en2 - st} sec" if VERBOSE
 
   t = NanoTest.new("test")
   t.assert_all([tr1, tr2], [739785, 444356092776315], "example 1")
