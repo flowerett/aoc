@@ -18,16 +18,16 @@ https://adventofcode.com/2021
 | 09 |           | [✓][09rb]              |            |
 | 10 |           | [✓][10rb]              |            |
 | 11 |           | [✓][11rb]              |            |
-| 12 | [✓][12py] | [✓][12rb],[(2)][12rb2] |            |
+| 12 | [✓][12py] | [✓][12rb],[(*)][12*rb] |            |
 | 13 |           | [✓][13rb]              | [✓][13exs] |
 | 14 |           | [✓][14rb]              |            |
 | 15 |           | [✓][15rb]              |            |
 | 16 |           | [✓][16rb]              |            |
 | 17 |           | [✓][17rb]              |            |
-| 18 |           | [✓][18rb]              |            |
+| 18 |           | [✓][18rb],[(*)][18*rb] |            |
 | 19 |           | [✓][19rb]              |            |
 | 20 |           | [✓][20rb]              |            |
-| 20 |           | [✓][21rb]              |            |
+| 21 |           | [✓][21rb]              |            |
 
 [01py]:  python/day1.py
 [06py]:  python/day6.py
@@ -45,16 +45,17 @@ https://adventofcode.com/2021
 [10rb]:  ruby/day10.rb
 [11rb]:  ruby/day11.rb
 [12rb]:  ruby/day12.rb
-[12rb2]: ruby/d12-neat.rb
+[12*rb]: ruby/day12b.rb
 [13rb]:  ruby/day13.rb
 [14rb]:  ruby/day14.rb
 [15rb]:  ruby/day15.rb
 [16rb]:  ruby/day16.rb
 [17rb]:  ruby/day17.rb
 [18rb]:  ruby/day18.rb
+[18*rb]: ruby/day18b.rb
 [19rb]:  ruby/day19.rb
 [20rb]:  ruby/day20.rb
-[21rb]:  ruby/day20.rb
+[21rb]:  ruby/day21.rb
 
 [01exs]:  elixir/day1.exs
 [02exs]:  elixir/day2.exs
