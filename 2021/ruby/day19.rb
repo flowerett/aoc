@@ -120,6 +120,8 @@ ROT = [
   [-1, -1, 1],
   [-1, -1, -1],
 ] # should be 24 ???
+# has 24 - but no explanation why exactly these
+# https://github.com/weichslgartner/AdventOfCode2021/blob/main/src/Python/day_19.py#L7
 
 MM = PERM.size * ROT.size
 
