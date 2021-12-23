@@ -43,6 +43,7 @@ defmodule Day5 do
     op(cmd, modes, acc, rest, idx, inp)
   end
 
+  # ADD
   def op(1, modes, acc, [x, y, adr | _], idx, inp) do
     [xx, yy] = get_args([x, y], modes, acc)
 
@@ -52,6 +53,7 @@ defmodule Day5 do
     |> run(idx + 4, inp)
   end
 
+  # MULTIPLY
   def op(2, modes, acc, [x, y, adr | _], idx, inp) do
     [xx, yy] = get_args([x, y], modes, acc)
 
@@ -61,6 +63,7 @@ defmodule Day5 do
     |> run(idx + 4, inp)
   end
 
+  # IN - takes input and saves it to the position given by parameter
   def op(3, _modes, acc, [adr | _], idx, inp) do
     acc
     |> List.replace_at(adr, inp)
@@ -68,12 +71,33 @@ defmodule Day5 do
     |> run(idx + 2, inp)
   end
 
+  # OUT - outputs value of its only parameter
   def op(4, _modes, acc, [adr | _], idx, inp) do
     Enum.at(acc, adr) |> IO.inspect(label: "OUT")
 
     acc
     # |> IO.inspect(label: "op4 >>>")
     |> run(idx + 2, inp)
+  end
+
+  # JUMP IF TRUE
+  def op(5, _modes, acc, [xcond, adr | _], _idx, _inp) do
+    :not_implemented
+  end
+
+  # JUMP IF FALSE
+  def op(6, _modes, acc, [xcond, adr | _], _idx, _inp) do
+    :not_implemented
+  end
+
+  # LESS THAN
+  def op(7, _modes, acc, [a, b, adr | _], _idx, _inp) do
+    :not_implemented
+  end
+
+  # EQUALS
+  def op(8, _modes, acc, [a, b, adr | _], _idx, _inp) do
+    :not_implemented
   end
 
   def op(99, _modes, acc, _cmd, _idx, _inp) do

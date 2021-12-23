@@ -145,12 +145,13 @@ if $0 == __FILE__
   d = prep_data(input)
   my = [run1(d), run2(d)]
 
+  t = NanoTest.new("test")
+
   Utils.day(2021, 11)
   Utils.pp(rt)
-  t1 = NanoTest.new("test")
-  t1.assert_all(rt, [1656, 195])
+
+  t.assert_all(rt, [1656, 195])
 
   Utils.pp(my)
-  t2 = NanoTest.new("task")
-  t2.assert_all(my, [1755, 212])
+  t.assert_all(my, [1755, 212], "task")
 end
