@@ -1,0 +1,46 @@
+# day1
+
+## solving using elixir livebook
+
+```elixir
+inpt = """
+199
+200
+208
+210
+200
+207
+240
+269
+260
+263
+"""
+```
+
+```elixir
+input = File.read!("../../aoc/2021/inputs/day1")
+```
+
+```elixir
+# T1
+# inpt
+input
+|> String.split("\n", trim: true)
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(2, 1, :discard)
+|> Enum.filter(fn [a, b] -> b > a end)
+|> Enum.count()
+```
+
+```elixir
+# T2
+# inpt
+input
+|> String.split("\n", trim: true)
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(4, 1, :discard)
+|> Enum.filter(fn [a, _, _, b] -> b > a end)
+|> Enum.count()
+```
+
+
