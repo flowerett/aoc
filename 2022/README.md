@@ -7,7 +7,7 @@ https://adventofcode.com/2022
 
 |    | python    | elixir     |
 | -  | -         | -          |
-| 01 | [✓][01py] |            |
+| 01 | [✓][01py] | [✓][01exs] |
 | 02 |           |            |
 | 03 |           |            |
 | 04 |           |            |
@@ -31,3 +31,6 @@ https://adventofcode.com/2022
 | 22 |           |            |
 
 [01py]:  python/day1.py
+
+
+[01exs]: elixir/day1.exs

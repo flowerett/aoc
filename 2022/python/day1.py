@@ -7,14 +7,15 @@ import minitest
 
 def solve(data):
     sums = []
-    for ss in data:
-        dd = [int(x) for x in ss.split('\n')]
+    for block in data:
+        dd = [int(x) for x in block.split('\n')]
 
         psum = sum(dd)
         sums.append(psum)
 
     r1 = max(sums)
 
+    # also sums[::-1]
     r2 = sum(sorted(sums, reverse=True)[:3])
 
     return r1, r2
