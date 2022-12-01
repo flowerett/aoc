@@ -7,6 +7,7 @@ https://adventofcode.com
 - [2018](2018/README.md)
 - [2019](2019/README.md)
 - [2021](2021/README.md)
+- [2022](2022/README.md)
 
 ## Getting inputs:
 Don't forget to add/update your **.secrets** then run:
