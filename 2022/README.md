@@ -5,10 +5,10 @@ https://adventofcode.com/2022
 
 ## My solutions in different languages:
 
-| Title                    | python     | elixir     |
-| -                        | -          | -          |
-| 01 - Calorie Counting    | [✓ ][01py] | [✓][01exs] |
-| 02 - Rock Paper Scissors | [✓ ][02py] |            |
+| Title                    | python     | elixir    |
+| -                        | -          | -         |
+| 01 - Calorie Counting    | [✓ ][01py] | [✓][01ex] |
+| 02 - Rock Paper Scissors | [✓ ][02py] | [✓][02ex] |
 | 03 |           |            |
 | 04 |           |            |
 | 05 |           |            |
@@ -33,4 +33,5 @@ https://adventofcode.com/2022
 [01py]:  python/day1.py
 [02py]:  python/day2.py
 
-[01exs]: elixir/day1.exs
+[01ex]: elixir/day1.exs
+[02ex]: elixir/day2.livemd

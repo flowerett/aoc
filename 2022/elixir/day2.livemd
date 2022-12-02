@@ -1,0 +1,93 @@
+# AOC Day2
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Get input
+
+<!-- livebook:{"attrs":{"day":"2","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "2", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day2 do
+  # A for Rock, B for Paper, and C for Scissors
+  # X for Rock, Y for Paper, and Z for Scissors
+
+  # Score T1
+  # (0 if you lost, 3 if the round was a draw, and 6 if you won
+  @outcome %{lose: 0, draw: 3, win: 6}
+
+  # (1 for Rock, 2 for Paper, and 3 for Scissors)
+  @score %{"X" => 1, "Y" => 2, "Z" => 3}
+
+  # Score T2:
+  # X means you need to lose,
+  # Y means you need to end the round in a draw,
+  # and Z means you need to win.
+  @res2 %{"X" => :lose, "Y" => :draw, "Z" => :win}
+
+  @game %{
+    win: %{"A" => "Y", "B" => "Z", "C" => "X"},
+    draw: %{"A" => "X", "B" => "Y", "C" => "Z"},
+    lose: %{"A" => "Z", "B" => "X", "C" => "Y"}
+  }
+
+  def solve(data, type \\ :Live) do
+    res1 = transpose()
+
+    data
+    |> String.trim()
+    |> String.split("\n")
+    |> Enum.map(&String.split/1)
+    |> Enum.reduce({0, 0}, fn [elf, me], {t1, t2} ->
+      r1 = res1[elf][me]
+      s1 = @outcome[r1] + @score[me]
+
+      r2 = @res2[me]
+      my_draw = @game[r2][elf]
+      s2 = @outcome[r2] + @score[my_draw]
+
+      {t1 + s1, t2 + s2}
+    end)
+    |> print_res(type)
+  end
+
+  # transpose game res into:
+  # %{
+  #   "A" => %{"X" => :draw, "Y" => :win, "Z" => :lose},
+  #   "B" => %{"X" => :lose, "Y" => :draw, "Z" => :win},
+  #   "C" => %{"X" => :win, "Y" => :lose, "Z" => :draw}
+  # }
+  defp transpose do
+    @game
+    |> Enum.flat_map(fn {res, val} ->
+      Enum.map(val, fn {elf, me} -> {elf, me, res} end)
+    end)
+    |> Enum.group_by(fn {elf, _, _} -> elf end, fn {_, me, res} -> {me, res} end)
+    |> Map.new(fn {k, v} -> {k, Enum.into(v, %{})} end)
+  end
+
+  defp print_res({r1, r2}, type) do
+    IO.puts("#{type} results:")
+    IO.puts("Task 1: #{r1}")
+    IO.puts("Task 2: #{r2}")
+  end
+end
+
+test_inp = """
+A Y
+B X
+C Z
+"""
+
+Day2.solve(test_inp, :Test)
+Day2.solve(data)
+```
