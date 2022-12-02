@@ -2,6 +2,11 @@
 Some folks that I follow for inspiration and insights after solving problems on my own.
 
 #### 2021
+- [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
+- [Peter Tseng - Ruby](https://github.com/petertseng/adventofcode-rb-2022)
+- [Søren Fuglede Jørgensen - Python - 2015-2022](https://github.com/fuglede/adventofcode)
+
+#### 2021
 - [Jonathan Paulson - YouTube](https://www.youtube.com/channel/UCuWLIm0l4sDpEe28t41WITA)
 - [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
 - [Peter Tseng - Ruby](https://github.com/petertseng/adventofcode-rb-2021)
@@ -12,6 +17,7 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Søren Fuglede Jørgensen - Python - 2015-2021](https://github.com/fuglede/adventofcode)
 - [Michael Gallagher - Python - 2019-2021](https://github.com/michaeljgallagher/Advent-of-Code)
 - [Oleg Kainov - Python - 2021](https://github.com/okainov/advent-of-code-2021)
+- [Łukasz Niemier - Elixir & Livebook](https://github.com/hauleth/advent-of-code)
 
 #### 2020
 - [Peter Tseng - Ruby 2020](https://github.com/petertseng/adventofcode-rb-2020)
