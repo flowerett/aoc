@@ -5,6 +5,8 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
 - [Peter Tseng - Ruby](https://github.com/petertseng/adventofcode-rb-2022)
 - [Søren Fuglede Jørgensen - Python - 2015-2022](https://github.com/fuglede/adventofcode)
+- [Thai Pangsakulyanont - Ruby](https://github.com/dtinth/advent-of-code-2022)
+- [Public AI(GPT) solver](https://github.com/ostwilkens/aoc2022)
 
 #### 2021
 - [Jonathan Paulson - YouTube](https://www.youtube.com/channel/UCuWLIm0l4sDpEe28t41WITA)
@@ -18,6 +20,7 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Michael Gallagher - Python - 2019-2021](https://github.com/michaeljgallagher/Advent-of-Code)
 - [Oleg Kainov - Python - 2021](https://github.com/okainov/advent-of-code-2021)
 - [Łukasz Niemier - Elixir & Livebook](https://github.com/hauleth/advent-of-code)
+- [5space - Python - 2021](https://github.com/5space/aoc-2021)
 
 #### 2020
 - [Peter Tseng - Ruby 2020](https://github.com/petertseng/adventofcode-rb-2020)
@@ -28,6 +31,7 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Brian Shaginaw - Python - 2015-2020](https://github.com/orez-/Advent-of-Code-2020)
 - [Paweł Kubiak - Python - 2020](https://github.com/pkubiak/advent-of-code-2020)
 - [Michael Fogleman - Python - 2020](https://github.com/fogleman/AdventOfCode2020)
+- [5space - Python - 2020](https://github.com/5space/aoc-2020)
 
 ### BEAM/Functional languages:
 - [Rosa Gutierrez - Elixir - 2015-2020](https://github.com/rosa/advent-of-code)
