@@ -5,11 +5,11 @@ https://adventofcode.com/2022
 
 ## My solutions in different languages:
 
-| Title                    | python     | elixir    |
-| -                        | -          | -         |
-| 01 - Calorie Counting    | [✓ ][01py] | [✓][01ex] |
-| 02 - Rock Paper Scissors | [✓ ][02py] | [✓][02ex] |
-| 03 |           |            |
+| Title                        | python     | elixir    |
+| -                            | -          | -         |
+| 01 - Calorie Counting        | [✓ ][01py] | [✓][01ex] |
+| 02 - Rock Paper Scissors     | [✓ ][02py] | [✓][02ex] |
+| 03 - Rucksack Reorganization | [✓ ][03py] | [✓][03ex] |
 | 04 |           |            |
 | 05 |           |            |
 | 06 |           |            |
@@ -32,6 +32,8 @@ https://adventofcode.com/2022
 
 [01py]:  python/day1.py
 [02py]:  python/day2.py
+[03py]:  python/day3.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
+[03ex]: elixir/day3.livemd

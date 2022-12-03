@@ -1,0 +1,109 @@
+# AOC 2022 - Day3
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Get input
+
+<!-- livebook:{"attrs":{"day":"3","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "3", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+import ExUnit.Case
+
+defmodule Day3 do
+  def solve(data) do
+    dd = data |> String.trim() |> String.split("\n")
+
+    {task1(dd), task2(dd)}
+  end
+
+  def task1(data) do
+    data
+    |> Enum.map(fn row ->
+      l = div(String.length(row), 2)
+
+      row
+      |> String.graphemes()
+      |> Enum.split(l)
+      |> score()
+    end)
+    |> Enum.sum()
+  end
+
+  def task2(data) do
+    data
+    |> Enum.chunk_every(3)
+    |> Enum.map(fn gr ->
+      gr
+      |> Enum.map(fn row ->
+        row |> String.graphemes() |> MapSet.new()
+      end)
+      |> score()
+    end)
+    |> Enum.sum()
+  end
+
+  def score([r1, r2, r3]) do
+    s1 = MapSet.new(r1)
+    s2 = MapSet.new(r2)
+    s3 = MapSet.new(r3)
+
+    s1
+    |> MapSet.intersection(s2)
+    |> MapSet.intersection(s3)
+    |> MapSet.to_list()
+    |> List.first()
+    |> to_prio()
+  end
+
+  def score({r1, r2}) do
+    s1 = MapSet.new(r1)
+    s2 = MapSet.new(r2)
+
+    s1
+    |> MapSet.intersection(s2)
+    |> MapSet.to_list()
+    |> List.first()
+    |> to_prio()
+  end
+
+  def to_prio(<<c>>) when c in ?a..?z, do: c - ?a + 1
+  def to_prio(<<c>>) when c in ?A..?Z, do: c - ?A + 27
+
+  def print_res({r1, r2}, type \\ "Live") do
+    IO.puts("#{type} results:")
+    IO.puts("Task 1: #{r1}")
+    IO.puts("Task 2: #{r2}")
+  end
+end
+
+defmodule Day3Test do
+  use ExUnit.Case, async: false
+
+  @testd """
+  vJrwpWtwJgWrhcsFMMfFFhFp
+  jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+  PmmdzqPrVvPwwTWBwg
+  wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+  ttgJtRGJQctTZtZT
+  CrZsJsPPZsGzwwsLwLmpwMDw
+  """
+
+  test "solves test cases" do
+    assert {157, 70} = Day3.solve(@testd)
+  end
+end
+
+ExUnit.run()
+
+data |> Day3.solve() |> Day3.print_res()
+```
