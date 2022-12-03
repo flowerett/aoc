@@ -17,8 +17,6 @@ Mix.install([
 ## Solve
 
 ```elixir
-import ExUnit.Case
-
 defmodule Day3 do
   def solve(data) do
     dd = data |> String.trim() |> String.split("\n")
@@ -34,6 +32,7 @@ defmodule Day3 do
       row
       |> String.graphemes()
       |> Enum.split(l)
+      |> Tuple.to_list()
       |> score()
     end)
     |> Enum.sum()
@@ -52,25 +51,11 @@ defmodule Day3 do
     |> Enum.sum()
   end
 
-  def score([r1, r2, r3]) do
-    s1 = MapSet.new(r1)
-    s2 = MapSet.new(r2)
-    s3 = MapSet.new(r3)
+  def score(sets) do
+    [st | rest] = Enum.map(sets, &MapSet.new/1)
 
-    s1
-    |> MapSet.intersection(s2)
-    |> MapSet.intersection(s3)
-    |> MapSet.to_list()
-    |> List.first()
-    |> to_prio()
-  end
-
-  def score({r1, r2}) do
-    s1 = MapSet.new(r1)
-    s2 = MapSet.new(r2)
-
-    s1
-    |> MapSet.intersection(s2)
+    rest
+    |> Enum.reduce(st, &MapSet.intersection(&2, &1))
     |> MapSet.to_list()
     |> List.first()
     |> to_prio()
@@ -85,6 +70,8 @@ defmodule Day3 do
     IO.puts("Task 2: #{r2}")
   end
 end
+
+ExUnit.start(autorun: false)
 
 defmodule Day3Test do
   use ExUnit.Case, async: false
@@ -105,5 +92,6 @@ end
 
 ExUnit.run()
 
+# 7446, 2646
 data |> Day3.solve() |> Day3.print_res()
 ```
