@@ -10,7 +10,7 @@ https://adventofcode.com/2022
 | 01 - Calorie Counting        | [✓ ][01py] | [✓][01ex] |
 | 02 - Rock Paper Scissors     | [✓ ][02py] | [✓][02ex] |
 | 03 - Rucksack Reorganization | [✓ ][03py] | [✓][03ex] |
-| 04 |           |            |
+| 04 - Camp Cleanup            | [✓ ][04py] | [✓][04ex] |
 | 05 |           |            |
 | 06 |           |            |
 | 07 |           |            |
@@ -33,7 +33,9 @@ https://adventofcode.com/2022
 [01py]:  python/day1.py
 [02py]:  python/day2.py
 [03py]:  python/day3.py
+[04py]:  python/day4.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
 [03ex]: elixir/day3.livemd
+[04ex]: elixir/day4.livemd

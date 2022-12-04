@@ -1,0 +1,81 @@
+# AoC 2022 - Day4
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+<!-- livebook:{"attrs":{"day":"4","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "4", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day4 do
+  def solve(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.reduce({0, 0}, fn row, {r1, r2} ->
+      [s1, s2] = extract(row)
+
+      {t1(r1, s1, s2), t2(r2, s1, s2)}
+    end)
+  end
+
+  def t1(cnt, s1, s2), do: (is_subset(s1, s2) && cnt + 1) || cnt
+  def t2(cnt, s1, s2), do: (is_intersection(s1, s2) && cnt + 1) || cnt
+
+  defp is_subset(s1, s2), do: MapSet.subset?(s1, s2) or MapSet.subset?(s2, s1)
+  defp is_intersection(s1, s2), do: s1 |> MapSet.intersection(s2) |> MapSet.size() |> Kernel.>(0)
+
+  def extract(row) do
+    row
+    |> String.split(["-", ","], trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.chunk_every(2)
+    |> Enum.map(fn [a, b] -> Range.new(a, b) |> MapSet.new() end)
+  end
+
+  def print_res({r1, r2}, type \\ "Live") do
+    IO.puts("#{type} results:")
+    IO.puts("Task 1: #{r1}")
+    IO.puts("Task 2: #{r2}")
+  end
+end
+
+Day4.solve(data)
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @testd """
+  2-4,6-8
+  2-3,4-5
+  5-7,7-9
+  2-8,3-7
+  6-6,4-6
+  2-6,4-8
+  """
+
+  test "solves test cases" do
+    assert {2, 4} = Day4.solve(@testd)
+  end
+end
+
+ExUnit.run()
+
+# {477, 830}
+data |> Day4.solve() |> Day4.print_res()
+```
