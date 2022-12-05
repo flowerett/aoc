@@ -4,14 +4,15 @@ import minitest
 import sys
 import re
 import copy
+import numpy as np
 
 VERBOSE = sys.argv.pop() in ['-v', '--verbose']
 
 
-def solve(raw, crates):
+def solve(raw):
     p1, p2 = raw.split('\n\n')
-    data = [row.strip() for row in p2.split('\n')]
-    print('crates:\n', p1)
+    data = p2.strip().split('\n')
+    crates = parse_crates(p1)
 
     cr1 = copy.deepcopy(crates)
     cr2 = copy.deepcopy(crates)
@@ -26,6 +27,25 @@ def solve(raw, crates):
         cr2 = move_t2(cr2, cmd)
 
     return to_msg(cr1), to_msg(cr2)
+
+
+def parse_crates(raw):
+    rows = raw.split('\n')
+
+    # get lines without numbers, convert to a matrix
+    mx = [list(l) for l in rows[:-1]]
+
+    # rotate clockwise using np
+    # same can be done with zip():
+    # transposed = list(zip(*matrix))
+    # rotated = [list(reversed(row)) for row in transposed]
+    rt = np.rot90(mx, 1, (1, 0))
+
+    # filter only lines with letters
+    ft = filter(lambda el: el[0].isalpha(), rt)
+
+    # strip blank chars and split into char list
+    return [list(''.join(l).strip()) for l in ft]
 
 
 def fmt(row):
@@ -62,42 +82,33 @@ def to_msg(crates):
 
 
 if __name__ == '__main__':
-    TEST_INP = """
-        [D]
-    [N] [C]
-    [Z] [M] [P]
-    1   2   3
-
-    move 1 from 2 to 1
-    move 3 from 1 to 3
-    move 2 from 2 to 1
-    move 1 from 1 to 2
-    """
+    TEST_INP = '../inputs/day5t'
     LIVE_INP = '../inputs/day5'
     TEST_RES = ('CMZ', 'MCD')
     LIVE_RES = ('QNHWJVJZW', 'BPCZJLFJW')
 
-    # didn't find a faster way of parsing it
-    tcrates = [['Z', 'N'], ['M', 'C', 'D'], ['P']]
-    crates = [
-        ["C", "Z", "N", "B", "M", "W", "Q", "V"],
-        ["H", "Z", "R", "W", "C", "B"],
-        ["F", "Q", "R", "J"],
-        ["Z", "S", "W", "H", "F", "N", "M", "T"],
-        ["G", "F", "W", "L", "N", "Q", "P"],
-        ["L", "P", "W"],
-        ["V", "B", "D", "R", "G", "C", "Q", "J"],
-        ["Z", "Q", "N", "B", "W"],
-        ["H", "L", "F", "C", "G", "T", "J"]
-    ]
+    # faster was just write input as an array
+    # tcrates = [['Z', 'N'], ['M', 'C', 'D'], ['P']]
+    # crates = [
+    #     ["C", "Z", "N", "B", "M", "W", "Q", "V"],
+    #     ["H", "Z", "R", "W", "C", "B"],
+    #     ["F", "Q", "R", "J"],
+    #     ["Z", "S", "W", "H", "F", "N", "M", "T"],
+    #     ["G", "F", "W", "L", "N", "Q", "P"],
+    #     ["L", "P", "W"],
+    #     ["V", "B", "D", "R", "G", "C", "Q", "J"],
+    #     ["Z", "Q", "N", "B", "W"],
+    #     ["H", "L", "F", "C", "G", "T", "J"]
+    # ]
+
+    with open(TEST_INP) as f:
+        tdata = f.read()
+        minitest.assert_all(solve(tdata), TEST_RES, 'TEST_INP')
 
     with open(LIVE_INP) as f:
         data = f.read().strip()
-        tdata = TEST_INP.strip()
 
-        minitest.assert_all(solve(tdata, tcrates), TEST_RES, 'TEST_INP')
-
-        r1, r2 = solve(data, crates)
+        r1, r2 = solve(data)
         minitest.assert_all((r1, r2), LIVE_RES, 'LIVE_INP')
 
         print('res1: ', r1)
