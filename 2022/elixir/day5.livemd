@@ -1,0 +1,118 @@
+# AoC - Day5
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+<!-- livebook:{"attrs":{"day":"5","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "5", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day5 do
+  def solve(data) do
+    [crates, moves] = String.split(data, "\n\n")
+
+    cr = parse_crates(crates)
+
+    moves
+    |> parse_moves()
+    |> Enum.reduce([cr, cr], fn move, [cr1, cr2] ->
+      [task1(cr1, move), task2(cr2, move)]
+    end)
+    |> Enum.map(&get_res/1)
+  end
+
+  def parse_crates(crates) do
+    crates
+    |> String.split("\n")
+    |> Enum.reverse()
+    |> then(fn [_ind | crates] -> crates end)
+    |> Enum.flat_map(&clean_columns/1)
+    |> Enum.group_by(fn {_c, ind} -> ind end)
+    |> Enum.into(%{}, fn {ind, el} -> {ind, parse_item(el)} end)
+  end
+
+  def clean_columns(row) do
+    row
+    |> String.codepoints()
+    |> Enum.chunk_every(4)
+    |> Enum.map(&Enum.at(&1, 1))
+    |> Enum.with_index(1)
+  end
+
+  def parse_item(box) do
+    box |> Enum.map(&elem(&1, 0)) |> Enum.reverse() |> Enum.reject(&(&1 == " "))
+  end
+
+  def parse_moves(moves) do
+    moves
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.split/1)
+    |> Enum.map(fn [_, cnt, _, f, _, t] -> {to_i(cnt), to_i(f), to_i(t)} end)
+  end
+
+  def to_i(str) when is_binary(str), do: String.to_integer(str)
+
+  def task1(cr, {cnt, f, t}) do
+    Enum.reduce(1..cnt, cr, fn _i, acc ->
+      [el | ff_rest] = acc[f]
+
+      acc
+      |> Map.put(f, ff_rest)
+      |> Map.put(t, [el | acc[t]])
+    end)
+  end
+
+  def task2(cr, {cnt, f, t}) do
+    {buf, f_rest} = Enum.split(cr[f], cnt)
+    t_new = Enum.concat(buf, cr[t])
+
+    cr |> Map.put(f, f_rest) |> Map.put(t, t_new)
+  end
+
+  def get_res(cr) do
+    cr |> Map.values() |> Enum.map(fn [c | _] -> c end) |> Enum.join()
+  end
+end
+
+# ["QNHWJVJZW", "BPCZJLFJW"]
+Day5.solve(data)
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @testd """
+      [D]    
+  [N] [C]    
+  [Z] [M] [P]
+  1   2   3 
+
+  move 1 from 2 to 1
+  move 3 from 1 to 3
+  move 2 from 2 to 1
+  move 1 from 1 to 2
+  """
+
+  test "solves test cases" do
+    assert ["CMZ", "MCD"] = Day5.solve(@testd)
+  end
+end
+
+ExUnit.run()
+```

@@ -11,7 +11,7 @@ https://adventofcode.com/2022
 | 02 - Rock Paper Scissors     | [✓ ][02py] | [✓][02ex] |
 | 03 - Rucksack Reorganization | [✓ ][03py] | [✓][03ex] |
 | 04 - Camp Cleanup            | [✓ ][04py] | [✓][04ex] |
-| 05 - Supply Stacks           | [✓ ][05py] |           |
+| 05 - Supply Stacks           | [✓ ][05py] | [✓][05ex] |
 | 06 |           |            |
 | 07 |           |            |
 | 08 |           |            |
@@ -40,3 +40,4 @@ https://adventofcode.com/2022
 [02ex]: elixir/day2.livemd
 [03ex]: elixir/day3.livemd
 [04ex]: elixir/day4.livemd
+[05ex]: elixir/day5.livemd
