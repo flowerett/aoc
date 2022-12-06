@@ -20,18 +20,29 @@ Mix.install([
 defmodule Day6 do
   def solve(data) do
     chars = data |> String.trim() |> String.graphemes()
-    {tune(chars, 4), tune(chars, 14)}
+
+    {tune(chars, 4) + 4, tune(chars, 14) + 14}
   end
 
+  # def tune(data, win) do
+  #   data
+  #   |> Enum.chunk_every(win, 1)
+  #   |> Enum.map(&MapSet.new/1)
+  #   |> Enum.map(&MapSet.size/1)
+  #   |> Enum.reduce_while(win, fn seq, acc ->
+  #     if seq == win, do: {:halt, acc}, else: {:cont, acc + 1}
+  #   end)
+  # end
+
+  # simpler version
   def tune(data, win) do
     data
     |> Enum.chunk_every(win, 1)
-    |> Enum.map(&MapSet.new/1)
-    |> Enum.map(&MapSet.size/1)
-    |> Enum.reduce_while(win, fn seq, acc ->
-      if seq == win, do: {:halt, acc}, else: {:cont, acc + 1}
-    end)
+    |> Enum.map(&uniq_size/1)
+    |> Enum.find_index(&(&1 == win))
   end
+
+  def uniq_size(chunk), do: chunk |> MapSet.new() |> MapSet.size()
 end
 
 # {1625, 2250}
