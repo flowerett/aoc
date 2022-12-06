@@ -1,0 +1,65 @@
+# AoC - Day6
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+<!-- livebook:{"attrs":{"day":"6","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "6", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day6 do
+  def solve(data) do
+    chars = data |> String.trim() |> String.graphemes()
+    {tune(chars, 4), tune(chars, 14)}
+  end
+
+  def tune(data, win) do
+    data
+    |> Enum.chunk_every(win, 1)
+    |> Enum.map(&MapSet.new/1)
+    |> Enum.map(&MapSet.size/1)
+    |> Enum.reduce_while(win, fn seq, acc ->
+      if seq == win, do: {:halt, acc}, else: {:cont, acc + 1}
+    end)
+  end
+end
+
+# {1625, 2250}
+Day6.solve(data)
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  tests = [
+    {"mjqjpqmgbljsphdztnvjfqwrcgsmlb", {7, 19}},
+    {"bvwbjplbgvbhsrlpgdmjqwftvncz", {5, 23}},
+    {"nppdvjthqldpwncqszvftbrmjlhg", {6, 23}},
+    {"nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", {10, 29}},
+    {"zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", {11, 26}}
+  ]
+
+  for {{tdata, res}, ind} <- Enum.with_index(tests) do
+    test "solves test cases #{ind}" do
+      assert unquote(res) = Day6.solve(unquote(tdata))
+    end
+  end
+end
+
+ExUnit.run()
+```

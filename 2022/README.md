@@ -12,7 +12,7 @@ https://adventofcode.com/2022
 | 03 - Rucksack Reorganization | [✓ ][03py] | [✓][03ex] |
 | 04 - Camp Cleanup            | [✓ ][04py] | [✓][04ex] |
 | 05 - Supply Stacks           | [✓ ][05py] | [✓][05ex] |
-| 06 |           |            |
+| 06 - Tuning Trouble          | [✓ ][06py] | [✓][06ex] |
 | 07 |           |            |
 | 08 |           |            |
 | 09 |           |            |
@@ -35,9 +35,11 @@ https://adventofcode.com/2022
 [03py]:  python/day3.py
 [04py]:  python/day4.py
 [05py]:  python/day5.py
+[06py]:  python/day5.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
 [03ex]: elixir/day3.livemd
 [04ex]: elixir/day4.livemd
 [05ex]: elixir/day5.livemd
+[06ex]: elixir/day6.livemd
