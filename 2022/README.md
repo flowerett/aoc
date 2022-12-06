@@ -35,7 +35,7 @@ https://adventofcode.com/2022
 [03py]:  python/day3.py
 [04py]:  python/day4.py
 [05py]:  python/day5.py
-[06py]:  python/day5.py
+[06py]:  python/day6.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
