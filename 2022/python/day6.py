@@ -34,13 +34,13 @@ if __name__ == '__main__':
     with open(LIVE_INP) as f:
         data = f.read().strip()
 
-        for ind, tdata in enumerate(test):
-            minitest.assert_all(
-                solve(tdata), TEST_RES[ind], f'TEST_INP: {ind+1}')
+    for ind, tdata in enumerate(test):
+        minitest.assert_all(
+            solve(tdata), TEST_RES[ind], f'TEST_INP: {ind+1}')
 
-        r1, r2 = solve(data)
+    r1, r2 = solve(data)
 
-        minitest.assert_all((r1, r2), LIVE_RES, 'LIVE_INP')
+    minitest.assert_all((r1, r2), LIVE_RES, 'LIVE_INP')
 
-        print('res1: ', r1)
-        print('res2: ', r2)
+    print('res1: ', r1)
+    print('res2: ', r2)

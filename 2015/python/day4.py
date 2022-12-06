@@ -2,6 +2,7 @@
 
 import minitest
 import hashlib
+import itertools as it
 
 
 def solve(secret):
@@ -12,17 +13,13 @@ def solve(secret):
 
 def mine(secret, n):
     print(f'mining for hash with {n} zeros...')
-    i = 0
-    while True:
-        m = hashlib.md5()
-        key = secret + str(i)
-        m.update(key.encode())
-        h = m.hexdigest()[:n]
-        check = '0'*n
+
+    check = '0'*n
+    for i in it.count():
+        key = (secret + str(i)).encode()
+        h = hashlib.md5(key).hexdigest()[:n]
         if check == h:
-            break
-        i += 1
-    return i
+            return i
 
 
 if __name__ == '__main__':
