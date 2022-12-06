@@ -1,7 +1,7 @@
 ## Some top performers:
 Some folks that I follow for inspiration and insights after solving problems on my own.
 
-#### 2021
+#### 2022
 - [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
 - [Peter Tseng - Ruby](https://github.com/petertseng/adventofcode-rb-2022)
 - [Søren Fuglede Jørgensen - Python - 2015-2022](https://github.com/fuglede/adventofcode)
@@ -58,3 +58,9 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Michael Fogleman - Python - 2018](https://github.com/fogleman/AdventOfCode2018)
 - [Michael Fogleman - Python - 2019](https://github.com/fogleman/AdventOfCode2019)
 - [Dmitry Slutsky - Rust - 2020](https://github.com/Lakret/aoc2020)
+
+### Teammates
+- [Sreetam Das - Elixir](https://github.com/sreetamdas/advent-of-code)
+- [Eleni Lixourioti - Elixir](https://github.com/Geekfish/advent-of-code-2022)
+- [Gerard Abelló Serras - Rust](https://github.com/gerardabello/advent-of-code)
+- [Peter Ullrich](https://github.com/PJUllrich/advent-of-code-2022)
