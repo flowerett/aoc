@@ -13,7 +13,7 @@ https://adventofcode.com/2022
 | 04 - Camp Cleanup            | [✓ ][04py] | [✓][04ex] |
 | 05 - Supply Stacks           | [✓ ][05py] | [✓][05ex] |
 | 06 - Tuning Trouble          | [✓ ][06py] | [✓][06ex] |
-| 07 |           |            |
+| 07 - No Space Left On Device |            | [✓][07ex] |
 | 08 |           |            |
 | 09 |           |            |
 | 10 |           |            |
@@ -43,3 +43,4 @@ https://adventofcode.com/2022
 [04ex]: elixir/day4.livemd
 [05ex]: elixir/day5.livemd
 [06ex]: elixir/day6.livemd
+[07ex]: elixir/day7.livemd

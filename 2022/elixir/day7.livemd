@@ -1,0 +1,136 @@
+# Day 7
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+<!-- livebook:{"attrs":{"day":"7","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "7", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day7 do
+  def solve(data, verbose \\ false) do
+    {tree, _} =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.split/1)
+      |> Enum.map(&List.to_tuple/1)
+      |> Enum.reduce({%{}, {}}, &parse/2)
+
+    {_tree, dirs, _total} = get_size(tree, {"/"}, %{})
+
+    verbose && IO.inspect(tree, label: "tree:")
+    verbose && IO.inspect(dirs, label: "dirs: ")
+
+    {task1(dirs), task2(dirs)}
+  end
+
+  def get_size(tree, path, acc) do
+    {tree, dirs, size} = Enum.reduce(tree[path], {tree, acc, 0}, &item_size/2)
+    {tree, Map.put(dirs, path, size), size}
+  end
+
+  def item_size({:dir, path}, {tree, dirs, total}) do
+    {tree, dirs, subd_size} = get_size(tree, path, dirs)
+    {tree, dirs, total + subd_size}
+  end
+
+  def item_size({:f, _fname, fsize}, {tree, dirs, total}) do
+    {tree, dirs, total + fsize}
+  end
+
+  def parse({"$", "cd", ".."}, {tree, path}) do
+    path = Tuple.delete_at(path, tuple_size(path) - 1)
+    {tree, path}
+  end
+
+  def parse({"$", "cd", dir_name}, {tree, path}) do
+    path = Tuple.append(path, dir_name)
+    tree = Map.put(tree, path, [])
+    {tree, path}
+  end
+
+  def parse({"$", "ls"}, acc), do: acc
+
+  def parse({"dir", dir_name}, {tree, path}) do
+    dir_path = Tuple.append(path, dir_name)
+    cont = [{:dir, dir_path} | tree[path]]
+    {Map.put(tree, path, cont), path}
+  end
+
+  def parse({fsize, fname}, {tree, path}) do
+    fsize = String.to_integer(fsize)
+    cont = [{:f, fname, fsize} | tree[path]]
+    {Map.put(tree, path, cont), path}
+  end
+
+  def task1(dirs) do
+    dirs
+    |> Enum.filter(fn {_k, v} -> v <= 100_000 end)
+    |> Enum.reduce(0, fn {_k, v}, sum -> sum + v end)
+  end
+
+  def task2(dirs) do
+    to_free = 30_000_000 - (70_000_000 - dirs[{"/"}])
+
+    dirs
+    |> Enum.filter(fn {_k, v} -> v >= to_free end)
+    |> Enum.min_by(fn {_k, v} -> v end)
+    |> elem(1)
+  end
+end
+
+# {1453349, 2948823}
+Day7.solve(data)
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @inp """
+  $ cd /
+  $ ls
+  dir a
+  14848514 b.txt
+  8504156 c.dat
+  dir d
+  $ cd a
+  $ ls
+  dir e
+  29116 f
+  2557 g
+  62596 h.lst
+  $ cd e
+  $ ls
+  584 i
+  $ cd ..
+  $ cd ..
+  $ cd d
+  $ ls
+  4060174 j
+  8033020 d.log
+  5626152 d.ext
+  7214296 k
+  """
+
+  test "solves test cases" do
+    assert {95437, 24_933_642} = Day7.solve(@inp, true)
+  end
+end
+
+ExUnit.run()
+```
