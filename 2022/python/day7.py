@@ -16,7 +16,7 @@ def solve(data):
     dirs, cur = defaultdict(int), []
 
     for row in dd:
-        dirs, cur = traverse(row, dirs, cur)
+        dirs, cur = traverse_v10(row, dirs, cur)
 
     if VERBOSE:
         print(*dd, sep='\n')
@@ -46,18 +46,33 @@ def task2(dirs):
     return min_to_del
 
 
-def traverse(cmd, dirs, cur):
-    # $ cd ..
-    if cmd[1] == 'cd' and cmd[2] == '..':
-        cur.pop()
-    # $ cd X
-    elif cmd[1] == 'cd':
-        cur.append(cmd[2])
-    # not '$ ls' or 'dir X' which we skip
-    elif (cmd[1] != 'ls') and (cmd[0] != 'dir'):
-        fsize, _fname = cmd
-        size = int(fsize)
-        dirs = add_to_dirs(dirs, cur, size)
+# def traverse(cmd, dirs, cur):
+#     # $ cd ..
+#     if cmd[1] == 'cd' and cmd[2] == '..':
+#         cur.pop()
+#     # $ cd X
+#     elif cmd[1] == 'cd':
+#         cur.append(cmd[2])
+#     # not '$ ls' or 'dir X' which we skip
+#     elif (cmd[1] != 'ls') and (cmd[0] != 'dir'):
+#         fsize, _fname = cmd
+#         size = int(fsize)
+#         dirs = add_to_dirs(dirs, cur, size)
+
+#     return dirs, cur
+
+
+# works only with python > 3.10
+def traverse_v10(cmd, dirs, cur):
+    match cmd:
+        case ['$', 'cd', '..']:
+            cur.pop()
+        case ['$', 'cd', dir]:
+            cur.append(dir)
+        # can skip '$ ls' and 'dir X' commands
+        case [fsize, _fname] if fsize not in ['$', 'dir']:
+            size = int(fsize)
+            dirs = add_to_dirs(dirs, cur, size)
 
     return dirs, cur
 
