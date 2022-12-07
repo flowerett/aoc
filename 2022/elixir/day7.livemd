@@ -93,6 +93,61 @@ end
 Day7.solve(data)
 ```
 
+## Improve parsing 🚀
+
+```elixir
+defmodule Day7Imp do
+  def solve(data, verbose \\ false) do
+    {dirs, _} =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.split/1)
+      |> Enum.map(&List.to_tuple/1)
+      |> Enum.reduce({%{}, []}, &parse/2)
+
+    verbose && IO.inspect(dirs, label: "dirs: ")
+
+    {task1(dirs), task2(dirs)}
+  end
+
+  def parse({"$", "cd", ".."}, {dirs, [_ | rest]}), do: {dirs, rest}
+
+  def parse({"$", "cd", dname}, {dirs, path}), do: {dirs, [dname | path]}
+
+  # no action needed on this
+  def parse({"$", "ls"}, acc), do: acc
+  def parse({"dir", _dir_name}, acc), do: acc
+
+  def parse({fsize, _fname}, {dirs, path}) do
+    fsize = String.to_integer(fsize)
+    {update_size(path, dirs, fsize), path}
+  end
+
+  def update_size([], dirs, _size), do: dirs
+
+  def update_size([_ | rest] = path, dirs, size) do
+    k = List.to_tuple(path)
+    v = Map.get(dirs, k, 0) + size
+    update_size(rest, Map.put(dirs, k, v), size)
+  end
+
+  def task1(dirs) do
+    dirs
+    |> Enum.filter(fn {_k, v} -> v <= 100_000 end)
+    |> Enum.reduce(0, fn {_k, v}, sum -> sum + v end)
+  end
+
+  def task2(dirs) do
+    to_free = 30_000_000 - (70_000_000 - dirs[{"/"}])
+
+    dirs
+    |> Enum.filter(fn {_k, v} -> v >= to_free end)
+    |> Enum.min_by(fn {_k, v} -> v end)
+    |> elem(1)
+  end
+end
+```
+
 ## Check
 
 ```elixir
@@ -127,8 +182,12 @@ defmodule AoCTest do
   7214296 k
   """
 
-  test "solves test cases" do
+  test "first solution solves test cases" do
     assert {95437, 24_933_642} = Day7.solve(@inp, true)
+  end
+
+  test "improved solution solves test cases" do
+    assert {95437, 24_933_642} = Day7Imp.solve(@inp)
   end
 end
 
