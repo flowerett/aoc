@@ -14,10 +14,6 @@ def solve(data):
 # def extract(row):
 #   print(row)
 
-# def t1(dd):
-# def t2(dd):
-
-
 if __name__ == '__main__':
   TEST_INP = """
   """
@@ -27,12 +23,13 @@ if __name__ == '__main__':
 
   with open(LIVE_INP) as f:
     data = f.read().strip().split('\n')
-    # tdata = TEST_INP.strip().split("\n")
 
-    # minitest.assert_all(solve(tdata), TEST_RES, 'TEST_INP')
+  # tdata = TEST_INP.strip().split("\n")
 
-    _res = solve(data)
-    # minitest.assert_all(res, LIVE_RES, 'LIVE_INP')
+  # minitest.assert_all(solve(tdata), TEST_RES, 'TEST_INP')
 
-    # print('res1: ', res.pop(0))
-    # print('res2: ', res.pop(0))
+  _res = solve(data)
+  # minitest.assert_all((r1, r2), LIVE_RES, 'LIVE_INP')
+
+  # print('res1: ', r1)
+  # print('res2: ', r2)

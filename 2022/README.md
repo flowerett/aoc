@@ -14,7 +14,7 @@ https://adventofcode.com/2022
 | 05 - Supply Stacks           | [✓ ][05py] | [✓][05ex] |
 | 06 - Tuning Trouble          | [✓ ][06py] | [✓][06ex] |
 | 07 - No Space Left On Device | [✓ ][07py] | [✓][07ex] |
-| 08 |           |            |
+| 08 - Treetop Tree House      | [✓ ][08py] |           |
 | 09 |           |            |
 | 10 |           |            |
 | 11 |           |            |
@@ -37,6 +37,7 @@ https://adventofcode.com/2022
 [05py]:  python/day5.py
 [06py]:  python/day6.py
 [07py]:  python/day7.py
+[08py]:  python/day8.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd

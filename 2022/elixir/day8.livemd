@@ -1,0 +1,50 @@
+# AoC - Day8
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+<!-- livebook:{"attrs":{"day":"8","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "8", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+tdata = """
+30373
+25512
+65332
+33549
+35390
+"""
+
+defmodule Day8 do
+  def solve(data) do
+    {dd, rows, cols} = format_inp(data)
+  end
+
+  def format_inp(data) do
+    dd =
+      data
+      |> String.trim()
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+      |> Enum.map(fn row ->
+        Enum.map(row, &String.to_integer/1)
+      end)
+
+    rows = length(dd)
+    cols = dd |> List.first() |> length()
+    {dd, rows, cols}
+  end
+end
+
+Day8.solve(tdata)
+```
