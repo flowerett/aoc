@@ -56,16 +56,6 @@ def task1(dd):
     rows = len(dd)
     cols = len(dd[0])
 
-    # set edges
-    for i in range(rows):
-        h.add((0, i))
-    for j in range(cols):
-        h.add((j, 0))
-    for i in range(rows-1, -1, -1):
-        h.add((rows-1, i))
-    for j in range(cols-1, -1, -1):
-        h.add((j, cols-1))
-
     # left
     for i in range(1, rows-1):
         hleft = dd[i][0]
@@ -98,7 +88,7 @@ def task1(dd):
                 h.add((j, i))
                 hbot = dd[j][i]
 
-    return len(h)
+    return len(h) + rows*2 + (cols-2)*2
 
 
 if __name__ == '__main__':

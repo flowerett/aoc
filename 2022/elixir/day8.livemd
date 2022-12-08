@@ -28,6 +28,46 @@ tdata = """
 defmodule Day8 do
   def solve(data) do
     {dd, rows, cols} = format_inp(data)
+
+    dd_cw = rotate_cw(dd)
+
+    acc_r = task1(dd, cols, false)
+    acc_c = task1(dd_cw, rows, true)
+    MapSet.union(acc_r, acc_c)
+  end
+
+  def task1(dd, size, rot) do
+    dd
+    |> Enum.with_index()
+    |> Enum.reduce(MapSet.new(), fn {row, ind}, acc ->
+      {_, lacc} = visible_from_edge(row, ind, acc, size, &l2r_ind/2, false, rot)
+      {_, acc} = visible_from_edge(row, ind, lacc, size, &r2l_ind/2, true, rot)
+      acc
+    end)
+  end
+
+  # calculation for rotated indexes need to be simplified
+  def visible_from_edge(row, i, acc, size, ind_fun, reverse, rot) do
+    row
+    |> then(fn row ->
+      if reverse, do: Enum.reverse(row), else: row
+    end)
+    |> Enum.with_index(fn el, ind -> {el, ind_fun.(ind, size)} end)
+    |> Enum.reduce({-1, acc}, &count_visible(&1, &2, i, rot, size))
+  end
+
+  def l2r_ind(ind, _size), do: ind
+  def r2l_ind(ind, size), do: size - 1 - ind
+
+  def count_visible({num, j}, {prev, acc}, i, rot, size) when num > prev do
+    k = if rot, do: {size - 1 - j, i}, else: {i, j}
+    {num, MapSet.put(acc, k)}
+  end
+
+  def count_visible(_el, {prev, acc}, _i, _rot, _size), do: {prev, acc}
+
+  def rotate_cw(matrix) do
+    matrix |> Enum.zip_with(fn row -> Enum.reverse(row) end)
   end
 
   def format_inp(data) do
@@ -46,5 +86,7 @@ defmodule Day8 do
   end
 end
 
-Day8.solve(tdata)
+# 21, 1662
+res = Day8.solve(tdata)
+res |> MapSet.size()
 ```
