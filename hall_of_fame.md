@@ -7,6 +7,7 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Søren Fuglede Jørgensen - Python - 2015-2022](https://github.com/fuglede/adventofcode)
 - [Thai Pangsakulyanont - Ruby](https://github.com/dtinth/advent-of-code-2022)
 - [Public AI(GPT) solver](https://github.com/ostwilkens/aoc2022)
+- [TenViki - TS with visualisations](https://github.com/TenViki/advent-of-code/tree/main/2022/visualizations)
 
 #### 2021
 - [Jonathan Paulson - YouTube](https://www.youtube.com/channel/UCuWLIm0l4sDpEe28t41WITA)
