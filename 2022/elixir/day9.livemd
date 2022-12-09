@@ -1,0 +1,131 @@
+# AoC: Day 9
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+<!-- livebook:{"attrs":{"day":"9","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "9", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day9 do
+  @dir %{R: {1, 0}, L: {-1, 0}, U: {0, 1}, D: {0, -1}}
+
+  def solve(data, tsize) do
+    dd = data |> String.split("\n", trim: true) |> Enum.map(&format/1)
+    knots = Enum.map(1..tsize, fn _ -> %{x: 0, y: 0} end)
+
+    {res, _} = Enum.reduce(dd, {MapSet.new(), knots}, &do_n_moves/2)
+    MapSet.size(res)
+  end
+
+  def do_n_moves({mv, steps}, acc) do
+    Enum.reduce(1..steps, acc, fn _, acc -> move_one(mv, acc) end)
+  end
+
+  def move_one(mv, {res, knots}) do
+    [head | tails] = knots
+    h = move_head(mv, head)
+    {last_t, tails} = move_tails(tails, h)
+
+    {MapSet.put(res, last_t), [h | tails]}
+  end
+
+  def move_head({sx, sy}, %{x: x, y: y}), do: %{x: x + sx, y: y + sy}
+
+  def move_tails(tails, h) do
+    {_, tails} =
+      Enum.reduce(tails, {h, []}, fn t, {h, acc} ->
+        t = move_tail(h, t)
+        {t, [t | acc]}
+      end)
+
+    [t | _] = tails
+
+    {t, Enum.reverse(tails)}
+  end
+
+  def move_tail(h, t) do
+    dx = h.x - t.x
+    dy = h.y - t.y
+
+    case {abs(dx), abs(dy)} do
+      {2, 0} ->
+        %{x: t.x + step(dx), y: t.y}
+
+      {0, 2} ->
+        %{x: t.x, y: t.y + step(dy)}
+
+      {ddx, ddy} when ddx == 2 or ddy == 2 ->
+        %{x: t.x + step(dx), y: t.y + step(dy)}
+
+      _ ->
+        t
+    end
+  end
+
+  def step(x) when x < 0, do: -1
+  def step(_x), do: 1
+
+  def format(row) do
+    [dir, snum] = row |> String.split(" ", trim: true)
+    {@dir[String.to_atom(dir)], String.to_integer(snum)}
+  end
+end
+
+# {6391, 2593}
+Day9.solve(data, 2) |> IO.inspect(label: "res1")
+Day9.solve(data, 10) |> IO.inspect(label: "res2")
+:ok
+```
+
+## Test
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @inp1 """
+  R 4
+  U 4
+  L 3
+  D 1
+  R 4
+  D 1
+  L 5
+  R 2
+  """
+
+  @inp2 """
+  R 5
+  U 8
+  L 8
+  D 3
+  R 17
+  D 10
+  L 25
+  U 20
+  """
+
+  test "solves first task" do
+    assert 13 = Day9.solve(@inp1, 2)
+  end
+
+  test "solves second task" do
+    assert 36 = Day9.solve(@inp2, 10)
+  end
+end
+
+ExUnit.run()
+```

@@ -15,7 +15,7 @@ https://adventofcode.com/2022
 | 06 - Tuning Trouble          | [✓][06py] | [✓][06ex] |
 | 07 - No Space Left On Device | [✓][07py] | [✓][07ex] |
 | 08 - Treetop Tree House      | [✓][08py] | [*][08ex] |
-| 09 - Rope Bridge             | [✓][09py] |           |
+| 09 - Rope Bridge             | [✓][09py] | [✓][09ex] |
 
 
 [01py]:  python/day1.py
@@ -36,3 +36,4 @@ https://adventofcode.com/2022
 [06ex]: elixir/day6.livemd
 [07ex]: elixir/day7.livemd
 [08ex]: elixir/day8.livemd
+[09ex]: elixir/day9.livemd

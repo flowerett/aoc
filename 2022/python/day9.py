@@ -5,6 +5,8 @@ import sys
 
 # VERBOSE = sys.argv.pop() in ['-v', '--verbose']
 
+DIRS = {'R': (1, 0), 'L': (-1, 0), 'U': (0, 1), 'D': (0, -1)}
+
 
 def solve(data, num_k):
     dd = map(extract, data.strip().split('\n'))
@@ -12,39 +14,25 @@ def solve(data, num_k):
     acc = set()
     kns = [(0, 0)] * num_k
 
-    for dir, n in dd:
-        mv = get_move(dir, n)
-        kns, acc = do_move(mv, kns, acc)
+    for mv, steps in dd:
+        for _ in range(steps):
+            kns[0] = move_head(mv, kns[0])
+            for i in range(1, len(kns)):
+                h, t = kns[i-1], kns[i]
+                kns[i] = move_tail(h, t)
+
+            acc.add(kns[-1])
 
     return len(acc)
 
 
 def extract(row):
     dir, snum = row.strip().split()
-    return dir.strip(), int(snum)
-
-
-def do_move(mv, kns, acc):
-    steps = max(map(abs, mv))
-
-    for _ in range(steps):
-        kns[0] = move_head(mv, kns[0])
-        for i in range(1, len(kns)):
-            h, t = kns[i-1], kns[i]
-            kns[i] = move_tail(h, t)
-
-        acc.add(kns[-1])
-
-    return kns, acc
+    return DIRS[dir.strip()], int(snum)
 
 
 def move_head(mv, hd):
-    xh, yh = hd
-    match mv:
-        case num, 0:
-            return xh + step(num), yh
-        case 0, num:
-            return xh, yh + step(num)
+    return tuple(a+b for a, b in zip(mv, hd))
 
 
 def move_tail(h, t):
@@ -65,18 +53,6 @@ def move_tail(h, t):
 
 def step(x):
     return (x == abs(x)) and 1 or -1
-
-
-def get_move(dir, n):
-    match dir:
-        case 'R':
-            return (n, 0)
-        case 'L':
-            return (-n, 0)
-        case 'U':
-            return (0, n)
-        case 'D':
-            return (0, -n)
 
 
 if __name__ == '__main__':
