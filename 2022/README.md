@@ -5,30 +5,18 @@ https://adventofcode.com/2022
 
 ## My solutions in different languages:
 
-| Title                        | python     | elixir    |
-| -                            | -          | -         |
-| 01 - Calorie Counting        | [✓ ][01py] | [✓][01ex] |
-| 02 - Rock Paper Scissors     | [✓ ][02py] | [✓][02ex] |
-| 03 - Rucksack Reorganization | [✓ ][03py] | [✓][03ex] |
-| 04 - Camp Cleanup            | [✓ ][04py] | [✓][04ex] |
-| 05 - Supply Stacks           | [✓ ][05py] | [✓][05ex] |
-| 06 - Tuning Trouble          | [✓ ][06py] | [✓][06ex] |
-| 07 - No Space Left On Device | [✓ ][07py] | [✓][07ex] |
-| 08 - Treetop Tree House      | [✓ ][08py] |           |
-| 09 |           |            |
-| 10 |           |            |
-| 11 |           |            |
-| 12 |           |            |
-| 13 |           |            |
-| 14 |           |            |
-| 15 |           |            |
-| 16 |           |            |
-| 17 |           |            |
-| 18 |           |            |
-| 19 |           |            |
-| 20 |           |            |
-| 21 |           |            |
-| 22 |           |            |
+| Title                        | python    | elixir    |
+| -                            | -         | -         |
+| 01 - Calorie Counting        | [✓][01py] | [✓][01ex] |
+| 02 - Rock Paper Scissors     | [✓][02py] | [✓][02ex] |
+| 03 - Rucksack Reorganization | [✓][03py] | [✓][03ex] |
+| 04 - Camp Cleanup            | [✓][04py] | [✓][04ex] |
+| 05 - Supply Stacks           | [✓][05py] | [✓][05ex] |
+| 06 - Tuning Trouble          | [✓][06py] | [✓][06ex] |
+| 07 - No Space Left On Device | [✓][07py] | [✓][07ex] |
+| 08 - Treetop Tree House      | [✓][08py] | [*][08ex] |
+| 09 - Rope Bridge             | [✓][09py] |           |
+
 
 [01py]:  python/day1.py
 [02py]:  python/day2.py
@@ -38,6 +26,7 @@ https://adventofcode.com/2022
 [06py]:  python/day6.py
 [07py]:  python/day7.py
 [08py]:  python/day8.py
+[09py]:  python/day9.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
@@ -46,3 +35,4 @@ https://adventofcode.com/2022
 [05ex]: elixir/day5.livemd
 [06ex]: elixir/day6.livemd
 [07ex]: elixir/day7.livemd
+[08ex]: elixir/day8.livemd
