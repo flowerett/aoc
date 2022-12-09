@@ -2,7 +2,8 @@
 
 ```elixir
 Mix.install([
-  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:complex, "~> 0.4"}
 ])
 ```
 
@@ -128,4 +129,44 @@ defmodule AoCTest do
 end
 
 ExUnit.run()
+```
+
+## Using Complex numbert to track coordinates
+
+```elixir
+test = """
+R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2
+"""
+
+defmodule Coords do
+  alias Complex, as: Cx
+  @dirs %{R: Cx.new(1, 0), L: Cx.new(-1, 0), U: Cx.new(0, 1), D: Cx.new(0, -1)}
+
+  def run(data) do
+    moves = data |> String.split("\n", trim: true) |> Enum.map(&fmt/1)
+    head = Cx.new(0, 0) |> IO.inspect(label: "H")
+
+    moves
+    |> Enum.reduce(head, fn {k, steps} = el, acc ->
+      @dirs[k]
+      |> Complex.multiply(steps)
+      |> Cx.add(acc)
+      |> IO.inspect(label: "#{inspect(el)}")
+    end)
+  end
+
+  def fmt(row) do
+    [dir, snum] = row |> String.split(" ", trim: true)
+    {String.to_atom(dir), String.to_integer(snum)}
+  end
+end
+
+Coords.run(test)
 ```
