@@ -16,6 +16,7 @@ https://adventofcode.com/2022
 | 07 - No Space Left On Device | [✓][07py] | [✓][07ex] |
 | 08 - Treetop Tree House      | [✓][08py] | [*][08ex] |
 | 09 - Rope Bridge             | [✓][09py] | [✓][09ex] |
+| 09 - Cathode-Ray Tube        | [✓][10py] |           |
 
 
 [01py]:  python/day1.py
@@ -27,6 +28,7 @@ https://adventofcode.com/2022
 [07py]:  python/day7.py
 [08py]:  python/day8.py
 [09py]:  python/day9.py
+[10py]:  python/day10.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
