@@ -29,8 +29,7 @@ def solve(data):
 
 
 def print_screen(crt):
-    # print(f'r1 {r1}')
-    print(f'res2: {"-"*40}')
+    print(f'res2:')
     for ind, line in enumerate(crt):
         print(line, f'| row: {(ind+1)*40}')
 

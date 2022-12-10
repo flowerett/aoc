@@ -1,0 +1,115 @@
+# AoC, Day10
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:complex, "~> 0.4"}
+])
+```
+
+## Setup
+
+<!-- livebook:{"attrs":{"day":"10","session_secret":"AOC_SECRET","variable":"data","year":"2022"},"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "10", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day10 do
+  @crtlen 40
+
+  def solve(data, opts \\ []) do
+    dd = data |> String.split("\n", trim: true) |> Enum.map(&format/1)
+    print = Access.get(opts, :print, false)
+
+    # state
+    # {reg, cnt, sum_sig, crt}
+    crt = build_crt()
+    {_, _, r1, crt} = Enum.reduce(dd, {1, 0, 0, crt}, &run_op/2)
+
+    print_crt(crt, print)
+    r1
+  end
+
+  def build_crt do
+    List.duplicate('.', 240)
+    |> Enum.with_index(fn el, ind -> {ind, el} end)
+    |> Enum.into(%{})
+  end
+
+  def print_crt(_, false), do: :noop
+
+  def print_crt(crt, true) do
+    crt
+    |> Enum.sort_by(fn {ind, _el} -> ind end)
+    |> Enum.map(fn {_ind, el} -> el end)
+    |> Enum.chunk_every(@crtlen)
+    |> Enum.join("\n")
+    |> IO.puts()
+
+    :noop
+  end
+
+  def run_op(["noop"], state), do: op(state)
+
+  def run_op(["addx", snum], state) do
+    state |> op() |> op() |> add_x(snum)
+  end
+
+  def op({reg, cnt, sum_sig, crt}) do
+    crt = lit_pixel(crt, cnt, reg)
+    cnt = cnt + 1
+    sig = (rem(cnt, @crtlen) == 20 && reg * cnt) || 0
+    {reg, cnt, sum_sig + sig, crt}
+  end
+
+  def add_x({reg, cnt, sum_sig, crt}, snum) do
+    num = String.to_integer(snum)
+    {reg + num, cnt, sum_sig, crt}
+  end
+
+  def lit_pixel(crt, cnt, reg) do
+    i = rem(cnt, @crtlen)
+
+    if i >= reg - 1 and i <= reg + 1 do
+      # #is not clearly visible on this term
+      Map.put(crt, cnt, "█")
+    else
+      Map.put(crt, cnt, " ")
+    end
+  end
+
+  def format(row) do
+    row |> String.trim() |> String.split(" ", trim: true)
+  end
+end
+
+# 13520
+# PGPHBEAB
+Day10.solve(data, print: true)
+```
+
+## Test
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  setup do
+    dir = System.fetch_env!("LB_INPUTS_DIR")
+    d = File.read!(dir <> "/day10t")
+    {:ok, %{data: d}}
+  end
+
+  test "solves first task", %{data: data} do
+    assert 13140 = Day10.solve(data)
+  end
+end
+
+ExUnit.run()
+```
