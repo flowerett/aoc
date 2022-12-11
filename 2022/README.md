@@ -17,6 +17,7 @@ https://adventofcode.com/2022
 | 08 - Treetop Tree House      | [✓][08py] | [*][08ex] |
 | 09 - Rope Bridge             | [✓][09py] | [✓][09ex] |
 | 09 - Cathode-Ray Tube        | [✓][10py] | [✓][10ex] |
+| 09 - Monkey in the Middle    | [✓][11py] |           |
 
 
 [01py]:  python/day1.py
@@ -29,6 +30,7 @@ https://adventofcode.com/2022
 [08py]:  python/day8.py
 [09py]:  python/day9.py
 [10py]:  python/day10.py
+[11py]:  python/day11.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
