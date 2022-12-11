@@ -1,0 +1,125 @@
+# AoC - Day11
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:complex, "~> 0.4"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "11", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+test = """
+Monkey 0:
+  Starting items: 79, 98
+  Operation: new = old * 19
+  Test: divisible by 23
+    If true: throw to monkey 2
+    If false: throw to monkey 3
+
+Monkey 1:
+  Starting items: 54, 65, 75, 74
+  Operation: new = old + 6
+  Test: divisible by 19
+    If true: throw to monkey 2
+    If false: throw to monkey 0
+
+Monkey 2:
+  Starting items: 79, 60, 97
+  Operation: new = old * old
+  Test: divisible by 13
+    If true: throw to monkey 1
+    If false: throw to monkey 3
+
+Monkey 3:
+  Starting items: 74
+  Operation: new = old + 3
+  Test: divisible by 17
+    If true: throw to monkey 0
+    If false: throw to monkey 1
+"""
+
+defmodule Day11 do
+  @keys ~w(items op div t f cnt)a
+
+  def solve(data) do
+    monkeys =
+      data
+      |> String.split("\n\n", trim: true)
+      |> Enum.map(&format_part/1)
+      |> Map.new()
+
+    # 20 for T1
+    1..20
+    |> Enum.reduce(monkeys, fn _i, acc -> run(acc) end)
+    |> Enum.map(fn {_, m} -> m.cnt end)
+    |> Enum.sort(:desc)
+    |> Enum.take(2)
+    |> Enum.product()
+  end
+
+  def format_part(part), do: part |> String.split("\n", trim: true) |> row_to_monkey()
+
+  def row_to_monkey([idx, items, op, tdiv, ct, cf]) do
+    m_id = ext_id(idx)
+    items = ext_items(items)
+    op = ext_op(op)
+    [tdiv, ct, cf] = Enum.map([tdiv, ct, cf], &ext_rest/1)
+    # keep tuple? {items, op, tdiv, ct, cf, 0}
+    v = [items, op, tdiv, ct, cf, 0]
+
+    {m_id, @keys |> Enum.zip(v) |> Map.new()}
+  end
+
+  def ext_id(str),
+    do: str |> String.split(" ") |> List.last() |> String.trim(":") |> String.to_integer()
+
+  def ext_items(str) do
+    str
+    |> String.split(": ")
+    |> List.last()
+    |> String.split(",")
+    |> Enum.map(fn num -> num |> String.trim() |> String.to_integer() end)
+  end
+
+  def ext_op(str), do: str |> String.split("new = ") |> List.last()
+  def ext_rest(str), do: str |> String.split(" ") |> List.last() |> String.to_integer()
+
+  def append(list, x), do: list |> Enum.reverse() |> then(&[x | &1]) |> Enum.reverse()
+
+  def run(dd) do
+    dd
+    |> Enum.reduce(dd, fn {idx, _m}, acc ->
+      # items op div t f cnt
+      new_m = acc[idx]
+
+      acc
+      |> pass_items({new_m.items, new_m.op, new_m.div, new_m.t, new_m.f})
+      |> update_in([idx, :cnt], fn x -> x + length(new_m.items) end)
+      |> update_in([idx, :items], fn _ -> [] end)
+    end)
+  end
+
+  def pass_items(acc, {items, op, div, t, f}) do
+    Enum.reduce(items, acc, fn item, acc ->
+      {new, _b} = Code.eval_string(op, old: item)
+      # p1
+      num = div(new, 3)
+      idx_to = (rem(num, div) == 0 && t) || f
+
+      update_in(acc, [idx_to, :items], &append(&1, num))
+    end)
+  end
+end
+
+# 10605
+# 61503
+Day11.solve(data)
+```

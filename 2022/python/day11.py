@@ -10,6 +10,20 @@ VERBOSE = sys.argv.pop() in ['-v', '--verbose']
 
 OPS = {'+': op.add, '-': op.sub, '*': op.mul, '/': op.truediv}
 
+# math trick of the day:
+#
+# 23 % 23 == 0
+# 230 % 23 == 0
+# 190 % 19 == 0
+# 23 * 19 == 437 - main modulo
+# won't affect small nums:
+# 230 % 437 = 230
+# 190 % 437 = 190
+# bigger numbers will be reduced
+# 460 % 437 = 23
+# but the next mod op will still be correct
+# 23 % 23 == 0
+
 
 def solve(data):
     mks = {}
