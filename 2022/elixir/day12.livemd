@@ -1,0 +1,150 @@
+# Untitled notebook
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:complex, "~> 0.4"}
+])
+```
+
+## Section
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "12", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day12 do
+  @nbh [{-1, 0}, {1, 0}, {0, -1}, {0, 1}]
+  @st 0
+  @en ?z - ?a + 1 + 1
+
+  def solve(data, opts \\ []) do
+    debug? = Access.get(opts, :debug, false)
+
+    dd = data |> String.split("\n", trim: true) |> Enum.map(&String.graphemes/1)
+    en = get_end(dd)
+    st1 = get_start(dd) |> i("inputs task 1", debug?)
+    st2 = get_start(dd, task: 2) |> i("inputs task 2", debug?)
+    vis = MapSet.new()
+
+    map = prep_space(dd)
+
+    with {:ok, d1, ^en} <- run(map, st1, vis),
+         {:ok, d2, ^en} <- run(map, st2, vis) do
+      {d1, d2}
+    else
+      error -> error
+    end
+  end
+
+  def run(_m, {[], []}, vis), do: {:not_found, vis}
+
+  def run(map, q, visited) do
+    {{:value, {cur, dist} = _el}, q} = :queue.out(q)
+
+    h = Map.get(map, cur)
+    seen = MapSet.member?(visited, cur)
+
+    do_run(map, q, visited, h, seen, cur, dist)
+  end
+
+  def do_run(_map, _q, _vis, h, _seen, cur, dist) when h == @en, do: {:ok, dist, cur}
+  def do_run(map, q, vis, _h, true, _cur, _dist), do: run(map, q, vis)
+
+  def do_run(map, q, vis, h, false, {x, y} = cur, dist) do
+    visited = MapSet.put(vis, cur)
+
+    q =
+      @nbh
+      |> Enum.map(fn {i, j} ->
+        nxt_h = Map.get(map, {x + i, y + j})
+        {nxt_h, h, {x + i, y + j}}
+      end)
+      |> Enum.filter(&valid_next_step/1)
+      |> Enum.reduce(q, fn {_, _, nxt}, acc ->
+        :queue.in({nxt, dist + 1}, acc)
+      end)
+
+    run(map, q, visited)
+  end
+
+  def valid_next_step({nil, _b, _nxt}), do: false
+  def valid_next_step({a, b, _nxt}) when a - b <= 1, do: true
+  def valid_next_step({_a, _b, _nxt}), do: false
+
+  def prep_space(dd) do
+    dd
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {row, i} ->
+      row
+      |> Enum.with_index()
+      |> Enum.map(fn {c, j} -> {{i, j}, to_h(c)} end)
+    end)
+    |> Map.new()
+  end
+
+  def to_h("S"), do: @st
+  def to_h("E"), do: @en
+  def to_h(<<c>>), do: c - ?a + 1
+
+  def get_end(dd) do
+    dd
+    |> Enum.with_index()
+    |> Enum.map(fn {row, i} -> {i, Enum.find_index(row, &(&1 == "E"))} end)
+    |> Enum.reject(fn {_x, y} -> is_nil(y) end)
+    |> List.first()
+  end
+
+  def get_start(dd, opts \\ []) do
+    task = Access.get(opts, :task, 1)
+
+    dd
+    |> Enum.with_index()
+    |> Enum.flat_map(&start_finder(&1, task))
+    |> Enum.reject(fn {_x, y} -> is_nil(y) end)
+    |> Enum.map(fn el -> {el, 0} end)
+    |> Enum.reduce(:queue.new(), &:queue.in/2)
+  end
+
+  def start_finder({row, i}, 1), do: [{i, Enum.find_index(row, &(&1 == "S"))}]
+
+  def start_finder({row, i}, 2) do
+    row
+    |> Enum.with_index()
+    |> Enum.map(fn {c, j} -> {i, (c == "a" && j) || nil} end)
+  end
+
+  def i(arg, _, false), do: arg
+  def i(arg, msg, true), do: IO.inspect(arg, label: msg)
+end
+
+# {534, 525}
+Day12.solve(data)
+```
+
+## Test
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @tdata """
+  Sabqponm
+  abcryxxl
+  accszExk
+  acctuvwj
+  abdefghi
+  """
+
+  test "solves tasks" do
+    assert {31, 29} = Day12.solve(@tdata)
+  end
+end
+
+ExUnit.run()
+```
