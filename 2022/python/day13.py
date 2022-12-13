@@ -22,10 +22,11 @@ def solve(data):
 def task2(dd):
     d2 = prep_t2(dd)
 
-    # sorting by function is removed from v3
-    # so you have to use additional lib
-    # or convert function to key on your own
+    # sorting by function is removed from v3 (you can sort only by key)
+    # so you have to use functools.cmp_to_key
     # https://learnpython.com/blog/python-custom-sort-function/
+    # or monkey patch object's cmparison functions of your own:
+    # https://github.com/python/cpython/blob/main/Lib/functools.py#L203
     d2 = sorted(d2, key=ft.cmp_to_key(comp))
 
     return (d2.index(TWO)+1) * (d2.index(SIX)+1)
