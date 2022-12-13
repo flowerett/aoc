@@ -1,0 +1,134 @@
+# AoC, Day 13
+
+```elixir
+Mix.install([{:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "13", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day13 do
+  @two [[2]]
+  @six [[6]]
+
+  def solve(data) do
+    dd =
+      data
+      |> String.trim()
+      |> String.split("\n\n", trim: true)
+      |> Enum.map(&String.split(&1, "\n"))
+      |> Enum.map(&extract/1)
+
+    r1 = task1(dd)
+    r2 = task2(dd)
+    {r1, r2}
+  end
+
+  def task2(data) do
+    [@two | [@six | Enum.flat_map(data, & &1)]]
+    |> Enum.sort(fn a, b -> compare(a, b) end)
+    |> Enum.with_index()
+    |> Enum.filter(fn {el, _ind} -> el in [@two, @six] end)
+    |> Enum.map(fn {_, ind} -> ind + 1 end)
+    |> Enum.reduce(&*/2)
+  end
+
+  def task1(data) do
+    data
+    |> Enum.map(fn [a, b] -> compare(a, b) end)
+    |> Enum.with_index()
+    |> Enum.filter(fn {res, _ind} -> res end)
+    |> Enum.map(fn {_, ind} -> ind + 1 end)
+    |> Enum.sum()
+  end
+
+  defp compare(_a, nil), do: false
+  defp compare(nil, _b), do: true
+
+  defp compare(a, b) when is_integer(a) and is_list(b), do: compare([a], b)
+  defp compare(a, b) when is_list(a) and is_integer(b), do: compare(a, [b])
+
+  defp compare(a, b) when is_integer(a) and is_integer(b) and a < b, do: true
+  defp compare(a, b) when is_integer(a) and is_integer(b) and a == b, do: :cont
+  defp compare(a, b) when is_integer(a) and is_integer(b) and a > b, do: false
+
+  defp compare(a, b) when is_list(a) and is_list(b) do
+    zip_pad(a, b)
+    |> Enum.map(fn {x, y} -> compare(x, y) end)
+    |> List.flatten()
+    |> Enum.reduce_while([], fn el, acc ->
+      if el == :cont, do: {:cont, [el | acc]}, else: {:halt, el}
+    end)
+  end
+
+  # lists are not that big, so ++ is ok
+  defp zip_pad(a, b) when length(a) > length(b) do
+    pad = List.duplicate(nil, length(a) - length(b))
+    Enum.zip(a, b ++ pad)
+  end
+
+  defp zip_pad(a, b) when length(a) < length(b) do
+    pad = List.duplicate(nil, length(b) - length(a))
+    Enum.zip(a ++ pad, b)
+  end
+
+  defp zip_pad(a, b), do: Enum.zip(a, b)
+
+  defp extract([a, b]) do
+    {a, _bnd} = Code.eval_string(a)
+    {b, _bnd} = Code.eval_string(b)
+    [a, b]
+  end
+end
+
+# {5557, 22425}
+Day13.solve(data)
+```
+
+## Test
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @tdata """
+  [1,1,3,1,1]
+  [1,1,5,1,1]
+
+  [[1],[2,3,4]]
+  [[1],4]
+
+  [9]
+  [[8,7,6]]
+
+  [[4,4],4,4]
+  [[4,4],4,4,4]
+
+  [7,7,7,7]
+  [7,7,7]
+
+  []
+  [3]
+
+  [[[]]]
+  [[]]
+
+  [1,[2,[3,[4,[5,6,7]]]],8,9]
+  [1,[2,[3,[4,[5,6,0]]]],8,9]
+  """
+
+  test "solves tasks" do
+    assert {13, 140} = Day13.solve(@tdata)
+  end
+end
+
+ExUnit.run()
+```
