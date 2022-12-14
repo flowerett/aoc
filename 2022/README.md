@@ -19,7 +19,8 @@ https://adventofcode.com/2022
 | 10 - Cathode-Ray Tube        | [✓][10py] | [✓][10ex] |
 | 11 - Monkey in the Middle    | [✓][11py] | [*][11ex] |
 | 12 - Hill Climbing Algorithm | [✓][12py] | [✓][12ex] |
-| 12 - Distress Signal         | [✓][13py] | [✓][13ex] |
+| 13 - Distress Signal         | [✓][13py] | [✓][13ex] |
+| 14 - Regolith Reservoir      | [✓][13py] |           |
 
 
 [01py]:  python/day1.py
@@ -35,6 +36,7 @@ https://adventofcode.com/2022
 [11py]:  python/day11.py
 [12py]:  python/day12.py
 [13py]:  python/day13.py
+[14py]:  python/day14.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
