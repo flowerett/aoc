@@ -8,14 +8,10 @@ VERBOSE = sys.argv.pop() in ['-v', '--verbose']
 
 
 def solve(data, debug=False):
-    dd = prep(data)
+    dd = map(format_row, data)
 
     start = (500, 0)
-
-    sp = create_space(dd, start)
-
-    size = get_size(sp)
-    maxy = size[1][1]
+    sp, maxy = create_space(dd)
 
     r1 = add_sand(sp, start, maxy, 0)
     if debug:
@@ -31,41 +27,39 @@ def solve(data, debug=False):
 
 
 def add_sand(sp, start, maxy, cnt, task=1):
-    while True:
+    while start not in sp:
         x, y = start
 
-        if sp[(x, y)] == 'o':
-            return cnt
-
-        space = None
-        while not space:
-            if y == maxy + 1:
+        while True:
+            if y == maxy+1:
                 if task == 1:
                     return cnt
-                else:
-                    space = '#'
-
-            if sp[(x, y+1)] == '.':
+                break
+            if (x, y+1) not in sp:
                 # move down
                 y += 1
-            elif sp[(x-1, y+1)] == '.':
+                continue
+            elif (x-1, y+1) not in sp:
                 # move down left
                 x -= 1
                 y += 1
-            elif sp[(x+1, y+1)] == '.':
+                continue
+            elif (x+1, y+1) not in sp:
                 # move down right
                 x += 1
                 y += 1
-            else:
-                space = 'o'
+                continue
+            # can't move anymore
+            break
 
-        sp[(x, y)] = space
-        cnt = cnt+1 if space == 'o' else cnt
+        sp[(x, y)] = 'o'
+        cnt += 1
+    return cnt
 
 
-def create_space(dd, start):
-    sp = defaultdict(lambda: '.')
-    sp[start] = '+'
+def create_space(dd):
+    sp = {}
+    maxy = 0
 
     # add rocks #
     for line in dd:
@@ -77,9 +71,10 @@ def create_space(dd, start):
             for y in range(y1, y2+1):
                 for x in range(x1, x2+1):
                     sp[(x, y)] = '#'
+                maxy = max(maxy, y)
             cur = el
 
-    return sp
+    return sp, maxy
 
 
 def get_size(sp):
@@ -93,30 +88,23 @@ def pspace(sp, task):
     x1, x2 = xr
 
     print(f'---state T{task}------------')
-    for y in range(0, y2+1):
-        l = ''
-        for x in range(x1, x2+1):
-            l += sp[(x, y)]
-        print(l)
+    for y in range(y1, y2+1):
+        row = [sp.get((x, y), '.') for x in range(x1, x2+1)]
+        print(''.join(row))
 
 
 def min_max(coords):
-    def xf(el): return el[0]
-    def yf(el): return el[1]
     xmin, xmax = min(coords, key=xf)[0], max(coords, key=xf)[0]
     ymin, ymax = min(coords, key=yf)[1], max(coords, key=yf)[1]
 
     return (xmin, xmax), (ymin, ymax)
 
 
-def prep(data):
-    dd = []
-    for row in data:
-        r = []
-        for el in row.strip().split(" -> "):
-            r.append([int(x) for x in el.split(",")])
-        dd.append(r)
-    return dd
+def xf(el): return el[0]
+def yf(el): return el[1]
+
+
+def format_row(row): return [eval(el) for el in row.strip().split(" -> ")]
 
 
 if __name__ == '__main__':
@@ -132,9 +120,9 @@ if __name__ == '__main__':
         data = f.read().strip().split('\n')
 
     tdata = TEST_INP.strip().split('\n')
-    minitest.assert_all(solve(tdata), TEST_RES, 'TEST_INP')
+    minitest.assert_all(solve(tdata, VERBOSE), TEST_RES, 'TEST_INP')
 
-    r1, r2 = solve(data, VERBOSE)
+    r1, r2 = solve(data)
     minitest.assert_all((r1, r2), LIVE_RES, 'LIVE_INP')
 
     print('res1: ', r1)
