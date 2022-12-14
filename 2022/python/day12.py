@@ -3,12 +3,15 @@
 import minitest
 import sys
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 VERBOSE = sys.argv.pop() in ['-v', '--verbose']
 
 NBH = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 
-def solve(data):
+def solve(data, debug=False):
     dd = [list(row.strip()) for row in data]
     dd, st, en = prep(dd)
 
@@ -75,6 +78,29 @@ def prep(dd):
     return dd, st, en
 
 
+def plot(data):
+    dd = [list(row.strip()) for row in data]
+    dd, _st, _en = prep(dd)
+
+    di = []
+    for row in data:
+        row = [norm(c) for c in list(row.strip())]
+        di.append(row)
+
+    xx = np.array(di)
+
+    # 2d heat map
+    plt.imshow(xx, cmap='terrain') #, vmin=-10, vmax=25)
+    plt.title('2-D heat map')
+    plt.xlabel('x-axis')
+    plt.ylabel('y-axis')
+    plt.colorbar()
+
+    plt.show()
+
+def norm(c):
+    return ord(c) - ord('m')
+
 if __name__ == '__main__':
     TEST_INP = """
     Sabqponm
@@ -99,3 +125,5 @@ if __name__ == '__main__':
 
     print('res1: ', r1)
     print('res2: ', r2)
+
+    plot(data)
