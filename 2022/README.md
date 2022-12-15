@@ -21,7 +21,7 @@ https://adventofcode.com/2022
 | 12 - Hill Climbing Algorithm | [✓][12py] | [✓][12ex] |
 | 13 - Distress Signal         | [✓][13py] | [✓][13ex] |
 | 14 - Regolith Reservoir      | [✓][14py] |           |
-| 15 - Beacon Exclusion Zone   | [✓][15py] |           |
+| 15 - Beacon Exclusion Zone   | [✓][15py] | [✓][15ex] |
 
 
 [01py]:  python/day1.py
@@ -53,3 +53,4 @@ https://adventofcode.com/2022
 [11ex]: elixir/day11.livemd
 [12ex]: elixir/day12.livemd
 [13ex]: elixir/day13.livemd
+[15ex]: elixir/day15.livemd

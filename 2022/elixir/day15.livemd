@@ -1,0 +1,114 @@
+# AoC - Day15
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "15", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+tdata = """
+Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+Sensor at x=9, y=16: closest beacon is at x=10, y=16
+Sensor at x=13, y=2: closest beacon is at x=15, y=3
+Sensor at x=12, y=14: closest beacon is at x=10, y=16
+Sensor at x=10, y=20: closest beacon is at x=10, y=16
+Sensor at x=14, y=17: closest beacon is at x=10, y=16
+Sensor at x=8, y=7: closest beacon is at x=2, y=10
+Sensor at x=2, y=0: closest beacon is at x=2, y=10
+Sensor at x=0, y=11: closest beacon is at x=2, y=10
+Sensor at x=20, y=14: closest beacon is at x=25, y=17
+Sensor at x=17, y=20: closest beacon is at x=21, y=22
+Sensor at x=16, y=7: closest beacon is at x=15, y=3
+Sensor at x=14, y=3: closest beacon is at x=15, y=3
+Sensor at x=20, y=1: closest beacon is at x=15, y=3
+"""
+
+defmodule Day15 do
+  # algorithm for P2 (P1 is obvious):
+  # 1. get border points with D+1 (within area) for each sensor => BP1
+  # 2. if BP1 point not inside any beacon range => we found the result
+  @parse_regex ~r/-?\d+/
+  @tuning_freq 4_000_000
+  @area 4_000_000
+  @tarea 20
+
+  def solve(data, opts \\ []) do
+    lim = opts |> Access.get(:mode, :test) |> get_limit()
+    dd = data |> String.split("\n", trim: true) |> Enum.map(&parse/1)
+
+    sensors = get_sensors(dd)
+
+    res =
+      sensors
+      |> Enum.reduce(MapSet.new(), fn s, acc ->
+        MapSet.union(acc, border(s, lim, 1))
+      end)
+      |> tap(fn pts -> IO.inspect(MapSet.size(pts), label: "points") end)
+      |> Enum.reduce_while(nil, fn pos, acc ->
+        if Enum.any?(sensors, fn s -> inside?(s, pos) end), do: {:cont, acc}, else: {:halt, pos}
+      end)
+      |> IO.inspect(label: "X, Y")
+
+    {x, y} = res
+    x * @tuning_freq + y
+  end
+
+  def parse(row) do
+    Regex.scan(@parse_regex, row)
+    |> List.flatten()
+    |> Enum.map(&String.to_integer/1)
+    |> List.to_tuple()
+  end
+
+  def get_limit(:test), do: @tarea
+  def get_limit(:live), do: @area
+
+  def get_sensors(dd) do
+    Enum.reduce(dd, MapSet.new(), fn {sx, sy, _bx, _by} = el, acc ->
+      MapSet.put(acc, {sx, sy, md(el)})
+    end)
+  end
+
+  def border({x, y, d}, lim, delta \\ 0) do
+    dd = d + delta
+
+    [
+      {-dd, 0, 0, -dd},
+      {0, dd, -dd, 0},
+      {dd, 0, 0, dd},
+      {0, -dd, dd, 0}
+    ]
+    |> Enum.reduce(MapSet.new(), fn {dx1, dx2, dy1, dy2}, acc ->
+      side =
+        Range.new(x + dx1, x + dx2)
+        |> Enum.zip(Range.new(y + dy1, y + dy2))
+        |> Enum.filter(fn {x, y} -> in_range(x, lim) && in_range(y, lim) end)
+        |> MapSet.new()
+
+      MapSet.union(acc, side)
+    end)
+  end
+
+  def md({xa, ya, xb, yb}), do: abs(xa - xb) + abs(ya - yb)
+
+  def in_range(x, r2, r1 \\ 0), do: r1 <= x && x <= r2
+  def inside?({xs, ys, d}, {xp, yp}), do: md({xs, ys, xp, yp}) <= d
+end
+
+{tm, res} =
+  :timer.tc(fn ->
+    Day15.solve(tdata)
+    # Day15.solve(data, mode: :live)
+  end)
+
+IO.puts("res: #{res}, calculated in: #{tm / 1_000_000} sec")
+```
