@@ -22,6 +22,8 @@ https://adventofcode.com/2022
 | 13 - Distress Signal         | [✓][13py] | [✓][13ex] |
 | 14 - Regolith Reservoir      | [✓][14py] |           |
 | 15 - Beacon Exclusion Zone   | [✓][15py] | [✓][15ex] |
+| 16 - Proboscidea Volcanium   | [*][16py] |           |
+| 17 - Pyroclastic Flow        | [✓][17py] |           |
 
 
 [01py]:  python/day1.py
@@ -39,6 +41,8 @@ https://adventofcode.com/2022
 [13py]:  python/day13.py
 [14py]:  python/day14.py
 [15py]:  python/day15.py
+[16py]:  python/day16.py
+[17py]:  python/day17.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
