@@ -24,6 +24,7 @@ https://adventofcode.com/2022
 | 15 - Beacon Exclusion Zone   | [✓][15py] | [✓][15ex] |
 | 16 - Proboscidea Volcanium   | [*][16py] |           |
 | 17 - Pyroclastic Flow        | [✓][17py] |           |
+| 18 - Boiling Boulders        | [✓][18py] |           |
 
 
 [01py]:  python/day1.py
@@ -43,6 +44,7 @@ https://adventofcode.com/2022
 [15py]:  python/day15.py
 [16py]:  python/day16.py
 [17py]:  python/day17.py
+[18py]:  python/day18.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd
