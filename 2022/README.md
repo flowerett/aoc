@@ -25,6 +25,7 @@ https://adventofcode.com/2022
 | 16 - Proboscidea Volcanium   | [*][16py] |           |
 | 17 - Pyroclastic Flow        | [✓][17py] |           |
 | 18 - Boiling Boulders        | [✓][18py] |           |
+| 19 - Not Enough Minerals     | [✓][19py] |           |
 
 
 [01py]:  python/day1.py
@@ -45,6 +46,7 @@ https://adventofcode.com/2022
 [16py]:  python/day16.py
 [17py]:  python/day17.py
 [18py]:  python/day18.py
+[19py]:  python/day19.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd

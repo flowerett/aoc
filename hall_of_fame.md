@@ -48,7 +48,9 @@ Some folks that I follow for inspiration and insights after solving problems on 
 ### Earlier events or other languages:
 - [Todd Ginsberg - Kotlin, with explanations - 2021](https://todd.ginsberg.com/post/advent-of-code/2021/)
 - [Evan Danaher - Brainfuck - 2016](https://github.com/edanaher/advent-solutions-2016)
-- [Neil Thistlethwaite - Python/Java - 2018](https://github.com/nthistle/advent-of-code)
+- [Neil Thistlethwaite - Python - 2022-2018](https://github.com/nthistle/advent-of-code)
+- [Tom Holmes - Go - 2021](https://github.com/tsholmes/aoc-2021)
+- [Tom Holmes - Go - 2020](https://github.com/tsholmes/aoc-2020)
 - [Tom Holmes - Go - 2019](https://github.com/tsholmes/aoc-2019)
 - [Evan Danaher - Ruby - 2015](https://github.com/edanaher/advent-solutions)
 - [Erik Godard - Python - 2015](https://github.com/godarderik/adventofcode)
