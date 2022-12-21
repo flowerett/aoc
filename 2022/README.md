@@ -26,7 +26,7 @@ https://adventofcode.com/2022
 | 17 - Pyroclastic Flow         | [✓][17py] |           |
 | 18 - Boiling Boulders         | [✓][18py] |           |
 | 19 - Not Enough Minerals      | [✓][19py] |           |
-| 20 - Grove Positioning System |           |           |
+| 20 - Grove Positioning System | [✓][20py] |           |
 | 21 - Monkey Math              | [✓][21py] |           |
 
 
