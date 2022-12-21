@@ -26,7 +26,7 @@ https://adventofcode.com/2022
 | 17 - Pyroclastic Flow         | [✓][17py] |           |
 | 18 - Boiling Boulders         | [✓][18py] |           |
 | 19 - Not Enough Minerals      | [✓][19py] |           |
-| 20 - Grove Positioning System | [✓][20py] |           |
+| 20 - Grove Positioning System | [✓][20py] | [✓][20ex] |
 | 21 - Monkey Math              | [✓][21py] |           |
 
 
@@ -66,3 +66,4 @@ https://adventofcode.com/2022
 [12ex]: elixir/day12.livemd
 [13ex]: elixir/day13.livemd
 [15ex]: elixir/day15.livemd
+[20ex]: elixir/day20.livemd

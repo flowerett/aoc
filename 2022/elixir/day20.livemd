@@ -1,0 +1,176 @@
+# AoC, Day20
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "20", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day20 do
+  @key 811_589_153
+
+  def solve(data) do
+    di = data |> String.split("\n", trim: true) |> Enum.map(&String.to_integer/1)
+    size = length(di)
+
+    r1 = task1(di, size) |> IO.inspect(label: "res1")
+    r2 = task2(di, size) |> IO.inspect(label: "res2")
+    {r1, r2}
+  end
+
+  def task2(di, size) do
+    nodes =
+      di
+      |> Enum.map(&(&1 * @key))
+      |> to_nodes(size)
+
+    nn =
+      1..10
+      |> Enum.reduce(nodes, fn _i, acc ->
+        mix_all(acc, size)
+      end)
+
+    # traverse(nn, cur: 1, force: true) |> IO.inspect(label: "mixed >>>")
+    grove_coord(nn)
+  end
+
+  def task1(di, size) do
+    nodes = to_nodes(di, size)
+
+    # traverse(nodes, cur: 1, force: true) |> IO.inspect(label: "init >>>")
+    # traverse(nodes, cur: 1, force: true, dir: :bcw) |> IO.inspect(label: "init <<<")
+
+    nn = mix_all(nodes, size)
+
+    # traverse(nn, cur: 1, force: true) |> IO.inspect(label: "mix >>>")
+    # traverse(nn, cur: 1, force: true, dir: :bcw) |> IO.inspect(label: "mix <<<")
+
+    grove_coord(nn)
+  end
+
+  def mix_all(nodes, size) do
+    Range.new(1, size)
+    |> Enum.reduce(nodes, fn n, nodes ->
+      {cur, _path} = traverse(nodes, cur: n, lim: nodes[n].v)
+      move_nodes(nodes, cur, n)
+    end)
+  end
+
+  def move_nodes(nodes, cur, n) when cur == n, do: nodes
+  def move_nodes(nodes, cur, n), do: insert_right(nodes, cur, n)
+
+  def insert_right(nodes, cur, n) do
+    old_prev = nodes[n].prev
+    old_nxt = nodes[n].nxt
+    new_nxt = nodes[cur].nxt
+
+    nodes
+    # 1. disconnect n, connect old neighbours
+    # old_p->old_n, oldp<-old_n
+    |> Map.update!(old_prev, &Map.put(&1, :nxt, old_nxt))
+    |> Map.update!(old_nxt, &Map.put(&1, :prev, old_prev))
+    # 2. connect left part
+    # cur->N, cur<-N
+    |> Map.update!(cur, &Map.put(&1, :nxt, n))
+    |> Map.update!(n, &Map.put(&1, :prev, cur))
+    # 3. connect right part
+    # N->new_nxt, N<-new_nxt
+    |> Map.update!(n, &Map.put(&1, :nxt, new_nxt))
+    |> Map.update!(new_nxt, &Map.put(&1, :prev, n))
+  end
+
+  def traverse(nodes, opts \\ []) do
+    size = map_size(nodes)
+    cur = Access.get(opts, :cur, 0)
+    dir = Access.get(opts, :dir, :fwd)
+    lim = Access.get(opts, :lim, size - 1)
+    force = Access.get(opts, :force, false)
+
+    # lim
+    lim = if !force, do: Integer.mod(lim, size - 1), else: Integer.mod(lim, size)
+
+    do_traverse(nodes, cur, [], dir, lim)
+  end
+
+  def do_traverse(nodes, cur, acc, _, 0), do: {cur, Enum.reverse([nodes[cur].v | acc])}
+
+  def do_traverse(nodes, cur, acc, :fwd, lim) when lim > 0 do
+    do_traverse(nodes, nodes[cur].nxt, [nodes[cur].v | acc], :fwd, lim - 1)
+  end
+
+  def do_traverse(nodes, cur, acc, :bcw, lim) do
+    do_traverse(nodes, nodes[cur].prev, [nodes[cur].v | acc], :bcw, lim - 1)
+  end
+
+  def grove_coord(nodes) do
+    {zero, %{v: 0}} = get_zero(nodes)
+    # |> IO.inspect(label: "1000 >>>")
+    {c1, _path} = traverse(nodes, cur: zero, force: true, lim: 1000)
+    # |> IO.inspect(label: "2000 >>>")
+    {c2, _path} = traverse(nodes, cur: c1, force: true, lim: 1000)
+    # |> IO.inspect(label: "3000 >>>")
+    {c3, _path} = traverse(nodes, cur: c2, force: true, lim: 1000)
+
+    [c1, c2, c3]
+    |> Enum.map(&nodes[&1].v)
+    |> IO.inspect(label: "1k, 2k, 3k")
+    |> Enum.sum()
+  end
+
+  def to_nodes(di, size) do
+    nodes =
+      di
+      |> Enum.with_index(fn el, ind -> {ind + 1, el} end)
+      |> Enum.map(fn {ind, v} -> {ind, %{nxt: nil, prev: nil, v: v}} end)
+      |> Map.new()
+
+    [size | Range.new(1, size) |> Enum.to_list()]
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.reduce(nodes, fn [l, r], acc ->
+      nl = acc[l] |> Map.put(:nxt, r)
+      nr = acc[r] |> Map.put(:prev, l)
+
+      acc |> Map.put(l, nl) |> Map.put(r, nr)
+    end)
+  end
+
+  def get_zero(nodes), do: Enum.find(nodes, fn {_id, n} -> n.v == 0 end)
+end
+
+Day20.solve(data)
+```
+
+## Test
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @tdata """
+  1
+  2
+  -3
+  3
+  -2
+  0
+  4
+  """
+
+  test "solves tasks" do
+    assert {3, 1_623_178_306} = Day20.solve(@tdata)
+  end
+end
+
+ExUnit.run()
+```
