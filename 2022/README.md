@@ -5,27 +5,29 @@ https://adventofcode.com/2022
 
 ## My solutions in different languages:
 
-| Title                        | python    | elixir    |
-| -                            | -         | -         |
-| 01 - Calorie Counting        | [✓][01py] | [✓][01ex] |
-| 02 - Rock Paper Scissors     | [✓][02py] | [✓][02ex] |
-| 03 - Rucksack Reorganization | [✓][03py] | [✓][03ex] |
-| 04 - Camp Cleanup            | [✓][04py] | [✓][04ex] |
-| 05 - Supply Stacks           | [✓][05py] | [✓][05ex] |
-| 06 - Tuning Trouble          | [✓][06py] | [✓][06ex] |
-| 07 - No Space Left On Device | [✓][07py] | [✓][07ex] |
-| 08 - Treetop Tree House      | [✓][08py] | [*][08ex] |
-| 09 - Rope Bridge             | [✓][09py] | [✓][09ex] |
-| 10 - Cathode-Ray Tube        | [✓][10py] | [✓][10ex] |
-| 11 - Monkey in the Middle    | [✓][11py] | [*][11ex] |
-| 12 - Hill Climbing Algorithm | [✓][12py] | [✓][12ex] |
-| 13 - Distress Signal         | [✓][13py] | [✓][13ex] |
-| 14 - Regolith Reservoir      | [✓][14py] |           |
-| 15 - Beacon Exclusion Zone   | [✓][15py] | [✓][15ex] |
-| 16 - Proboscidea Volcanium   | [*][16py] |           |
-| 17 - Pyroclastic Flow        | [✓][17py] |           |
-| 18 - Boiling Boulders        | [✓][18py] |           |
-| 19 - Not Enough Minerals     | [✓][19py] |           |
+| Title                         | python    | elixir    |
+| -                             | -         | -         |
+| 01 - Calorie Counting         | [✓][01py] | [✓][01ex] |
+| 02 - Rock Paper Scissors      | [✓][02py] | [✓][02ex] |
+| 03 - Rucksack Reorganization  | [✓][03py] | [✓][03ex] |
+| 04 - Camp Cleanup             | [✓][04py] | [✓][04ex] |
+| 05 - Supply Stacks            | [✓][05py] | [✓][05ex] |
+| 06 - Tuning Trouble           | [✓][06py] | [✓][06ex] |
+| 07 - No Space Left On Device  | [✓][07py] | [✓][07ex] |
+| 08 - Treetop Tree House       | [✓][08py] | [*][08ex] |
+| 09 - Rope Bridge              | [✓][09py] | [✓][09ex] |
+| 10 - Cathode-Ray Tube         | [✓][10py] | [✓][10ex] |
+| 11 - Monkey in the Middle     | [✓][11py] | [*][11ex] |
+| 12 - Hill Climbing Algorithm  | [✓][12py] | [✓][12ex] |
+| 13 - Distress Signal          | [✓][13py] | [✓][13ex] |
+| 14 - Regolith Reservoir       | [✓][14py] |           |
+| 15 - Beacon Exclusion Zone    | [✓][15py] | [✓][15ex] |
+| 16 - Proboscidea Volcanium    | [*][16py] |           |
+| 17 - Pyroclastic Flow         | [✓][17py] |           |
+| 18 - Boiling Boulders         | [✓][18py] |           |
+| 19 - Not Enough Minerals      | [✓][19py] |           |
+| 20 - Grove Positioning System |           |           |
+| 21 - Monkey Math              | [✓][21py] |           |
 
 
 [01py]:  python/day1.py
@@ -47,6 +49,8 @@ https://adventofcode.com/2022
 [17py]:  python/day17.py
 [18py]:  python/day18.py
 [19py]:  python/day19.py
+[20py]:  python/day20.py
+[21py]:  python/day21.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd

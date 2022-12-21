@@ -11,6 +11,7 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [hyper-neutrino - Python](https://github.com/hyper-neutrino/advent-of-code)
 - [hyper-neutrino - Youtube](https://www.youtube.com/@hyper-neutrino)
 - [Roland Meertens - Python (YouTube)](https://www.youtube.com/@rolandmeertens8162)
+- [Ivan Krasilnikov - Python](https://github.com/ivankra/advent-of-code)
 
 #### 2021
 - [Jonathan Paulson - YouTube](https://www.youtube.com/channel/UCuWLIm0l4sDpEe28t41WITA)
