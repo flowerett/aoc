@@ -28,6 +28,8 @@ https://adventofcode.com/2022
 | 19 - Not Enough Minerals      | [✓][19py] |           |
 | 20 - Grove Positioning System | [✓][20py] | [✓][20ex] |
 | 21 - Monkey Math              | [✓][21py] |           |
+| 22 - Monkey Map               | ref p2    |           |
+| 23 - Unstable Diffusion       | [✓][23py] |           |
 
 
 [01py]:  python/day1.py
@@ -51,6 +53,8 @@ https://adventofcode.com/2022
 [19py]:  python/day19.py
 [20py]:  python/day20.py
 [21py]:  python/day21.py
+[22py]:  python/day22.py
+[23py]:  python/day23.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd

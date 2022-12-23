@@ -20,6 +20,14 @@ def solve(data):
 
 
 def task2(h):
+    """
+    the right part is constant
+    got lucky to have my left part function linear
+    in other cases it should be done with a binary search:
+      https://github.com/jonathanpaulson/AdventOfCode/blob/master/2022/21.py#L52
+    or with a library for symbolic computations like sympy:
+      https://github.com/hyper-neutrino/advent-of-code/blob/main/2022/day21p2.py#L3
+    """
     a, b, _op = h['root']
 
     bb = run(h, b, 0)
