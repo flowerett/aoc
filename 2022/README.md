@@ -28,7 +28,7 @@ https://adventofcode.com/2022
 | 19 - Not Enough Minerals      | [✓][19py] |           |
 | 20 - Grove Positioning System | [✓][20py] | [✓][20ex] |
 | 21 - Monkey Math              | [✓][21py] |           |
-| 22 - Monkey Map               | ref p2    |           |
+| 22 - Monkey Map               | [✓][22py] |           |
 | 23 - Unstable Diffusion       | [✓][23py] |           |
 
 
