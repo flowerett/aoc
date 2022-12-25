@@ -30,6 +30,8 @@ https://adventofcode.com/2022
 | 21 - Monkey Math              | [✓][21py] |           |
 | 22 - Monkey Map               | [✓][22py] |           |
 | 23 - Unstable Diffusion       | [✓][23py] |           |
+| 24 - Blizzard Basin           | [✓][24py] |           |
+| 25 - Full of Hot Air          | [✓][25py] |           |
 
 
 [01py]:  python/day1.py
@@ -55,6 +57,8 @@ https://adventofcode.com/2022
 [21py]:  python/day21.py
 [22py]:  python/day22.py
 [23py]:  python/day23.py
+[24py]:  python/day24.py
+[25py]:  python/day25.py
 
 [01ex]: elixir/day1.exs
 [02ex]: elixir/day2.livemd

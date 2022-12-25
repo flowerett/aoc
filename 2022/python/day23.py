@@ -2,12 +2,7 @@
 
 import minitest
 import sys
-import re
 from collections import defaultdict
-import itertools as it
-import functools as ft
-import copy as cp
-from collections import deque
 
 VERBOSE = sys.argv.pop() in ['-v', '--verbose']
 
