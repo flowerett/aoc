@@ -13,6 +13,7 @@ import heapq
 VERBOSE = sys.argv.pop() in ['-v', '--verbose']
 FROM_SNAFU = {'2': 2, '1': 1, '0': 0, '-': -1, '=': -2}
 TO_SNAFU = {4: '2', 3: '1', 2: '0', 1: '-', 0: '='}
+TO_SNAFU2 = {4: '-', 3: '=', 2: '2', 1: '1', 0: '0'}
 
 
 def solve(data: list):
@@ -42,12 +43,28 @@ def from_dec(num: int):
         d = num % 5
         num //= 5
         reg.append(d)
+    assert num == -1, f'rem - {num}'
 
     if VERBOSE:
         print('reminder', num, 'last dig', reg[0])
 
     snf = [TO_SNAFU[d] for d in reversed(reg)]
 
+    return ''.join(snf)
+
+
+# also not intuitive solution
+def from_dec2(num: int):
+    reg = []
+    while num:
+        d = num % 5
+        num //= 5
+
+        if d > 2:
+            num += 1
+        reg.append(d)
+
+    snf = [TO_SNAFU2[d] for d in reversed(reg)]
     return ''.join(snf)
 
 
