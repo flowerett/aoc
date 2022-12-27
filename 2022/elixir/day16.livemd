@@ -1,0 +1,127 @@
+# AoC - Day16
+
+```elixir
+Mix.install([
+  :nimble_parsec,
+  :heap,
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Parse
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2022", "16", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+```elixir
+tdata = """
+Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+Valve BB has flow rate=13; tunnels lead to valves CC, AA
+Valve CC has flow rate=2; tunnels lead to valves DD, BB
+Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
+Valve EE has flow rate=3; tunnels lead to valves FF, DD
+Valve FF has flow rate=0; tunnels lead to valves EE, GG
+Valve GG has flow rate=0; tunnels lead to valves FF, HH
+Valve HH has flow rate=22; tunnel leads to valve GG
+Valve II has flow rate=0; tunnels lead to valves AA, JJ
+Valve JJ has flow rate=21; tunnel leads to valve II
+"""
+
+defmodule Day16 do
+  @rc ~r([A-Z]{2})
+  @ri ~r(\d+)
+
+  def solve(data) do
+    {et1, res1} = :timer.tc(fn -> p1(data) end)
+    "#{res1} in #{et1 / 1000}ms" |> IO.inspect(label: :res1)
+    {et2, res2} = :timer.tc(fn -> p2(data) end)
+    "#{res2} in #{et2 / 1000}ms" |> IO.inspect(label: :res2)
+    {res1, res2}
+  end
+
+  def p1(data) do
+    {gr, _to_check, with_dist} = parse(data)
+    dp(gr, with_dist, 30, "AA", MapSet.new())
+  end
+
+  def p2(data) do
+    {gr, to_check, with_dist} = parse(data)
+    {all, comb} = valve_combinations(to_check)
+
+    comb
+    |> Enum.map(fn h ->
+      el = MapSet.difference(all, h)
+      dp(gr, with_dist, 26, "AA", h) + dp(gr, with_dist, 26, "AA", el)
+    end)
+    |> Enum.max()
+  end
+
+  def dp(gr, with_dist, time, node, open) do
+    with_dist[node]
+    |> Enum.map(fn {n, dist} -> {n, time - dist - 1} end)
+    |> Enum.reject(fn {n, remtime} -> MapSet.member?(open, n) || remtime <= 0 end)
+    |> Enum.reduce(0, fn {n, remtime}, maxp ->
+      nopen = MapSet.put(open, n)
+      press = gr[n].flow * remtime
+
+      max(maxp, dp(gr, with_dist, remtime, n, nopen) + press)
+    end)
+  end
+
+  def parse(data) do
+    gr = data |> String.split("\n", trim: true) |> Enum.map(&format/1) |> Map.new()
+    to_check = for {n, v} <- gr, v.flow > 0 or n == "AA", do: n
+    with_dist = Enum.map(to_check, &{&1, explore(gr, &1)}) |> Map.new()
+    {gr, to_check, with_dist}
+  end
+
+  def format(row) do
+    [node | conn] = Regex.scan(@rc, row) |> List.flatten()
+    [rate] = Regex.scan(@ri, row) |> List.flatten()
+    {node, %{flow: String.to_integer(rate), conn: conn}}
+  end
+
+  def explore(gr, node) do
+    :queue.new()
+    |> then(&:queue.in({node, 0}, &1))
+    |> do_explore(gr, MapSet.new(), %{})
+  end
+
+  def do_explore({[], []}, _gr, _seen, nodes), do: nodes
+
+  def do_explore(q, gr, seen, nodes) do
+    {{_, {node, dist}}, q} = :queue.out(q)
+
+    if MapSet.member?(seen, node) do
+      do_explore(q, gr, seen, nodes)
+    else
+      seen = MapSet.put(seen, node)
+      nodes = if dist > 0 && gr[node].flow > 0, do: Map.put(nodes, node, dist), else: nodes
+      q = Enum.reduce(gr[node].conn, q, fn node, q -> :queue.in({node, dist + 1}, q) end)
+      do_explore(q, gr, seen, nodes)
+    end
+  end
+
+  def valve_combinations(to_check) do
+    all = to_check |> Enum.reject(fn n -> n == "AA" end)
+    h = div(length(all), 2)
+    comb = combinations(all, h) |> Enum.map(&MapSet.new/1)
+    {MapSet.new(all), comb}
+  end
+
+  def combinations(list, num)
+  def combinations(_list, 0), do: [[]]
+  def combinations(list = [], _num), do: list
+
+  def combinations([head | tail], num) do
+    Enum.map(combinations(tail, num - 1), &[head | &1]) ++
+      combinations(tail, num)
+  end
+end
+
+# {1651, 1707}
+# {1850, 2306}
+# p2 is still slow, need to add cache
+Day16.solve(tdata)
+```

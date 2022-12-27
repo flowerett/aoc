@@ -22,13 +22,13 @@ https://adventofcode.com/2022
 | 13 - Distress Signal          | [✓][13py] | [✓][13ex] |
 | 14 - Regolith Reservoir       | [✓][14py] |           |
 | 15 - Beacon Exclusion Zone    | [✓][15py] | [✓][15ex] |
-| 16 - Proboscidea Volcanium    | [*][16py] |           |
+| 16 - Proboscidea Volcanium    | [*][16py] | [✓][16ex] |
 | 17 - Pyroclastic Flow         | [✓][17py] |           |
 | 18 - Boiling Boulders         | [✓][18py] |           |
 | 19 - Not Enough Minerals      | [✓][19py] |           |
 | 20 - Grove Positioning System | [✓][20py] | [✓][20ex] |
 | 21 - Monkey Math              | [✓][21py] |           |
-| 22 - Monkey Map               | [✓][22py] |           |
+| 22 - Monkey Map               | [✓][22py] | *         |
 | 23 - Unstable Diffusion       | [✓][23py] |           |
 | 24 - Blizzard Basin           | [✓][24py] |           |
 | 25 - Full of Hot Air          | [✓][25py] |           |
@@ -74,4 +74,5 @@ https://adventofcode.com/2022
 [12ex]: elixir/day12.livemd
 [13ex]: elixir/day13.livemd
 [15ex]: elixir/day15.livemd
+[16ex]: elixir/day16.livemd
 [20ex]: elixir/day20.livemd
