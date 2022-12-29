@@ -22,7 +22,7 @@ https://adventofcode.com/2022
 | 13 - Distress Signal          | [✓][13py] | [✓][13ex] |
 | 14 - Regolith Reservoir       | [✓][14py] |           |
 | 15 - Beacon Exclusion Zone    | [✓][15py] | [✓][15ex] |
-| 16 - Proboscidea Volcanium    | [*][16py] | [✓][16ex] |
+| 16 - Proboscidea Volcanium    | [✓][16py] | [✓][16ex] |
 | 17 - Pyroclastic Flow         | [✓][17py] |           |
 | 18 - Boiling Boulders         | [✓][18py] |           |
 | 19 - Not Enough Minerals      | [✓][19py] |           |

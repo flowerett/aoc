@@ -33,16 +33,18 @@ defmodule Day16 do
   @ri ~r(\d+)
 
   def solve(data) do
-    {et1, res1} = :timer.tc(fn -> p1(data) end)
+    {et1, {res1, _}} = :timer.tc(fn -> p1(data) end)
     "#{res1} in #{et1 / 1000}ms" |> IO.inspect(label: :res1)
-    {et2, res2} = :timer.tc(fn -> p2(data) end)
+    {et2, {res2, _}} = :timer.tc(fn -> p2(data) end)
     "#{res2} in #{et2 / 1000}ms" |> IO.inspect(label: :res2)
     {res1, res2}
   end
 
   def p1(data) do
     {gr, _to_check, with_dist} = parse(data)
-    dp(gr, with_dist, 30, "AA", MapSet.new())
+    cache = %{}
+    key = {30, "AA", MapSet.new()}
+    dp(gr, with_dist, key, cache)
   end
 
   def p2(data) do
@@ -50,23 +52,37 @@ defmodule Day16 do
     {all, comb} = valve_combinations(to_check)
 
     comb
-    |> Enum.map(fn h ->
+    |> Enum.reduce({0, %{}}, fn h, {maxp, cache} ->
       el = MapSet.difference(all, h)
-      dp(gr, with_dist, 26, "AA", h) + dp(gr, with_dist, 26, "AA", el)
+      key_h = {26, "AA", h}
+      key_el = {26, "AA", el}
+      {maxp_h, cache} = dp(gr, with_dist, key_h, cache)
+      {maxp_el, cache} = dp(gr, with_dist, key_el, cache)
+
+      {max(maxp, maxp_h + maxp_el), cache}
     end)
-    |> Enum.max()
   end
 
-  def dp(gr, with_dist, time, node, open) do
-    with_dist[node]
-    |> Enum.map(fn {n, dist} -> {n, time - dist - 1} end)
-    |> Enum.reject(fn {n, remtime} -> MapSet.member?(open, n) || remtime <= 0 end)
-    |> Enum.reduce(0, fn {n, remtime}, maxp ->
-      nopen = MapSet.put(open, n)
-      press = gr[n].flow * remtime
+  def dp(_gr, _with_dist, key, cache) when is_map_key(cache, key) do
+    {Map.fetch!(cache, key), cache}
+  end
 
-      max(maxp, dp(gr, with_dist, remtime, n, nopen) + press)
-    end)
+  def dp(gr, with_dist, key, cache) do
+    {time, node, open} = key
+
+    {maxp, cache} =
+      with_dist[node]
+      |> Enum.map(fn {n, dist} -> {n, time - dist - 1} end)
+      |> Enum.reject(fn {n, remtime} -> MapSet.member?(open, n) || remtime <= 0 end)
+      |> Enum.reduce({0, cache}, fn {n, remtime}, {maxp, cache} ->
+        nopen = MapSet.put(open, n)
+        press = gr[n].flow * remtime
+        {nmax, cache} = dp(gr, with_dist, {remtime, n, nopen}, cache)
+
+        {max(maxp, nmax + press), cache}
+      end)
+
+    {maxp, Map.put(cache, key, maxp)}
   end
 
   def parse(data) do
@@ -122,6 +138,21 @@ end
 
 # {1651, 1707}
 # {1850, 2306}
-# p2 is still slow, need to add cache
+# with cache ~2x faster
+# test norm:
+# res1: "1651 in 2.149ms"
+# res2: "1707 in 0.549ms"
+
+# test cache:
+# res1: "1651 in 1.384ms"
+# res2: "1707 in 0.529ms"
+
+# real - norm:
+# res1: "1850 in 324.17ms"
+# res2: "2306 in 23134.853ms"
+
+# real - cache:
+# res1: "1850 in 294.203ms"
+# res2: "2306 in 9613.089ms"
 Day16.solve(tdata)
 ```

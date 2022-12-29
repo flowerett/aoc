@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env pypy3
 
 import minitest
 import sys
@@ -7,8 +7,6 @@ import copy as cp
 import itertools as it
 
 VERBOSE = sys.argv.pop() in ['-v', '--verbose']
-
-CUT = 1000
 
 
 def solve(data):
@@ -19,53 +17,74 @@ def solve(data):
         flows[node] = cost
         g[node] = conn
 
-    st1 = (0, 0, 'AA', tuple())
-    press, ov = dfs1(g, flows, st1, 30)
-    print('res1:', press, 'valves: ', ov)
+    dist = fill_dist(flows, g)
+
+    if VERBOSE:
+        print('flows', flows)
+        print('graph', g)
+        print('dist', dist)
+
+    r1 = dp(flows, dist, 30, "AA", set())
+    r2 = p2(flows, dist)
+    return r1, r2
 
 
-def dfs1(g, flows, st, max):
-    q = [st]
-    ct = 0
+def p2(fl, dist):
+    cmb = combinations(dist)
 
+    maxp = 0
+    for h, el in cmb:
+        maxr = dp(fl, dist, 26, 'AA', h) + dp(fl, dist, 26, 'AA', el)
+        maxp = max(maxp, maxr)
+
+    return maxp
+
+
+def dp(fl, dist, time, node, ov):
+    maxp = 0
+    for nxt in dist[node]:
+        remtime = time - dist[node][nxt] - 1
+        if nxt not in ov and remtime > 0:
+            press = fl[nxt] * remtime
+            maxr = dp(fl, dist, remtime, nxt, ov | {nxt})
+            maxp = max(maxp, maxr + press)
+    return maxp
+
+
+def fill_dist(fl, g):
+    to_explore = [n for n, f in fl.items() if n == "AA" or f > 0]
+    dist = {}
+    for n in to_explore:
+        dist[n] = explore(fl, g, n)
+
+    return dist
+
+
+def explore(fl, g, node):
+    q = [(0, node)]
+    seen = set()
+    with_dist = {}
     while q:
-        # every new minute take N most promising
-        # to cut the number of computations
-        if q[0][0] > ct:
-            ct = q[0][0]
-            q.sort(reverse=True, key=lambda x: x[1])
-            q = q[:CUT]
+        d, n = q.pop(0)
+        if n in seen:
+            continue
+        seen.add(n)
+        if d > 0 and fl[n] > 0:
+            with_dist[n] = d
+        for nxt in g[n]:
+            q.append((d+1, nxt))
 
-        t, press, node, ov = q.pop(0)
-        if t == max:
-            return press, ov
-
-        # open valve
-        if node not in ov and flows[node] > 0:
-            trem = max - t - 1
-            new_pr = press + flows[node] * trem
-            new_ov = ov + (node,)
-            q.append((t+1, new_pr, node, new_ov))
-
-        # move to the next node
-        for ne in g[node]:
-            q.append((t+1, press, ne, ov))
+    return with_dist
 
 
-# def visit(dd, st):
-#     q, visited, t, sum = [st], [], 30, 0
-#     while (t >= 0) or q:
-#         n = q.pop(0)
-#         c, open, nn = dd[n]
-#         if not open:
-#             visited.append(n)
-#             sum += c
-#             dd[n] = (c, True, nn)
-#         t -= 1
-#         for n in nn:
-#             # if n not in visited:
-#             q.append(n)
-#     return visited, sum
+def combinations(dist):
+    all = [n for n in dist if n != 'AA']
+    l = len(all) // 2
+    cmb = []
+    for nodes in it.combinations(all, l):
+        h = set(nodes)
+        cmb.append((h, set(all) - h))
+    return cmb
 
 
 RC = r'[A-Z]{2}'
@@ -101,13 +120,10 @@ if __name__ == '__main__':
 
     tdata = TEST_INP.strip().split('\n')
 
-    solve(tdata)
+    minitest.assert_all(solve(tdata), TEST_RES, 'TEST_INP')
 
-    # minitest.assert_all(
-    #     solve(tdata, inp='test', debug=VERBOSE), TEST_RES, 'TEST_INP')
+    r1, r2 = solve(data)
+    minitest.assert_all((r1, r2), LIVE_RES, 'LIVE_INP')
 
-    # r1, r2 = solve(data, inp='live')
-    # minitest.assert_all((r1, r2), LIVE_RES, 'LIVE_INP')
-
-    # print('res1: ', r1)
-    # print('res2: ', r2)
+    print('res1: ', r1)
+    print('res2: ', r2)
