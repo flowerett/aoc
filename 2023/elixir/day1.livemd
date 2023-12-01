@@ -1,0 +1,70 @@
+# Day1
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "1", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Task1
+
+```elixir
+data
+|> String.split()
+|> Enum.map(fn row ->
+  digits = Regex.scan(~r/\d/, row) |> List.flatten()
+  [h | _t] = digits
+  t = List.last(digits)
+  (h <> t) |> String.to_integer()
+end)
+|> Enum.sum()
+```
+
+## Task2
+
+```elixir
+w2d = %{
+  "one" => "o1e",
+  "two" => "t2o",
+  "three" => "t3e",
+  "four" => "f4r",
+  "five" => "f5e",
+  "six" => "s6x",
+  "seven" => "s7n",
+  "eight" => "e8t",
+  "nine" => "n9e"
+}
+
+keys = Map.keys(w2d)
+
+dt = """
+two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen
+"""
+
+data
+|> String.split()
+|> Enum.map(fn row ->
+  drow =
+    Enum.reduce(w2d, row, fn {word, digit}, acc ->
+      String.replace(acc, word, digit)
+    end)
+
+  digits = Regex.scan(~r/\d/, drow) |> List.flatten()
+  h = List.first(digits)
+  t = List.last(digits)
+  (h <> t) |> String.to_integer()
+end)
+|> Enum.sum()
+```
