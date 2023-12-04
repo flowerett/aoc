@@ -1,0 +1,87 @@
+# Day4
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "4", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Task1
+
+```elixir
+defmodule Day4 do
+  def parse(row) do
+    [_, card] = row |> String.split(": ", trim: true)
+
+    card
+    |> String.split(" | ", trim: true)
+    |> Enum.map(fn set ->
+      set |> String.split() |> MapSet.new()
+    end)
+    |> List.to_tuple()
+  end
+
+  def task1(card) do
+    n = count_win(card)
+    (n > 0 && 2 ** (n - 1)) || 0
+  end
+
+  def task2(cards) do
+    acc = 1..length(cards) |> Enum.map(fn n -> {n, 1} end) |> Enum.into(%{})
+
+    cards
+    |> Enum.reduce({acc, 1}, fn card, acc ->
+      card |> count_win() |> update_copies(acc)
+    end)
+    |> elem(0)
+    |> Map.values()
+  end
+
+  def update_copies(0, {acc, i}), do: {acc, i + 1}
+
+  def update_copies(n, {acc, i}) do
+    acc =
+      (i + 1)..(i + n)
+      |> Enum.reduce(acc, fn k, acc ->
+        Map.put(acc, k, acc[k] + acc[i])
+      end)
+
+    {acc, i + 1}
+  end
+
+  def count_win({win, nums}) do
+    win |> MapSet.intersection(nums) |> MapSet.size()
+  end
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+end
+
+dt = """
+Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
+"""
+
+data
+|> String.split("\n", trim: true)
+|> Enum.map(&Day4.parse/1)
+|> Enum.map(&Day4.task1/1)
+|> Enum.sum()
+|> Day4.out("task1")
+
+data
+|> String.split("\n", trim: true)
+|> Enum.map(&Day4.parse/1)
+|> Day4.task2()
+|> Enum.sum()
+|> Day4.out("task2")
+```
