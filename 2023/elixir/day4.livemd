@@ -2,7 +2,8 @@
 
 ```elixir
 Mix.install([
-  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"}
 ])
 ```
 
@@ -84,4 +85,25 @@ data
 |> Day4.task2()
 |> Enum.sum()
 |> Day4.out("task2")
+```
+
+## Bench
+
+```elixir
+Benchee.run(%{
+  "day_4_part1" => fn ->
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(&Day4.parse/1)
+    |> Enum.map(&Day4.task1/1)
+    |> Enum.sum()
+  end,
+  "day_4_part2" => fn ->
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(&Day4.parse/1)
+    |> Day4.task2()
+    |> Enum.sum()
+  end
+})
 ```

@@ -1,0 +1,142 @@
+# Day3
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "3", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day3 do
+  @dig ~w(1 2 3 4 5 6 7 8 9 0) |> MapSet.new()
+  @nbh [{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}]
+
+  def parse(data) do
+    data
+    |> Enum.with_index()
+    |> Enum.flat_map(&parse_row/1)
+    |> Enum.reject(fn {_, sym} -> sym == "." end)
+    |> Enum.split_with(fn {_, sym} -> sym in @dig end)
+  end
+
+  def parse_row({row, i}) do
+    String.graphemes(row)
+    |> Enum.with_index()
+    |> Enum.map(fn {c, j} -> {{i, j}, c} end)
+  end
+
+  def task1(data) do
+    adj =
+      data
+      |> parse()
+      |> adj_task1()
+
+    data
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {str, r} ->
+      Regex.scan(~r/\d+/, str, return: :index)
+      |> List.flatten()
+      |> Enum.filter(fn {st, len} ->
+        st..(st + len) |> Enum.any?(fn c -> Map.has_key?(adj, {r, c}) end)
+      end)
+      |> Enum.map(fn {st, len} -> String.slice(str, st, len) end)
+    end)
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.sum()
+  end
+
+  def adj_task1({digits, symb}) do
+    symb = Map.new(symb)
+
+    digits
+    |> Enum.filter(fn {{r, c}, _dig} ->
+      Enum.any?(@nbh, fn {rn, cn} ->
+        Map.has_key?(symb, {rn + r, cn + c})
+      end)
+    end)
+    |> Map.new()
+  end
+
+  def task2(data) do
+    {_nums, symb} = parse(data)
+
+    stars =
+      symb
+      |> Enum.filter(fn {_, c} -> c == "*" end)
+      |> Enum.map(fn {pos, _} -> pos end)
+      |> MapSet.new()
+
+    num_with_pos =
+      data
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {str, r} ->
+        Regex.scan(~r/\d+/, str, return: :index)
+        |> List.flatten()
+        |> Enum.map(fn {st, len} ->
+          {{r, {st, len}}, String.slice(str, st, len)}
+        end)
+      end)
+
+    num_with_pos
+    |> get_gears(stars)
+    |> Enum.reject(fn {_k, v} -> length(v) == 1 end)
+    |> Enum.map(fn {_k, v} ->
+      Enum.map(v, fn {_coord, str, _star_pos} -> String.to_integer(str) end)
+    end)
+    |> Enum.reduce(0, fn [a, b], acc -> acc + a * b end)
+  end
+
+  def get_gears(nump, stars) do
+    Enum.reduce(nump, [], fn {coords, str}, acc ->
+      star_pos = check_num_neighbours(coords, stars)
+      (is_nil(star_pos) && acc) || [{coords, str, star_pos} | acc]
+    end)
+    |> Enum.group_by(fn {_coords, _str, star_pos} -> star_pos end)
+  end
+
+  def check_num_neighbours({nr, {st, len}}, stars) do
+    numd = for c <- st..(st + len - 1), do: {nr, c}
+    nbh = for {dr, dc} <- @nbh, {r, c} <- numd, into: MapSet.new(), do: {dr + r, dc + c}
+    num_nbh = MapSet.difference(nbh, MapSet.new(numd))
+
+    MapSet.intersection(stars, num_nbh) |> MapSet.to_list() |> List.first()
+  end
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+end
+```
+
+## Test
+
+```elixir
+dt = """
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+"""
+
+data
+|> String.split("\n", trim: true)
+|> Day3.task1()
+|> Day3.out("task1")
+
+data
+|> String.split("\n", trim: true)
+|> Day3.task2()
+|> Day3.out("task2")
+```
