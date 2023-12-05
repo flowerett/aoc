@@ -1,0 +1,168 @@
+# Day5
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "5", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day5 do
+  def parse(blocks) do
+    [seeds | conv] =
+      blocks
+      |> Enum.map(fn b ->
+        [_k, data] = String.split(b, ":", trim: true)
+        String.trim(data)
+      end)
+
+    seeds = row2int(seeds)
+
+    conv =
+      conv
+      |> Enum.map(fn convb ->
+        convb
+        |> String.split("\n", trim: true)
+        |> Enum.map(fn row ->
+          {to, from, d} = row |> row2int() |> List.to_tuple()
+          {{from, from + d - 1}, to - from}
+        end)
+        |> Enum.sort_by(fn {{from, _}, _} -> from end)
+      end)
+
+    {seeds, conv}
+  end
+
+  def get_conv_num(source, conv) do
+    conv
+    |> Enum.find({:nf, 0}, fn {{st, en}, _num} ->
+      source >= st && source <= en
+    end)
+    |> elem(1)
+  end
+
+  def convert_all(num, conv) do
+    Enum.reduce(conv, num, fn cx, acc ->
+      acc + get_conv_num(acc, cx)
+    end)
+  end
+
+  def task1({seeds, conv}) do
+    seeds
+    |> Enum.map(fn seed ->
+      convert_all(seed, conv)
+    end)
+    |> Enum.min()
+  end
+
+  # all inside
+  def new_range({{rst, ren}, d}, {st, en}, {done, rest}) when st >= rst and en <= ren do
+    {[{st + d, en + d} | done], rest}
+  end
+
+  # seed before
+  def new_range({{rst, ren}, d}, {st, en}, {done, rest}) when st < rst and en in rst..ren do
+    {[{rst + d, en + d} | done], [{st, rst - 1} | rest]}
+  end
+
+  # seed after
+  def new_range({{rst, ren}, d}, {st, en}, {done, rest}) when st in rst..ren and en > ren do
+    {[{st + d, ren + d} | done], [{ren + 1, en} | rest]}
+  end
+
+  # all out
+  def new_range(_conv, seed, {done, rest}) do
+    {done, [seed | rest]}
+  end
+
+  def process({done, rest}, []), do: done ++ rest
+  def process({done, []}, _c_step), do: done
+
+  def process({done, rest}, [conv | rest_conv]) do
+    rest
+    |> Enum.reduce({done, []}, fn seed, acc ->
+      new_range(conv, seed, acc)
+    end)
+    |> process(rest_conv)
+  end
+
+  def task2({seeds, conv}) do
+    seeds =
+      seeds
+      |> Enum.chunk_every(2)
+      |> Enum.map(fn [from, len] -> {from, from + len - 1} end)
+
+    conv
+    |> Enum.reduce(seeds, fn c_step, acc ->
+      process({[], acc}, c_step)
+    end)
+    |> Enum.min_by(fn {st, _} -> st end)
+    |> elem(0)
+  end
+
+  def row2int(str) do
+    str |> String.split(" ", trim: true) |> Enum.map(&String.to_integer/1)
+  end
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+end
+
+dt = """
+seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+0 11 42
+42 0 7
+57 7 4
+
+water-to-light map:
+88 18 7
+18 25 70
+
+light-to-temperature map:
+45 77 23
+81 45 19
+68 64 13
+
+temperature-to-humidity map:
+0 69 1
+1 0 69
+
+humidity-to-location map:
+60 56 37
+56 93 4
+"""
+
+# 51752125
+data
+|> String.split("\n\n", trim: true)
+|> Day5.parse()
+|> Day5.task1()
+|> Day5.out("task1")
+
+# 12634632
+data
+|> String.split("\n\n", trim: true)
+|> Day5.parse()
+|> Day5.task2()
+|> Day5.out("task2")
+```

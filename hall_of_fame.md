@@ -1,5 +1,10 @@
 ## Some top performers:
 Some folks that I follow for inspiration and insights after solving problems on my own.
+#### 2023
+- [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
+- [Oliver Ni - Python](https://github.com/oliver-ni/advent-of-code)
+- [Peter Tseng - Ruby](https://github.com/petertseng/adventofcode-rb-2023)
+- [hyper-neutrino - Python](https://github.com/hyper-neutrino/advent-of-code)
 
 #### 2022
 - [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
@@ -40,7 +45,6 @@ Some folks that I follow for inspiration and insights after solving problems on 
 
 ### BEAM/Functional languages:
 - [Rosa Gutierrez - Elixir - 2015-2020](https://github.com/rosa/advent-of-code)
-- [Madeleine Malmsten - Erlang - 2020](https://github.com/mmalmsten/advent-of-code-2020)
 - [Madeleine Malmsten - Erlang - 2019](https://github.com/mmalmsten/advent-of-code-2019)
 - [Rolf van Kleef - Erlang (2019)](https://github.com/rhbvkleef/aoc2019)
 - [Martin Svalin - Elixir/Erlang/Ruby - 2015-2020](https://github.com/martinsvalin/advent_of_code)
@@ -70,4 +74,6 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Sreetam Das - Elixir](https://github.com/sreetamdas/advent-of-code)
 - [Eleni Lixourioti - Elixir](https://github.com/Geekfish/advent-of-code-2022)
 - [Gerard Abelló Serras - Rust](https://github.com/gerardabello/advent-of-code)
-- [Peter Ullrich](https://github.com/PJUllrich/advent-of-code-2022)
+- [Peter Ullrich - Elixir](https://github.com/PJUllrich/advent-of-code-2022)
+- [Mickey - Elixir](https://github.com/yuchunc/aoc2023/)
+- [Vinícius Müller - Elixir](https://github.com/viniciusmuller/aoc2023)
