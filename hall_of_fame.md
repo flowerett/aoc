@@ -19,6 +19,7 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Ivan Krasilnikov - Python](https://github.com/ivankra/advent-of-code)
 
 #### 2021
+- [Jose Valim](https://github.com/josevalim/aoc)
 - [Jonathan Paulson - YouTube](https://www.youtube.com/channel/UCuWLIm0l4sDpEe28t41WITA)
 - [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
 - [Peter Tseng - Ruby](https://github.com/petertseng/adventofcode-rb-2021)
