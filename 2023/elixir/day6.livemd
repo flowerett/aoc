@@ -1,0 +1,104 @@
+# Day6
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "6", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day6 do
+  def parse1(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      Regex.scan(~r/\d+/, row) |> List.flatten() |> Enum.map(&String.to_integer/1)
+    end)
+    |> Enum.zip()
+  end
+
+  def parse2(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      Regex.scan(~r/\d+/, row) |> Enum.join() |> String.to_integer()
+    end)
+  end
+
+  def task1(pairs) do
+    pairs
+    |> Enum.map(&do_race/1)
+    |> Enum.reduce(1, fn x, acc -> x * acc end)
+  end
+
+  def task2([t, d]), do: calc_race_res({t, d})
+
+  # -a^2 + ac - d > 0
+  # since we're interested in whole solutions
+  # making it:
+  # -a^2 + ac - d+1 = 0
+  def calc_race_res({t, d}) do
+    {:ok, {x1, x2}} = quad(-1, t, -1 * (d + 1))
+    [a, b] = Enum.sort([ceil(x1), floor(x2)])
+    b - a + 1
+  end
+
+  # slow solution, but still works for T2
+  def do_race({t, d}) do
+    # 0 and t doesn't make sense
+    1..(t - 1)
+    |> Enum.reduce({0, t, d}, fn th, {cnt, ts, ds} ->
+      tt = ts - th
+      d = tt * th
+      (d > ds && {cnt + 1, ts, ds}) || {cnt, ts, ds}
+    end)
+    |> elem(0)
+  end
+
+  def quad(a, b, c) do
+    d = :math.pow(b, 2) - 4 * a * c
+
+    if d >= 0 do
+      x1 = (-1 * b + :math.sqrt(d)) / (2 * a)
+      x2 = (-1 * b - :math.sqrt(d)) / (2 * a)
+      {:ok, {x1, x2}}
+    else
+      {:error, [error: "Discriminant less than zero!"]}
+    end
+  end
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+end
+
+dt = """
+Time:      7  15   30
+Distance:  9  40  200
+"""
+
+t1 = fn inp -> inp |> Day6.parse1() |> Day6.task1() end
+t2 = fn inp -> inp |> Day6.parse2() |> Day6.task2() end
+
+t1.(dt) |> Day6.out("task1-test")
+t2.(dt) |> Day6.out("task2-test")
+t1.(data) |> Day6.out("task1")
+t2.(data) |> Day6.out("task2")
+
+Benchee.run(
+  %{
+    "day_6_part1" => t1,
+    "day_6_part2" => t2
+  },
+  inputs: %{"test" => dt, "full" => data}
+)
+
+:noop
+```
