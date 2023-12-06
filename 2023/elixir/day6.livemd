@@ -42,10 +42,13 @@ defmodule Day6 do
 
   def task2([t, d]), do: calc_race_res({t, d})
 
-  # -a^2 + ac - d > 0
-  # since we're interested in whole solutions
-  # making it:
-  # -a^2 + ac - d+1 = 0
+  # from two initial equations:
+  #   a + b = c
+  #   a * b = d
+  # we make:
+  #   -a^2 + ac - d > 0
+  # or:
+  #   -a^2 + ac - d+1 = 0
   def calc_race_res({t, d}) do
     {:ok, {x1, x2}} = quad(-1, t, -1 * (d + 1))
     [a, b] = Enum.sort([ceil(x1), floor(x2)])
