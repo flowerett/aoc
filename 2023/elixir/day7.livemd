@@ -1,0 +1,165 @@
+# Day7
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "7", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day7 do
+  @cards ~w(A K Q J T 9 8 7 6 5 4 3 2)
+  @cards2 ~w(A K Q T 9 8 7 6 5 4 3 2 J)
+
+  @power_builder fn cards ->
+    Enum.with_index(cards, fn el, ind -> {el, ind + 1} end) |> Map.new()
+  end
+
+  @power @power_builder.(@cards)
+  @power2 @power_builder.(@cards2)
+
+  @type_rank %{
+    "5" => 1,
+    "41" => 2,
+    "32" => 3,
+    "311" => 4,
+    "221" => 5,
+    "2111" => 6,
+    "11111" => 7
+  }
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, part) do
+    data
+    |> String.split("\n", trim: true)
+    |> parse()
+    |> solve(part)
+  end
+
+  def parse(data) do
+    data
+    |> Enum.map(fn row ->
+      [h, bid] = String.split(row)
+      cards = String.graphemes(h)
+      {build_hand(cards), cards, String.to_integer(bid)}
+    end)
+  end
+
+  def build_hand(cards) do
+    cards
+    |> Enum.group_by(& &1)
+    |> Enum.map(fn {k, v} -> {length(v), k} end)
+    |> Enum.sort_by(fn {k, _v} -> k end, :desc)
+  end
+
+  def solve(data, part) do
+    data
+    |> Enum.sort_by(&card_sorter(&1, part), :desc)
+    |> Enum.with_index(1)
+    |> Enum.map(fn {{_h, _c, bid}, ind} -> bid * ind end)
+    |> Enum.sum()
+  end
+
+  def card_sorter({hand, cards, _bid}, part) do
+    tr = type_rank(hand, part)
+    cr = cards_power(cards, part)
+    {@type_rank[tr], cr}
+  end
+
+  def type_rank(hand, :p1) do
+    hand
+    |> Enum.map(fn {cnt, _card} -> cnt end)
+    |> Enum.join()
+  end
+
+  def type_rank(hand, :p2) do
+    numj =
+      hand
+      |> Enum.filter(fn {_cnt, c} -> c == "J" end)
+      |> count_jokers()
+
+    hand
+    |> Enum.reject(fn {_cnt, c} -> c == "J" end)
+    |> Enum.map(fn {cnt, _card} -> cnt end)
+    |> add_jokers(numj)
+    |> Enum.join()
+  end
+
+  def count_jokers([]), do: 0
+  def count_jokers([{count, _j}]), do: count
+
+  def add_jokers([], numj), do: [numj]
+  def add_jokers([h | t], numj), do: [h + numj | t]
+
+  def cards_power(cards, :p1), do: Enum.map(cards, fn c -> @power[c] end)
+  def cards_power(cards, :p2), do: Enum.map(cards, fn c -> @power2[c] end)
+end
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule AoCTest do
+  use ExUnit.Case, async: false
+
+  @td2 """
+  77888 4
+  77788 3
+  T55J5 7
+  KK677 2
+  33332 6
+  32T3K 1
+  2AAAA 5
+  KTJJT 9
+  JJJJJ 10
+  QQQJA 8
+  """
+
+  @td """
+  32T3K 765
+  T55J5 684
+  KK677 28
+  KTJJT 220
+  QQQJA 483
+  """
+
+  setup do
+    {:ok, data} = KinoAOC.download_puzzle("2023", "7", System.fetch_env!("LB_AOC_SECRET"))
+    %{data: data}
+  end
+
+  test "solves test cases" do
+    assert Day7.run(@td, :p1) == 6440
+    assert Day7.run(@td, :p2) == 5905
+  end
+
+  test "solves edge cases" do
+    assert Day7.run(@td2, :p1) == 333
+    assert Day7.run(@td2, :p2) == 385
+  end
+
+  test "solves live cases", %{data: data} do
+    assert Day7.run(data, :p1) == 253_638_586
+    assert Day7.run(data, :p2) == 253_253_225
+  end
+end
+
+ExUnit.run()
+
+data |> Day7.run(:p1) |> Day7.out("part1")
+data |> Day7.run(:p2) |> Day7.out("part2")
+```

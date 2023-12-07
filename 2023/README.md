@@ -13,6 +13,7 @@ https://adventofcode.com/2023
 | 04 - Scratchcards                    | [✓][04ex] |
 | 05 - If You Give A Seed A Fertilizer | [✓][05ex] |
 | 06 - Wait For It                     | [✓][06ex] |
+| 07 - Camel Cards                     | [✓][07ex] |
 
 
 [01ex]: elixir/day1.livemd
@@ -21,3 +22,4 @@ https://adventofcode.com/2023
 [04ex]: elixir/day4.livemd
 [05ex]: elixir/day5.livemd
 [06ex]: elixir/day6.livemd
+[07ex]: elixir/day7.livemd
