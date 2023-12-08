@@ -46,66 +46,80 @@ defmodule Day8 do
     find_end("AAA", data, :p1)
   end
 
-  def solve({_iter, nds} = data, :p2) do
-    nds
-    |> Enum.filter(fn {k, _v} -> String.at(k, 2) == "A" end)
-    |> Enum.map(fn {k, _v} -> k end)
-    # |> IO.inspect(label: :start_nodes)
-    |> Enum.map(fn st_node ->
-      find_end(st_node, data, :p2)
-    end)
+  def solve({_iter, nodes} = data, :p2) do
+    nodes
+    |> get_start()
+    |> Enum.map(fn st -> find_end(st, data, :p2) end)
     |> Enum.reduce(1, &Math.lcm/2)
   end
 
-  def find_end(st_node, {iter, nds}, part) do
+  def get_start(nodes) do
+    nodes
+    |> Enum.filter(fn {k, _v} -> match?(<<_, _, "A">>, k) end)
+    |> Enum.map(fn {k, _v} -> k end)
+  end
+
+  def find_end(st_node, {iter, nodes}, part) do
     iter
     |> Stream.cycle()
     |> Enum.reduce_while({st_node, 0}, fn move, {node, cnt} ->
-      if end_check(node, part) do
-        {:halt, cnt}
-      else
-        nn = nds[node] |> elem(@instr[move])
-        {:cont, {nn, cnt + 1}}
-      end
+      nxt = nodes[node] |> elem(@instr[move])
+      end_check(nxt, node, cnt, part)
     end)
   end
 
-  def end_check(node, :p1), do: node == "ZZZ"
-  def end_check(node, :p2), do: String.at(node, 2) == "Z"
+  def end_check(_nxt, "ZZZ", cnt, :p1), do: {:halt, cnt}
+  def end_check(_nxt, <<_, _, "Z">>, cnt, :p2), do: {:halt, cnt}
+  def end_check(nxt, _, cnt, _), do: {:cont, {nxt, cnt + 1}}
+end
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule Day8.Test do
+  use ExUnit.Case, async: false
+
+  @td1 """
+  LLR
+
+  AAA = (BBB, BBB)
+  BBB = (AAA, ZZZ)
+  ZZZ = (ZZZ, ZZZ)
+  """
+
+  @td2 """
+  LR
+
+  11A = (11B, XXX)
+  11B = (XXX, 11Z)
+  11Z = (11B, XXX)
+  22A = (22B, XXX)
+  22B = (22C, 22C)
+  22C = (22Z, 22Z)
+  22Z = (22B, 22B)
+  XXX = (XXX, XXX)
+  """
+
+  setup do
+    {:ok, data} = KinoAOC.download_puzzle("2023", "8", System.fetch_env!("LB_AOC_SECRET"))
+    %{data: data}
+  end
+
+  test "solves test cases" do
+    assert Day8.run(@td1, :p1) == 6
+    assert Day8.run(@td2, :p2) == 6
+  end
+
+  test "solves live cases", %{data: data} do
+    assert Day8.run(data, :p1) == 18023
+    assert Day8.run(data, :p2) == 14_449_445_933_179
+  end
 end
 
-dt = """
-RL
-
-AAA = (BBB, CCC)
-BBB = (DDD, EEE)
-CCC = (ZZZ, GGG)
-DDD = (DDD, DDD)
-EEE = (EEE, EEE)
-GGG = (GGG, GGG)
-ZZZ = (ZZZ, ZZZ)
-"""
-
-dt2 = """
-LLR
-
-AAA = (BBB, BBB)
-BBB = (AAA, ZZZ)
-ZZZ = (ZZZ, ZZZ)
-"""
-
-dt3 = """
-LR
-
-11A = (11B, XXX)
-11B = (XXX, 11Z)
-11Z = (11B, XXX)
-22A = (22B, XXX)
-22B = (22C, 22C)
-22C = (22Z, 22Z)
-22Z = (22B, 22B)
-XXX = (XXX, XXX)
-"""
+ExUnit.run()
 
 data |> Day8.run(:p1) |> Day8.out("p1")
 data |> Day8.run(:p2) |> Day8.out("p2")
