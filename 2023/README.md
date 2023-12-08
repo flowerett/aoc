@@ -14,7 +14,7 @@ https://adventofcode.com/2023
 | 05 - If You Give A Seed A Fertilizer | [✓][05ex] |
 | 06 - Wait For It                     | [✓][06ex] |
 | 07 - Camel Cards                     | [✓][07ex] |
-
+| 08 - Haunted Wasteland               | [✓][08ex] |
 
 [01ex]: elixir/day1.livemd
 [02ex]: elixir/day2.livemd
@@ -23,3 +23,4 @@ https://adventofcode.com/2023
 [05ex]: elixir/day5.livemd
 [06ex]: elixir/day6.livemd
 [07ex]: elixir/day7.livemd
+[08ex]: elixir/day8.livemd

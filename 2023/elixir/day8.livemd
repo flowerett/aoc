@@ -1,0 +1,112 @@
+# Day8
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "8", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day8 do
+  @instr %{L: 0, R: 1}
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, part) do
+    data
+    |> String.split("\n", trim: true)
+    |> parse()
+    |> solve(part)
+  end
+
+  def parse([instr | net]) do
+    i = instr |> String.graphemes() |> Enum.map(&String.to_existing_atom/1)
+    n = Enum.into(net, %{}, &build_node/1)
+    {i, n}
+  end
+
+  def build_node(row) do
+    {n, l, r} = Regex.scan(~r/[1-9A-Z]+/, row) |> List.flatten() |> List.to_tuple()
+    {n, {l, r}}
+  end
+
+  def solve(data, :p1) do
+    find_end("AAA", data, :p1)
+  end
+
+  def solve({_iter, nds} = data, :p2) do
+    nds
+    |> Enum.filter(fn {k, _v} -> String.at(k, 2) == "A" end)
+    |> Enum.map(fn {k, _v} -> k end)
+    # |> IO.inspect(label: :start_nodes)
+    |> Enum.map(fn st_node ->
+      find_end(st_node, data, :p2)
+    end)
+    |> Enum.reduce(1, &Math.lcm/2)
+  end
+
+  def find_end(st_node, {iter, nds}, part) do
+    iter
+    |> Stream.cycle()
+    |> Enum.reduce_while({st_node, 0}, fn move, {node, cnt} ->
+      if end_check(node, part) do
+        {:halt, cnt}
+      else
+        nn = nds[node] |> elem(@instr[move])
+        {:cont, {nn, cnt + 1}}
+      end
+    end)
+  end
+
+  def end_check(node, :p1), do: node == "ZZZ"
+  def end_check(node, :p2), do: String.at(node, 2) == "Z"
+end
+
+dt = """
+RL
+
+AAA = (BBB, CCC)
+BBB = (DDD, EEE)
+CCC = (ZZZ, GGG)
+DDD = (DDD, DDD)
+EEE = (EEE, EEE)
+GGG = (GGG, GGG)
+ZZZ = (ZZZ, ZZZ)
+"""
+
+dt2 = """
+LLR
+
+AAA = (BBB, BBB)
+BBB = (AAA, ZZZ)
+ZZZ = (ZZZ, ZZZ)
+"""
+
+dt3 = """
+LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)
+"""
+
+data |> Day8.run(:p1) |> Day8.out("p1")
+data |> Day8.run(:p2) |> Day8.out("p2")
+```
