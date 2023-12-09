@@ -1,0 +1,92 @@
+# Day9
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "9", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day9 do
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, dir) do
+    data
+    |> String.split("\n", trim: true)
+    |> parse()
+    |> Enum.map(fn row -> extrapolite(row, dir) end)
+    |> Enum.sum()
+  end
+
+  def parse(rows) do
+    rows
+    |> Enum.map(fn row ->
+      row
+      |> String.split(" ", trim: true)
+      |> Enum.map(&String.to_integer/1)
+    end)
+  end
+
+  def extrapolite(list, dir) do
+    if Enum.all?(list, fn x -> x == 0 end) do
+      0
+    else
+      [_h | rest] = list
+      nxt = list |> Enum.zip(rest) |> Enum.map(fn {a, b} -> b - a end)
+      diff = extrapolite(nxt, dir)
+      nxt_val(list, diff, dir)
+    end
+  end
+
+  def nxt_val(list, diff, :forward), do: List.last(list) + diff
+  def nxt_val([h | _t], diff, :backward), do: h - diff
+end
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule Day9.Test do
+  use ExUnit.Case, async: false
+
+  @td1 """
+  0 3 6 9 12 15
+  1 3 6 10 15 21
+  10 13 16 21 30 45
+  """
+
+  setup do
+    {:ok, data} = KinoAOC.download_puzzle("2023", "9", System.fetch_env!("LB_AOC_SECRET"))
+    %{data: data}
+  end
+
+  test "solves test cases" do
+    assert Day9.run(@td1, :forward) == 114
+    assert Day9.run(@td1, :backward) == 2
+  end
+
+  test "solves live cases", %{data: data} do
+    assert Day9.run(data, :forward) == 1_887_980_197
+    assert Day9.run(data, :backward) == 990
+  end
+end
+
+ExUnit.run()
+
+data |> Day9.run(:forward) |> Day9.out("p1")
+data |> Day9.run(:backward) |> Day9.out("p1")
+```
