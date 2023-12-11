@@ -1,0 +1,259 @@
+# Day10
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "10", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day10 do
+  # {row, col}
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+
+  @nbh %{
+    "S" => [@up, @down, @left, @right],
+    "F" => [@right, @down],
+    "7" => [@left, @down],
+    "L" => [@up, @right],
+    "J" => [@up, @left],
+    "|" => [@up, @down],
+    "-" => [@left, @right]
+  }
+
+  @nbh_to_sym %{
+    MapSet.new([@up, @left]) => "J",
+    MapSet.new([@up, @right]) => "L",
+    MapSet.new([@up, @down]) => "|",
+    MapSet.new([@left, @right]) => "-",
+    MapSet.new([@left, @down]) => "7",
+    MapSet.new([@right, @down]) => "F"
+  }
+
+  # meaning allowed from -> to
+  @allowed %{
+    @right => ~w(- 7 J),
+    @left => ~w(- F L),
+    @down => ~w(| J L),
+    @up => ~w(| F 7)
+  }
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, :p1) do
+    data
+    |> String.split("\n", trim: true)
+    |> parse()
+    |> task1()
+  end
+
+  def run(data, :p2) do
+    data
+    |> String.split("\n", trim: true)
+    |> parse()
+    |> task2()
+  end
+
+  def parse(rows) do
+    nodes =
+      rows
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {row, r}, acc ->
+        row
+        |> String.graphemes()
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {sym, c}, acc ->
+          Map.put(acc, {r, c}, sym)
+        end)
+      end)
+
+    st = Enum.find(nodes, fn {_k, v} -> v == "S" end)
+
+    {st, nodes}
+  end
+
+  # can be also length(bfs_res) // 2
+  def task1({st, nodes}) do
+    [{st, 0}]
+    |> bfs(%{}, nodes)
+    |> Enum.max_by(fn {_k, v} -> v end)
+    |> elem(1)
+  end
+
+  def task2({st, nodes}) do
+    loop = bfs([{st, 0}], %{}, nodes)
+    nodes = replace_st(st, nodes)
+
+    # get size
+    {{_, max_c}, _} = Enum.max_by(nodes, fn {{_r, c}, _} -> c end)
+
+    nodes
+    |> Enum.filter(fn {pos, _sym} -> not Map.has_key?(loop, pos) end)
+    |> Enum.reduce(0, fn {pos, _sym}, cnt ->
+      if is_inside?(pos, max_c, loop, nodes) do
+        cnt + 1
+      else
+        cnt
+      end
+    end)
+  end
+
+  def replace_st(st, nodes) do
+    {st_pos, _} = st
+    {str, stc} = st_pos
+
+    sym_set =
+      Enum.filter(@nbh["S"], fn {dr, dc} = d ->
+        nodes[{str + dr, stc + dc}] in @allowed[d]
+      end)
+      |> MapSet.new()
+
+    st_sym = @nbh_to_sym[sym_set]
+
+    Map.put(nodes, st_pos, st_sym)
+  end
+
+  # Ray Casting Algorithm:
+  # - choose a point from which you want to determine if it's inside or outside the loop
+  # - cast a horizontal ray to the right (or left) from this point
+  # - count how many times this ray intersects with the loop boundary
+  #   (increment count each time the ray crosses a pipe segment)
+  # determine Inside or Outside:
+  # - if the number of intersections is odd, the point is inside the loop
+  # - if the number of intersections is even, the point is outside the loop
+  # Edge Cases and Grid Adaptation:
+  # - since our loop is on a grid, we'll be checking intersections with
+  #   segments going UP: vertical (|) and pipe bends (L, J)
+  # - alternatively we can consider segments going down: (|, 7, F)
+  def is_inside?({r, c}, max_c, loop, nodes) do
+    c..max_c
+    |> Enum.reduce(false, fn cc, inside ->
+      sym = nodes[{r, cc}]
+
+      if Map.has_key?(loop, {r, cc}) and @up in @nbh[sym] do
+        not inside
+      else
+        inside
+      end
+    end)
+  end
+
+  def bfs([], graph, _nodes), do: graph
+
+  def bfs(q, graph, nodes) do
+    [cur | rest] = q
+
+    # put current node to graph
+    {{{r, c}, cur_sym}, cur_dist} = cur
+
+    new_graph =
+      if Map.has_key?(graph, {r, c}) do
+        graph
+      else
+        Map.put(graph, {r, c}, cur_dist)
+      end
+
+    rev_res = Enum.reverse(rest)
+    # get next moves
+    # - if move is allowed
+    # - not already visited
+    # - put them to queue
+    new_q =
+      @nbh[cur_sym]
+      |> Enum.reduce(rev_res, fn {dr, dc}, acc ->
+        nxt_pos = {r + dr, c + dc}
+        allowed = @allowed[{dr, dc}]
+        nxt_sym = nodes[nxt_pos]
+
+        if nxt_sym in allowed and !Map.has_key?(graph, nxt_pos) do
+          [{{nxt_pos, nxt_sym}, cur_dist + 1} | acc]
+        else
+          acc
+        end
+      end)
+      |> Enum.reverse()
+
+    bfs(new_q, new_graph, nodes)
+  end
+end
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule Day10.Test do
+  use ExUnit.Case, async: false
+
+  @td1 """
+  .....
+  .S-7.
+  .|7|.
+  .L-J.
+  ....L
+  """
+
+  @td2 """
+  ..F7.
+  .FJ|.
+  SJ.L7
+  |F--J
+  LJ...
+  """
+
+  @td3 """
+  FF7FSF7F7F7F7F7F---7
+  L|LJ||||||||||||F--J
+  FL-7LJLJ||||||LJL-77
+  F--JF--7||LJLJ7F7FJ-
+  L---JF-JLJ.||-FJLJJ7
+  |F|F-JF---7F7-L7L|7|
+  |FFJF7L7F-JF7|JL---7
+  7-L-JL7||F7|L7F-7F7|
+  L.L7LFJ|||||FJL7||LJ
+  L7JLJL-JLJLJL--JLJ.L
+  """
+
+  setup do
+    {:ok, data} = KinoAOC.download_puzzle("2023", "10", System.fetch_env!("LB_AOC_SECRET"))
+    %{data: data}
+  end
+
+  test "solves test cases" do
+    assert Day10.run(@td1, :p1) == 4
+    assert Day10.run(@td1, :p2) == 1
+
+    assert Day10.run(@td2, :p1) == 8
+    assert Day10.run(@td2, :p2) == 1
+
+    assert Day10.run(@td3, :p1) == 80
+    assert Day10.run(@td3, :p2) == 10
+  end
+
+  test "solves live cases", %{data: data} do
+    assert Day10.run(data, :p1) == 6897
+    assert Day10.run(data, :p2) == 367
+  end
+end
+
+ExUnit.run()
+
+data |> Day10.run(:p1) |> Day10.out("t1")
+data |> Day10.run(:p2) |> Day10.out("t2")
+```

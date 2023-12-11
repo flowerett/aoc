@@ -5,6 +5,7 @@ Some folks that I follow for inspiration and insights after solving problems on 
 - [Oliver Ni - Python](https://github.com/oliver-ni/advent-of-code)
 - [Peter Tseng - Ruby](https://github.com/petertseng/adventofcode-rb-2023)
 - [hyper-neutrino - Python](https://github.com/hyper-neutrino/advent-of-code)
+- [mrphlip - Python](https://github.com/mrphlip/aoc/tree/master/2023)
 
 #### 2022
 - [Jonathan Paulson - Python](https://github.com/jonathanpaulson/AdventOfCode)
