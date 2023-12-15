@@ -17,6 +17,7 @@ https://adventofcode.com/2023
 | 08 - Haunted Wasteland               | [✓][08ex] |
 | 09 - Mirage Maintenance              | [✓][09ex] |
 | 10 - Pipe Maze                       | [✓][10ex] |
+| 11 - Cosmic Expansion                | [✓][11ex] |
 
 [01ex]: elixir/day1.livemd
 [02ex]: elixir/day2.livemd
@@ -27,3 +28,4 @@ https://adventofcode.com/2023
 [07ex]: elixir/day7.livemd
 [08ex]: elixir/day8.livemd
 [10ex]: elixir/day10.livemd
+[11ex]: elixir/day11.livemd

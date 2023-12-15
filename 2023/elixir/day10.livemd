@@ -230,6 +230,30 @@ defmodule Day10.Test do
   L7JLJL-JLJLJL--JLJ.L
   """
 
+  @td4 """
+  ...........
+  .S-------7.
+  .|F-----7|.
+  .||.....||.
+  .||.....||.
+  .|L-7.F-J|.
+  .|..|.|..|.
+  .L--J.L--J.
+  ...........
+  """
+
+  @td5 """
+  ..........
+  .S------7.
+  .|F----7|.
+  .||....||.
+  .||....||.
+  .|L-7F-J|.
+  .|..||..|.
+  .L--JL--J.
+  ..........
+  """
+
   setup do
     {:ok, data} = KinoAOC.download_puzzle("2023", "10", System.fetch_env!("LB_AOC_SECRET"))
     %{data: data}
