@@ -18,6 +18,8 @@ https://adventofcode.com/2023
 | 09 - Mirage Maintenance              | [✓][09ex] |
 | 10 - Pipe Maze                       | [✓][10ex] |
 | 11 - Cosmic Expansion                | [✓][11ex] |
+|                                      |           |
+| 16 - The Floor Will Be Lava          | [✓][16ex] |
 
 [01ex]: elixir/day1.livemd
 [02ex]: elixir/day2.livemd
@@ -29,3 +31,5 @@ https://adventofcode.com/2023
 [08ex]: elixir/day8.livemd
 [10ex]: elixir/day10.livemd
 [11ex]: elixir/day11.livemd
+
+[16ex]: elixir/day16.livemd

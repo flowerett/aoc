@@ -1,0 +1,174 @@
+# Day16
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "16", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day16 do
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, :p1) do
+    {grid, max} = prep(data)
+    # top left heading right
+    light_from(grid, max, {{0, -1}, {0, 1}})
+  end
+
+  def run(data, :p2) do
+    {grid, max} = prep(data)
+    {mrow, mcol} = max
+
+    lr =
+      for r <- 0..mrow, reduce: 0 do
+        acc ->
+          r = light_from(grid, max, {{r, -1}, {0, 1}})
+          l = light_from(grid, max, {{r, mcol + 1}, {0, -1}})
+          r |> max(l) |> max(acc)
+      end
+
+    tb =
+      for c <- 0..mcol, reduce: 0 do
+        acc ->
+          t = light_from(grid, max, {{-1, c}, {1, 0}})
+          b = light_from(grid, max, {{mrow + 1, c}, {-1, 0}})
+          t |> max(b) |> max(acc)
+      end
+
+    max(lr, tb)
+  end
+
+  def light_from(grid, max, st) do
+    grid
+    |> next(max, MapSet.new(), [st])
+    |> Enum.map(fn {pos, _dir} -> pos end)
+    |> Enum.uniq()
+    |> Enum.count()
+  end
+
+  def prep(data), do: {parse(data), get_max(data)}
+
+  def parse(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.with_index()
+    |> Enum.reduce(%{}, fn {row, r}, gr ->
+      row
+      |> String.graphemes()
+      |> Enum.with_index()
+      |> Enum.reduce(gr, fn {sym, c}, gr ->
+        Map.put(gr, {r, c}, sym)
+      end)
+    end)
+  end
+
+  def get_max(data) do
+    [h | rest] = String.split(data, "\n", trim: true)
+    # zero based size
+    {length(rest), String.length(h) - 1}
+  end
+
+  def next(_grid, _max, acc, []), do: acc
+
+  def next(grid, max, acc, q) do
+    [{cur, dir} | t] = q
+    {r, c} = cur
+    {rd, cd} = dir
+    ncur = {r + rd, c + cd}
+
+    if inside?(ncur, max) do
+      dirs = next_dirs(grid[ncur], dir)
+
+      q =
+        dirs
+        |> Enum.reduce(t, fn dir, nq ->
+          if not MapSet.member?(acc, {ncur, dir}) do
+            [{ncur, dir} | nq]
+          else
+            nq
+          end
+        end)
+
+      acc =
+        Enum.reduce(dirs, acc, fn dir, acc ->
+          MapSet.put(acc, {ncur, dir})
+        end)
+
+      next(grid, max, acc, q)
+    else
+      next(grid, max, acc, t)
+    end
+  end
+
+  def next_dirs(".", dir), do: [dir]
+
+  def next_dirs("\\", {rd, cd}), do: [{cd, rd}]
+  def next_dirs("/", {rd, cd}), do: [{-cd, -rd}]
+
+  def next_dirs("|", {_rd, 0} = dir), do: [dir]
+  def next_dirs("-", {0, _cd} = dir), do: [dir]
+
+  def next_dirs("|", {0, _cd}), do: [{-1, 0}, {1, 0}]
+  def next_dirs("-", {_rd, 0}), do: [{0, -1}, {0, 1}]
+
+  def inside?({r, c}, {rmax, cmax}) do
+    r in 0..rmax and c in 0..cmax
+  end
+end
+```
+
+## Check
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule Day16.Test do
+  use ExUnit.Case, async: false
+
+  @td ~S"""
+  .|...\....
+  |.-.\.....
+  .....|-...
+  ........|.
+  ..........
+  .........\
+  ..../.\\..
+  .-.-/..|..
+  .|....-|.\
+  ..//.|....
+  """
+
+  setup do
+    {:ok, data} = KinoAOC.download_puzzle("2023", "16", System.fetch_env!("LB_AOC_SECRET"))
+    %{data: data}
+  end
+
+  test "solves test cases" do
+    assert Day16.run(@td, :p1) == 46
+    assert Day16.run(@td, :p2) == 51
+  end
+
+  test "solves live cases", %{data: data} do
+    assert Day16.run(data, :p1) == 8116
+    assert Day16.run(data, :p2) == 8383
+  end
+end
+
+ExUnit.run()
+
+Day16.run(data, :p1) |> Day16.out("p1")
+Day16.run(data, :p2) |> Day16.out("p2")
+```
