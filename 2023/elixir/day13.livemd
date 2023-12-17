@@ -1,0 +1,108 @@
+# Day13
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "13", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day13 do
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, :p1) do
+    data
+    |> String.split("\n\n", trim: true)
+    |> Enum.map(&solve(&1, 0))
+    |> Enum.sum()
+  end
+
+  def run(data, :p2) do
+    data
+    |> String.split("\n\n", trim: true)
+    |> Enum.map(&solve(&1, 1))
+    |> Enum.sum()
+  end
+
+  def solve(block, similarity) do
+    b = String.split(block, "\n", trim: true)
+
+    h = find_mirror(b, similarity)
+    tb = transpose(b)
+    v = find_mirror(tb, similarity)
+
+    v + h * 100
+  end
+
+  def find_mirror(block, similarity) do
+    max = length(block) - 1
+    indb = block |> Enum.with_index(fn el, ind -> {ind, el} end) |> Map.new()
+
+    0..(max - 1)
+    |> Enum.filter(fn ri ->
+      mir_dist = min(ri, max - (ri + 1))
+
+      diff =
+        Enum.reduce(0..mir_dist, 0, fn d, acc ->
+          str_diff(indb[ri - d], indb[ri + 1 + d]) + acc
+        end)
+
+      diff == similarity
+    end)
+    |> check_results()
+  end
+
+  def check_results([]), do: 0
+  def check_results([ri]), do: ri + 1
+
+  def transpose(block) do
+    block
+    |> Enum.map(&String.graphemes/1)
+    |> Enum.zip()
+    |> Enum.map(fn t -> t |> Tuple.to_list() |> Enum.join() end)
+  end
+
+  def str_diff(s1, s2) do
+    [String.graphemes(s1), String.graphemes(s2)]
+    |> Enum.zip()
+    |> Enum.reduce(0, fn {c1, c2}, acc ->
+      (c1 == c2 && acc) || acc + 1
+    end)
+  end
+end
+
+td = """
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+"""
+
+td |> Day13.run(:p1) |> Day13.out("p1-test")
+td |> Day13.run(:p2) |> Day13.out("p2-test")
+data |> Day13.run(:p1) |> Day13.out("p1")
+data |> Day13.run(:p2) |> Day13.out("p2")
+```
