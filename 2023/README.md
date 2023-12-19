@@ -20,7 +20,8 @@ https://adventofcode.com/2023
 | 11 - Cosmic Expansion                | [✓][11ex] |
 | 12 - Hot Springs                     | [✓][12ex] |
 | 13 - Point of Incidence              | [✓][13ex] |
-|                                      |           |
+| 14 - Parabolic Reflector Dish        | [✓][14ex] |
+| 15 - Lens Library                    |           |
 | 16 - The Floor Will Be Lava          | [✓][16ex] |
 
 [01ex]: elixir/day1.livemd
@@ -31,9 +32,11 @@ https://adventofcode.com/2023
 [06ex]: elixir/day6.livemd
 [07ex]: elixir/day7.livemd
 [08ex]: elixir/day8.livemd
+[09ex]: elixir/day9.livemd
 [10ex]: elixir/day10.livemd
 [11ex]: elixir/day11.livemd
 [12ex]: elixir/day12.livemd
 [13ex]: elixir/day13.livemd
+[14ex]: elixir/day14.livemd
 
 [16ex]: elixir/day16.livemd

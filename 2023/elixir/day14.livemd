@@ -1,0 +1,186 @@
+# Day14
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "14", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day14 do
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, :p1), do: data |> parse() |> solve1()
+  def run(data, :p2), do: data |> parse() |> solve2()
+
+  @north {-1, 0}
+  @south {1, 0}
+  @west {0, -1}
+  @east {0, 1}
+
+  def parse(data) do
+    rows = String.split(data, "\n", trim: true)
+    {get_grid(rows), get_size(rows)}
+  end
+
+  def get_size([h | _t] = rows) do
+    # for zero based indexing
+    {length(rows) - 1, String.length(h) - 1}
+  end
+
+  def get_grid(rows) do
+    rows
+    |> Enum.with_index()
+    |> Enum.reduce(%{}, fn {row, r}, acc ->
+      row
+      |> String.graphemes()
+      |> Enum.with_index()
+      |> Enum.reduce(acc, fn {sym, c}, acc ->
+        Map.put(acc, {r, c}, sym)
+      end)
+    end)
+  end
+
+  def to_key(grid, {mr, mc}) do
+    Enum.map(0..mr, fn r ->
+      Enum.reduce(0..mc, "", fn c, acc -> acc <> grid[{r, c}] end)
+    end)
+    |> Enum.join("\n")
+  end
+
+  def plot(grid, size) do
+    grid |> to_key(size) |> IO.puts()
+    grid
+  end
+
+  def solve1({grid, size}) do
+    grid
+    |> move(size, @north)
+    # |> plot(size)
+    |> count_north_load(size)
+  end
+
+  def solve2({grid, size}) do
+    {memo, cycle, st} =
+      Enum.reduce_while(1..(10 ** 9), {grid, %{}}, fn i, {grid, memo} ->
+        key = to_key(grid, size)
+
+        if Map.has_key?(memo, key) do
+          {_ngr, j} = memo[key]
+          {:halt, {memo, i, j}}
+        else
+          ngr = spin(grid, size)
+          {:cont, {ngr, Map.put(memo, key, {ngr, i})}}
+        end
+      end)
+
+    pos = rem(10 ** 9 - st, cycle - st) + st
+
+    fgr =
+      memo
+      |> Map.values()
+      |> Enum.find(fn {_, i} -> i == pos end)
+      |> elem(0)
+
+    count_north_load(fgr, size)
+  end
+
+  # north -> west -> south -> east
+  def spin(grid, size) do
+    grid
+    |> move(size, @north)
+    |> move(size, @west)
+    |> move(size, @south)
+    |> move(size, @east)
+  end
+
+  # slow, can be done with sorting
+  def move(grid, {mr, mc}, dir) when dir == @north do
+    Enum.reduce(0..mc, grid, fn c, grid ->
+      Enum.reduce(0..mr, grid, fn r, grid ->
+        move_rock(grid, r, c, dir)
+      end)
+    end)
+  end
+
+  def move(grid, {mr, mc}, dir) when dir == @west do
+    Enum.reduce(0..mr, grid, fn r, grid ->
+      Enum.reduce(0..mc, grid, fn c, grid ->
+        move_rock(grid, r, c, dir)
+      end)
+    end)
+  end
+
+  def move(grid, {mr, mc}, dir) when dir == @south do
+    Enum.reduce(0..mc, grid, fn c, grid ->
+      Enum.reduce(mr..0, grid, fn r, grid ->
+        move_rock(grid, r, c, dir)
+      end)
+    end)
+  end
+
+  def move(grid, {mr, mc}, dir) when dir == @east do
+    Enum.reduce(0..mr, grid, fn r, grid ->
+      Enum.reduce(mc..0, grid, fn c, grid ->
+        move_rock(grid, r, c, dir)
+      end)
+    end)
+  end
+
+  def move_rock(gr, r, c, {dr, dc}) do
+    if Map.has_key?(gr, {r, c}) && Map.get(gr, {r, c}) == "O" do
+      if Map.has_key?(gr, {r + dr, c + dc}) && Map.get(gr, {r + dr, c + dc}) == "." do
+        gr
+        |> Map.put({r + dr, c + dc}, "O")
+        |> Map.put({r, c}, ".")
+        |> move_rock(r + dr, c + dc, {dr, dc})
+      else
+        gr
+      end
+    else
+      gr
+    end
+  end
+
+  def count_north_load(gr, {mr, mc}) do
+    max = mr + 1
+
+    Enum.reduce(0..mr, 0, fn r, cnt ->
+      row_load = Enum.count(0..mc, fn c -> gr[{r, c}] == "O" end) * (max - r)
+      row_load + cnt
+    end)
+  end
+end
+
+td = """
+O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....
+"""
+
+# 136, 110821
+# 64, 83516
+td |> Day14.run(:p1) |> Day14.out("p1-test")
+td |> Day14.run(:p2) |> Day14.out("p2-test")
+data |> Day14.run(:p1) |> Day14.out("p1")
+data |> Day14.run(:p2) |> Day14.out("p2")
+```
