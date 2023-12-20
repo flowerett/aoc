@@ -1,0 +1,114 @@
+# Day15
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "15", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day15 do
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, :p1), do: data |> parse() |> solve1()
+  def run(data, :p2), do: data |> parse() |> solve2()
+
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split(",")
+  end
+
+  def hash(str) do
+    str
+    |> String.graphemes()
+    |> Enum.reduce(0, fn <<code::utf8>>, acc ->
+      acc
+      |> Kernel.+(code)
+      |> Kernel.*(17)
+      |> rem(256)
+    end)
+  end
+
+  def hashmap({:ins, label, num}, boxes) do
+    ind = hash(label)
+    b = boxes[ind]
+
+    nb =
+      if Enum.find(b, fn {k, _v} -> k == label end) do
+        Enum.reduce(b, [], fn {k, v}, acc ->
+          (k == label && [{label, num} | acc]) || [{k, v} | acc]
+        end)
+      else
+        [{label, num} | Enum.reverse(b)]
+      end
+
+    Map.put(boxes, ind, Enum.reverse(nb))
+  end
+
+  def hashmap({:del, label, _}, boxes) do
+    ind = hash(label)
+
+    b =
+      Enum.reduce(boxes[ind], [], fn {k, v}, acc ->
+        (k == label && acc) || [{k, v} | acc]
+      end)
+
+    Map.put(boxes, ind, Enum.reverse(b))
+  end
+
+  def get_op(str) do
+    if String.contains?(str, "=") do
+      [label, num] = String.split(str, "=", trim: true)
+      {:ins, label, String.to_integer(num)}
+    else
+      {:del, String.trim(str, "-"), nil}
+    end
+  end
+
+  def solve2(steps) do
+    boxes = for i <- 0..255, into: %{}, do: {i, []}
+
+    steps
+    |> Enum.map(&get_op/1)
+    |> Enum.reduce(boxes, &hashmap/2)
+    |> Enum.reject(fn {_k, v} -> v == [] end)
+    |> Enum.reduce(0, fn {ind, lens}, total ->
+      lens
+      |> Enum.with_index()
+      |> Enum.reduce(total, fn {{_label, num}, l_ind}, total ->
+        total + (1 + ind) * (l_ind + 1) * num
+      end)
+    end)
+  end
+
+  def solve1(steps) do
+    steps
+    |> Enum.map(&hash/1)
+    |> Enum.sum()
+  end
+end
+
+td = """
+rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7
+"""
+
+# 1320, 145
+# 505379, 263211
+td |> Day15.run(:p1) |> Day15.out("p1-test")
+td |> Day15.run(:p2) |> Day15.out("p2-test")
+data |> Day15.run(:p1) |> Day15.out("p1")
+data |> Day15.run(:p2) |> Day15.out("p2")
+```

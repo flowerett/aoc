@@ -21,7 +21,7 @@ https://adventofcode.com/2023
 | 12 - Hot Springs                     | [✓][12ex] |
 | 13 - Point of Incidence              | [✓][13ex] |
 | 14 - Parabolic Reflector Dish        | [✓][14ex] |
-| 15 - Lens Library                    |           |
+| 15 - Lens Library                    | [✓][15ex] |
 | 16 - The Floor Will Be Lava          | [✓][16ex] |
 
 [01ex]: elixir/day1.livemd
@@ -38,5 +38,5 @@ https://adventofcode.com/2023
 [12ex]: elixir/day12.livemd
 [13ex]: elixir/day13.livemd
 [14ex]: elixir/day14.livemd
-
+[15ex]: elixir/day15.livemd
 [16ex]: elixir/day16.livemd
