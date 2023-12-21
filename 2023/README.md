@@ -23,6 +23,8 @@ https://adventofcode.com/2023
 | 14 - Parabolic Reflector Dish        | [✓][14ex] |
 | 15 - Lens Library                    | [✓][15ex] |
 | 16 - The Floor Will Be Lava          | [✓][16ex] |
+| 17 - Clumsy Crucible                 | [✓][17ex] |
+| 18 - Lavaduct Lagoon                 | [✓][18ex] |
 
 [01ex]: elixir/day1.livemd
 [02ex]: elixir/day2.livemd
@@ -40,3 +42,5 @@ https://adventofcode.com/2023
 [14ex]: elixir/day14.livemd
 [15ex]: elixir/day15.livemd
 [16ex]: elixir/day16.livemd
+[17ex]: elixir/day17.livemd
+[18ex]: elixir/day18.livemd

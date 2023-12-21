@@ -1,0 +1,196 @@
+# Day17
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"},
+  {:heap, "~> 3.0"}
+])
+```
+
+## Setup
+
+```elixir
+defmodule Aoc do
+  @type input :: String.t()
+  @type part :: :p1 | :p2
+
+  @callback parse(input()) :: any()
+  @callback solve1(input()) :: any()
+  @callback solve2(input()) :: any()
+
+  @callback run(input(), part()) :: any()
+  @callback out(any(), String.t()) :: :ok
+  @callback get_input(String.t(), String.t()) :: String.t()
+
+  defmacro __using__(_) do
+    quote do
+      @year "2023"
+      @secret System.fetch_env!("LB_AOC_SECRET")
+
+      @behaviour Aoc
+      def parse(_input), do: :not_implemented
+      def solve1(_input), do: :not_implemented
+      def solve2(_input), do: :not_implemented
+
+      def run(data, :p1), do: data |> parse() |> solve1()
+      def run(data, :p2), do: data |> parse() |> solve2()
+
+      def out(res, txt), do: IO.puts("Res #{txt}: #{res}")
+
+      def get_input(day, year \\ @year) do
+        {:ok, data} = KinoAOC.download_puzzle(year, day, @secret)
+        data
+      end
+
+      defoverridable parse: 1, solve1: 1, solve2: 1
+    end
+  end
+end
+
+defmodule Aoc.Grid do
+  @type aoc_grid :: %{grid: map(), mx: non_neg_integer(), my: non_neg_integer()}
+  @type data :: String.t()
+
+  @spec parse(data(), fun()) :: aoc_grid()
+  def parse(data, fun) do
+    raw =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+
+    my = length(raw)
+    mx = raw |> hd() |> length()
+
+    grid =
+      for {row, y} <- Enum.with_index(raw),
+          {sym, x} <- Enum.with_index(row),
+          into: %{} do
+        {{y, x}, fun.(sym)}
+      end
+
+    %{grid: grid, mx: mx - 1, my: my - 1}
+  end
+end
+```
+
+## Solve
+
+```elixir
+defmodule Day17 do
+  use Aoc
+  alias Aoc.Grid
+
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @moves [@up, @down, @left, @right]
+
+  def parse(data), do: Grid.parse(data, &String.to_integer/1)
+
+  def solve1(aoc) do
+    q = Heap.new() |> Heap.push({0, {0, 0}, {0, 0}, 0})
+    seen = MapSet.new()
+    move(q, seen, aoc, {0, 3})
+  end
+
+  def solve2(aoc) do
+    q = Heap.new() |> Heap.push({0, {0, 0}, {0, 0}, 0})
+    seen = MapSet.new()
+    move(q, seen, aoc, {4, 10})
+  end
+
+  def move(q, seen, aoc, {min, max} = lim) do
+    {{loss, p, dir, n}, q} = pop(q)
+    {y, x} = p
+    {dy, dx} = dir
+
+    if p == {aoc.my, aoc.mx} and n >= min do
+      loss
+    else
+      s_key = {p, dir, n}
+
+      if MapSet.member?(seen, s_key) do
+        move(q, seen, aoc, lim)
+      else
+        seen = MapSet.put(seen, s_key)
+        np = {y + dy, x + dx}
+
+        nq =
+          if n < max and dir != {0, 0} and in_grid?(np, aoc) do
+            loss = aoc.grid[np] + loss
+            Heap.push(q, {loss, np, dir, n + 1})
+          else
+            q
+          end
+
+        nq =
+          if n >= min || dir == {0, 0} do
+            next_moves(p, dir, aoc)
+            |> Enum.reduce(nq, fn {dy, dx}, acc ->
+              np = {y + dy, x + dx}
+              loss = aoc.grid[np] + loss
+              Heap.push(acc, {loss, np, {dy, dx}, 1})
+            end)
+          else
+            nq
+          end
+
+        move(nq, seen, aoc, lim)
+      end
+    end
+  end
+
+  def in_grid?({y, x}, aoc) do
+    y >= 0 and y <= aoc.my and x >= 0 and x <= aoc.mx
+  end
+
+  def next_moves({y, x}, {py, px}, aoc) do
+    Enum.filter(@moves, fn {dy, dx} ->
+      {dy, dx} != {py, px} and
+        {dy, dx} != {-py, -px} and
+        in_grid?({y + dy, x + dx}, aoc)
+    end)
+  end
+
+  def pop(q), do: {Heap.root(q), Heap.pop(q)}
+end
+
+td = """
+2413432311323
+3215453535623
+3255245654254
+3446585845452
+4546657867536
+1438598798454
+4457876987766
+3637877979653
+4654967986887
+4564679986453
+1224686865563
+2546548887735
+4322674655533
+"""
+
+td2 = """
+111111111111
+999999999991
+999999999991
+999999999991
+999999999991
+"""
+
+data = Day17.get_input("17")
+
+# 102, 886
+# 94, 71, 1055
+Day17.run(td, :p1) |> Day17.out("p1-test")
+Day17.run(td, :p2) |> Day17.out("p2-test")
+Day17.run(td2, :p2) |> Day17.out("p2-test2")
+Day17.run(data, :p1) |> Day17.out("p1")
+Day17.run(data, :p2) |> Day17.out("p2")
+```

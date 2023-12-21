@@ -1,0 +1,241 @@
+# Day18
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "18", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day18 do
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  @dirs %{
+    "U" => {-1, 0},
+    "D" => {1, 0},
+    "L" => {0, -1},
+    "R" => {0, 1}
+  }
+
+  @last_dig_to_dir %{"0" => "R", "1" => "D", "2" => "L", "3" => "U"}
+  @upsyms ~w(l J U D)
+
+  def run(data, :p1_slow) do
+    # slow & complex:
+    # - create the border
+    # - change corners to L J F 7
+    # - use ray trace algorithm to calculate internal square
+    # - A = border + internal
+    rows =
+      data
+      |> parse()
+      |> Enum.map(fn row -> fmt_row(row, :p1) end)
+
+    {gr, _pos} = dig(rows)
+    dim = get_size(gr)
+    ins = dig_ins(gr, dim)
+    plot(gr, ins, dim)
+    Enum.count(gr) + Enum.count(ins)
+  end
+
+  def run(data, part) do
+    data
+    |> parse()
+    |> Enum.map(&fmt_row(&1, part))
+    |> get_square()
+  end
+
+  def parse(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      [dir, num, col] = row |> String.split(" ", trim: true)
+
+      {
+        dir,
+        String.to_integer(num),
+        col |> String.trim("(") |> String.trim(")")
+      }
+    end)
+  end
+
+  def fmt_row(row, :p1_slow), do: fmt_row(row, :p1)
+  def fmt_row({dir, num, _col}, :p1), do: {dir, num}
+
+  def fmt_row({_dir, _num, col}, :p2) do
+    "#" <> rest = col
+    slist = String.graphemes(rest)
+    num = slist |> Enum.take(5) |> Enum.join() |> String.to_integer(16)
+    dir = @last_dig_to_dir[List.last(slist)]
+    {dir, num}
+  end
+
+  def get_square(rows) do
+    b_len = Enum.reduce(rows, 0, fn {_d, n}, acc -> acc + n end)
+
+    trench =
+      rows
+      |> Enum.reduce([{0, 0}], fn {dir, n}, acc ->
+        [{y, x} | _t] = acc
+        {dy, dx} = @dirs[dir]
+
+        [{y + dy * n, x + dx * n} | acc]
+      end)
+
+    tt = List.to_tuple(trench)
+    max = length(trench) - 1
+
+    # Shoelace https://en.wikipedia.org/wiki/Shoelace_formula
+    a =
+      0..max
+      |> Enum.reduce(0, fn i, a ->
+        im1 = (i == 0 && max) || i - 1
+        ip1 = (i == max && 0) || i + 1
+        yi = tt |> elem(i) |> elem(0)
+        xim1 = tt |> elem(im1) |> elem(1)
+        xip1 = tt |> elem(ip1) |> elem(1)
+
+        yi * (xim1 - xip1) + a
+      end)
+      |> abs()
+      |> div(2)
+
+    # Pick's theorem https://en.wikipedia.org/wiki/Pick%27s_theorem
+    i = a - div(b_len, 2) + 1
+
+    # border + inside
+    b_len + i
+  end
+
+  def dig(rows) do
+    {gr, st} =
+      Enum.reduce(rows, {%{}, {0, 0}}, fn instr, acc ->
+        trench(instr, acc)
+      end)
+
+    {n_dir, _num} = List.first(rows)
+    dir = gr[st]
+    corner = corner(dir, n_dir)
+
+    # {dir, num, col}
+    gr = Map.put(gr, st, corner)
+    {gr, st}
+  end
+
+  def trench({dir, num}, acc) do
+    {dy, dx} = @dirs[dir]
+    {gr, {y, x}} = acc
+
+    prev_dir = Map.get(gr, {y, x}, dir)
+    corner = corner(prev_dir, dir)
+
+    gr = (corner && Map.put(gr, {y, x}, corner)) || gr
+
+    0..(num - 1)
+    |> Enum.reduce({gr, {y, x}}, fn _n, {gr, {y, x}} ->
+      cur = {y + dy, x + dx}
+      {Map.put(gr, cur, dir), cur}
+    end)
+  end
+
+  def corner("U", "R"), do: "F"
+  def corner("L", "D"), do: "F"
+
+  def corner("U", "L"), do: "7"
+  def corner("R", "D"), do: "7"
+
+  def corner("D", "R"), do: "l"
+  def corner("L", "U"), do: "l"
+
+  def corner("D", "L"), do: "J"
+  def corner("R", "U"), do: "J"
+
+  def corner(_, _), do: false
+
+  def get_size(gr) do
+    Enum.reduce(gr, {0, 0, 0, 0}, fn {{y, x}, _d}, {maxy, miny, maxx, minx} ->
+      {max(maxy, y), min(miny, y), max(maxx, x), min(minx, x)}
+    end)
+  end
+
+  def dig_ins(gr, {maxy, miny, maxx, minx}) do
+    Enum.reduce(miny..maxy, %{}, fn r, ins ->
+      Enum.reduce(minx..maxx, ins, fn c, acc ->
+        case not_border?(gr, {r, c}) && inside?(gr, {r, c}, maxx) do
+          true ->
+            Map.put(acc, {r, c}, "X")
+
+          false ->
+            acc
+        end
+      end)
+    end)
+  end
+
+  def not_border?(border, pos) do
+    not Map.has_key?(border, pos)
+  end
+
+  def inside?(border, {r, c}, max_c) do
+    c..max_c
+    |> Enum.reduce(false, fn cc, inside ->
+      sym = Map.get(border, {r, cc}, ".")
+
+      if sym in @upsyms do
+        not inside
+      else
+        inside
+      end
+    end)
+  end
+
+  def plot(gr, ins, {maxy, miny, maxx, minx}) do
+    Enum.each(miny..maxy, fn r ->
+      Enum.reduce(minx..maxx, "", fn c, str ->
+        symb = Map.get(gr, {r, c}, nil)
+        symi = Map.get(ins, {r, c}, nil)
+        sym = symb || symi || "."
+        str <> sym
+      end)
+      |> IO.puts()
+    end)
+
+    IO.puts("-------")
+  end
+end
+
+dt = """
+R 6 (#70c710)
+D 5 (#0dc571)
+L 2 (#5713f0)
+D 2 (#d2c081)
+R 2 (#59c680)
+D 2 (#411b91)
+L 5 (#8ceee2)
+U 2 (#caa173)
+L 1 (#1b58a2)
+U 2 (#caa171)
+R 2 (#7807d2)
+U 3 (#a77fa3)
+L 2 (#015232)
+U 2 (#7a21e3)
+"""
+
+dt |> Day18.run(:p1_slow) |> Day18.out("p1-test-slow")
+dt |> Day18.run(:p1) |> Day18.out("p1-test")
+dt |> Day18.run(:p2) |> Day18.out("p2-test")
+data |> Day18.run(:p1) |> Day18.out("p1")
+data |> Day18.run(:p2) |> Day18.out("p2")
+```
