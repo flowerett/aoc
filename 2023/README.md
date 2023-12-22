@@ -27,6 +27,7 @@ https://adventofcode.com/2023
 | 18 - Lavaduct Lagoon                 | [✓][18ex] |
 | 19 - Aplenty                         | [✓][19ex] |
 | 20 - Pulse Propagation               | [✓][20ex] |
+| 21 - Step Counter                    | [✓][21ex] |
 
 
 [01ex]: elixir/day1.livemd
@@ -49,3 +50,4 @@ https://adventofcode.com/2023
 [18ex]: elixir/day18.livemd
 [19ex]: elixir/day19.livemd
 [20ex]: elixir/day20.livemd
+[21ex]: elixir/day21.livemd

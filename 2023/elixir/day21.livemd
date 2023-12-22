@@ -1,0 +1,251 @@
+# Day21
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"},
+  {:heap, "~> 3.0"},
+  {:qex, "~> 0.5"}
+])
+```
+
+## Setup
+
+```elixir
+defmodule Aoc do
+  @type input :: String.t()
+  @type part :: :p1 | :p2
+
+  @callback parse(input()) :: any()
+  @callback solve1(input()) :: any()
+  @callback solve2(input()) :: any()
+
+  @callback run(input(), part()) :: any()
+  @callback out(any(), String.t()) :: :ok
+  @callback get_input(String.t(), String.t()) :: String.t()
+
+  defmacro __using__(_) do
+    quote do
+      @year "2023"
+      @secret System.fetch_env!("LB_AOC_SECRET")
+
+      @behaviour Aoc
+      def parse(_input), do: :not_implemented
+      def solve1(_input), do: :not_implemented
+      def solve2(_input), do: :not_implemented
+
+      def run(data, :p1), do: data |> parse() |> solve1()
+      def run(data, :p2), do: data |> parse() |> solve2()
+
+      def out(res, txt), do: IO.puts("Res #{txt}: #{res}")
+
+      def get_input(day, year \\ @year) do
+        {:ok, data} = KinoAOC.download_puzzle(year, day, @secret)
+        data
+      end
+
+      defoverridable parse: 1, solve1: 1, solve2: 1, run: 2
+    end
+  end
+end
+
+defmodule Aoc.Grid do
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @star for x <- -1..1, y <- -1..1, x != y and x != -y, do: {y, x}
+  @diag for x <- -1..1, y <- -1..1, x != 0 or y != 0, do: {y, x}
+
+  @type aoc_grid :: %{grid: map(), mx: non_neg_integer(), my: non_neg_integer()}
+  @type data :: String.t()
+
+  @spec parse(data(), fun()) :: aoc_grid()
+  def parse(data, fun) do
+    raw =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+
+    my = length(raw)
+    mx = raw |> hd() |> length()
+
+    grid =
+      for {row, y} <- Enum.with_index(raw),
+          {sym, x} <- Enum.with_index(row),
+          into: %{} do
+        {{y, x}, fun.(sym)}
+      end
+
+    %{grid: grid, mx: mx - 1, my: my - 1}
+  end
+
+  def find(aoc, val) do
+    aoc.grid |> Enum.find(fn {_k, v} -> v == val end) |> elem(0)
+  end
+
+  def moves(:star), do: @star
+  def moves(:diag), do: @diag
+
+  def up?(p), do: p == @up
+  def down?(p), do: p == @down
+  def left?(p), do: p == @left
+  def right?(p), do: p == @right
+
+  def plot(aoc) do
+    Enum.each(0..aoc.my, fn y ->
+      for x <- 0..aoc.mx, reduce: "" do
+        acc -> acc <> aoc.grid[{y, x}]
+      end
+      |> IO.puts()
+    end)
+  end
+end
+
+defmodule Setup do
+  use Aoc
+end
+
+data = Setup.get_input("21")
+```
+
+## Solve
+
+```elixir
+defmodule Day21 do
+  use Aoc
+  alias Aoc.Grid
+
+  def run(data, :p1t), do: data |> parse() |> solve1(6)
+  def run(data, :p1), do: data |> parse() |> solve1(64)
+  def run(data, :p2), do: data |> parse() |> solve2()
+
+  def parse(data), do: Grid.parse(data, fn c -> c end)
+
+  def solve1(aoc, max) do
+    st = Grid.find(aoc, "S")
+    aoc = put_in(aoc, [:grid, st], ".")
+
+    MapSet.new([st])
+    |> step(0, max, aoc)
+    |> MapSet.size()
+  end
+
+  def step(set, cnt, max, _aoc) when cnt == max, do: set
+
+  def step(set, cnt, max, aoc) do
+    set
+    |> Enum.reduce(MapSet.new(), fn p, acc ->
+      p
+      |> filter_next(aoc, acc)
+      |> Enum.reduce(acc, fn np, acc -> MapSet.put(acc, np) end)
+    end)
+    |> step(cnt + 1, max, aoc)
+  end
+
+  def filter_next(p, aoc, set) do
+    star_for(p)
+    |> Enum.filter(fn np ->
+      aoc.grid[np] == "." and not MapSet.member?(set, np)
+    end)
+  end
+
+  def star_for({y, x}) do
+    for {dy, dx} <- Grid.moves(:star), do: {y + dy, x + dx}
+  end
+
+  def fill(y, x, steps, aoc, opts \\ %{})
+
+  def fill(y, x, steps, aoc, %{debug: true}) do
+    res = MapSet.new([{y, x}]) |> step(0, steps, aoc)
+
+    Enum.reduce(res, aoc, fn p, aoc ->
+      put_in(aoc, [:grid, p], "O")
+    end)
+    |> Grid.plot()
+
+    res |> MapSet.size() |> IO.inspect(label: "count #{y} #{x} #{steps}")
+  end
+
+  def fill(y, x, steps, aoc, _opts) do
+    MapSet.new([{y, x}]) |> step(0, steps, aoc) |> MapSet.size()
+  end
+
+  def solve2(aoc) do
+    # prepare grid
+    st = Grid.find(aoc, "S")
+    aoc = put_in(aoc, [:grid, st], ".")
+
+    # base measument constants
+    steps = 26_501_365
+    # 131
+    size = aoc.my + 1
+    # 65 - same as start pos
+    h = half = div(aoc.my, 2)
+    # size + half - 196
+
+    # num filled tiles from start
+    n = div(steps - half, size)
+
+    IO.puts("Crunching P2 Results...")
+
+    # full tiles
+    odd = fill(h, h, size, aoc) |> IO.inspect(label: "odd")
+    even = fill(h, h, size - 1, aoc) |> IO.inspect(label: "even")
+
+    # tops (corners)
+    tops =
+      (fill(size - 1, h, size - 1, aoc) +
+         fill(0, h, size - 1, aoc) +
+         fill(h, size - 1, size - 1, aoc) +
+         fill(h, 0, size - 1, aoc))
+      |> IO.inspect(label: "tops")
+
+    # smalls
+    small =
+      (fill(size - 1, size - 1, h - 1, aoc) +
+         fill(size - 1, 0, h - 1, aoc) +
+         fill(0, size - 1, h - 1, aoc) +
+         fill(0, 0, h - 1, aoc))
+      |> IO.inspect(label: "smalls")
+
+    # big parts
+    bigs =
+      (fill(size - 1, size - 1, h + size - 1, aoc) +
+         fill(size - 1, 0, h + size - 1, aoc) +
+         fill(0, size - 1, h + size - 1, aoc) +
+         fill(0, 0, h + size - 1, aoc))
+      |> IO.inspect(label: "bigs")
+
+    # res
+    even * n ** 2 +
+      odd * (n - 1) ** 2 +
+      tops +
+      small * n +
+      bigs * (n - 1)
+  end
+end
+
+td = """
+...........
+.....###.#.
+.###.##..#.
+..#.#...#..
+....#.#....
+.##..S####.
+.##..#...#.
+.......##..
+.##.#.####.
+.##..##.##.
+...........
+"""
+
+# 6: 16, 64: 3677
+# 26501365: 609585229256084
+td |> Day21.run(:p1t) |> Day21.out("p1-t")
+data |> Day21.run(:p1) |> Day21.out("p1")
+data |> Day21.run(:p2) |> Day21.out("p2")
+```
