@@ -1,0 +1,224 @@
+# Day20
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"},
+  {:qex, "~> 0.5"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "20", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day20 do
+  alias Qex, as: Q
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, :p1), do: data |> parse() |> solve1()
+  def run(data, :p2), do: data |> parse() |> solve2()
+
+  # -- parse input
+
+  def parse(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(&to_modules/1)
+    |> Enum.map(&init_mod/1)
+    |> Enum.reduce({%{}, %{}}, fn {name, v}, {st_acc, op_acc} ->
+      {state, fun, dest} = v
+      {Map.put(st_acc, name, state), Map.put(op_acc, name, {fun, dest})}
+    end)
+  end
+
+  # name, fun, state, dest
+  def init_mod({:bc, {:bc, dest}}) do
+    {:bc, {false, &fun(:bc, &1), dest}}
+  end
+
+  def init_mod({:ff, {name, dest}}) do
+    {name, {false, &fun(:ff, &1), dest}}
+  end
+
+  def init_mod({:cj, {name, dest}}) do
+    {name, {%{}, &fun(:cj, &1), dest}}
+  end
+
+  @type mod_type :: :bc | :ff | :cj
+  @type pulse :: :high | :low | nil
+  @type state :: true | false | map() | nil
+  @type from :: atom()
+  @spec fun(mod_type(), {pulse(), state(), from()}) :: {pulse(), state()}
+
+  def fun(:bc, {p, _st, _f}), do: {p, nil}
+
+  def fun(:ff, {:high, st, _f}), do: {nil, st}
+
+  def fun(:ff, {:low, st, _f}) do
+    new_st = not st
+    {(new_st && :high) || :low, new_st}
+  end
+
+  def fun(:cj, {p, st, from}) do
+    st = Map.put(st, from, p)
+    check = st |> Map.values() |> Enum.all?(fn p -> p == :high end)
+    {(check && :low) || :high, st}
+  end
+
+  def to_modules(<<"&", rest::binary>>), do: {:cj, mod_data(rest)}
+  def to_modules(<<"%", rest::binary>>), do: {:ff, mod_data(rest)}
+  def to_modules(<<"broadcaster", rest::binary>>), do: {:bc, mod_data("bc" <> rest)}
+
+  def mod_data(str) do
+    [from, to] = String.split(str, " -> ", trim: true)
+    dest = String.split(to, ", ", trim: true) |> Enum.map(&String.to_atom/1)
+    {String.to_atom(from), dest}
+  end
+
+  # -- process
+
+  def init_state({sts, ops}) do
+    {Enum.reduce(ops, sts, fn {from, {_, dest}}, acc ->
+       Enum.reduce(dest, acc, fn to, acc ->
+         (is_map(acc[to]) && put_in(acc, [to, from], :low)) || acc
+       end)
+     end)}
+    |> Tuple.append(ops)
+  end
+
+  def solve1({_sts, _ops} = mods) do
+    mods = init_state(mods)
+
+    {_mods, {h, l}} =
+      Enum.reduce(1..(10 ** 3), {mods, {0, 0}}, fn _i, {mods, cnt} ->
+        q = Q.new([{:bc, :low, :button}])
+        process(mods, cnt, q)
+      end)
+
+    h * l
+  end
+
+  def process({sts, ops} = mods, {h, l} = cnt, q) do
+    if Enum.empty?(q) do
+      {mods, cnt}
+    else
+      # received a signal
+      {{_v, {name, sig, from}}, q} = Q.pop(q)
+      ncnt = (sig == :high && {h + 1, l}) || {h, l + 1}
+
+      if Map.has_key?(sts, name) do
+        st = sts[name]
+        {fun, dest} = ops[name]
+
+        {nsig, nst} = fun.({sig, st, from})
+        sts = Map.put(sts, name, nst)
+
+        nq =
+          (nsig &&
+             Enum.reduce(dest, q, fn to, acc ->
+               Q.push(acc, {to, nsig, name})
+             end)) || q
+
+        process({sts, ops}, ncnt, nq)
+      else
+        process({sts, ops}, ncnt, q)
+      end
+    end
+  end
+
+  def p2({sts, ops} = mods, {en_to, en_from, cnt}, q) do
+    if Enum.empty?(q) do
+      {mods, en_from}
+    else
+      # received a signal
+      {{_v, {name, sig, from}}, q} = Q.pop(q)
+
+      en_from =
+        if name == en_to and sig == :high do
+          Map.put(en_from, from, cnt)
+        else
+          en_from
+        end
+
+      if Map.has_key?(sts, name) do
+        st = sts[name]
+        {fun, dest} = ops[name]
+
+        {nsig, nst} = fun.({sig, st, from})
+        sts = Map.put(sts, name, nst)
+
+        nq =
+          (nsig &&
+             Enum.reduce(dest, q, fn to, acc ->
+               Q.push(acc, {to, nsig, name})
+             end)) || q
+
+        p2({sts, ops}, {en_to, en_from, cnt}, nq)
+      else
+        # too long to wait
+        # if name == :rx and sig == :low do
+        #   IO.inspect({name, sig, cnt}, label: "end>>>")
+        # end
+        p2({sts, ops}, {en_to, en_from, cnt}, q)
+      end
+    end
+  end
+
+  def solve2(mods) do
+    {sts, ops} = init_state(mods)
+
+    {en_to, _} = Enum.find(ops, fn {_from, {_, dest}} -> :rx in dest end)
+
+    en_from_z = Map.keys(sts[en_to]) |> Enum.into(%{}, fn from -> {from, 0} end)
+
+    Enum.reduce_while(1..(10 ** 4), {{sts, ops}, en_from_z}, fn i, {mods, en_from} ->
+      q = Q.new([{:bc, :low, :button}])
+      {mods, en_from} = p2(mods, {en_to, en_from, i}, q)
+
+      (all_high?(en_from) && {:halt, en_from}) || {:cont, {mods, en_from}}
+    end)
+    |> Map.values()
+    |> Enum.reduce(1, &Math.lcm/2)
+  end
+
+  def all_high?(en_from) do
+    en_from |> Map.values() |> Enum.all?(fn n -> n > 0 end)
+  end
+end
+
+td = """
+broadcaster -> a, b, c
+%a -> b
+%b -> c
+%c -> inv
+&inv -> a
+"""
+
+td2 = """
+broadcaster -> a
+%a -> inv, con
+&inv -> b
+%b -> con
+&con -> output
+"""
+
+# {4000, 8000} - 32000000
+# {2750, 4250} - 11687500
+# {46872, 18771} - 879834312
+# 243037165713371
+
+td |> Day20.run(:p1) |> Day20.out("p1-test1")
+td2 |> Day20.run(:p1) |> Day20.out("p1-test2")
+data |> Day20.run(:p1) |> Day20.out("p1")
+data |> Day20.run(:p2) |> Day20.out("p2")
+```

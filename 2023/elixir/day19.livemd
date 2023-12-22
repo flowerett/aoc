@@ -1,0 +1,182 @@
+# Day19
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:benchee, "~> 1.0"},
+  {:nimble_parsec, "~> 1.0"},
+  {:libgraph, "~> 0.16.0"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Get Input
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "19", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day19 do
+  @ranges_p2 for k <- ~w(x m a s)a, into: %{}, do: {k, 1..4000}
+
+  def out(res, t), do: IO.puts("Res #{t}: #{res}")
+
+  def run(data, :p1) do
+    data |> parse() |> solve1()
+  end
+
+  def run(data, :p2) do
+    {wfs, _} = parse(data)
+    solve2(@ranges_p2, :in, wfs)
+  end
+
+  # -- parse input
+
+  def parse(data) do
+    [wf, rt] = String.split(data, "\n\n", trim: true)
+    {format_workflows(wf), format_ratings(rt)}
+  end
+
+  def format_workflows(workflows) do
+    workflows
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      [[_r, name, wf]] = Regex.scan(~r/([a-z]+){(.+)}/, row)
+      {String.to_atom(name), fmt_workflow(wf)}
+    end)
+    |> Map.new()
+  end
+
+  def fmt_workflow(wf) do
+    wf
+    |> String.split(",", trim: true)
+    |> Enum.map(fn p ->
+      get_part(p)
+    end)
+  end
+
+  def get_part(part) do
+    if String.match?(part, ~r/:/) do
+      [cnd, to] = String.split(part, ":", trim: true)
+      <<key::binary-1, cmp::binary-1, num::binary>> = cnd
+      {{String.to_atom(key), cmp, String.to_integer(num)}, String.to_atom(to)}
+    else
+      String.to_atom(part)
+    end
+  end
+
+  def format_ratings(ratings) do
+    ratings
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      row
+      |> Code.eval_string()
+      |> elem(1)
+    end)
+  end
+
+  # --- task 1
+
+  def solve1({wfs, ratings}) do
+    ratings
+    |> Enum.filter(fn rt -> jump(:in, wfs, rt) == :A end)
+    |> Enum.map(fn rt ->
+      rt |> Enum.map(&elem(&1, 1)) |> Enum.sum()
+    end)
+    |> Enum.sum()
+  end
+
+  def jump({_str, to}, wfs, rt), do: jump(to, wfs, rt)
+  def jump(:A, _, _), do: :A
+  def jump(:R, _, _), do: :R
+
+  def jump(to, wfs, rt) do
+    wfs[to]
+    |> Enum.find(fn cnd ->
+      case cnd do
+        {{key, cmp, num}, _to} ->
+          str = "#{key}#{cmp}#{num}"
+          {res, _b} = Code.eval_string(str, rt)
+          res
+
+        _to ->
+          true
+      end
+    end)
+    |> jump(wfs, rt)
+  end
+
+  # --- part2
+
+  def solve2(_ranges, :R, _wfs), do: 0
+
+  def solve2(ranges, :A, _wfs) do
+    ranges
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.map(fn l..h -> h - l + 1 end)
+    |> Enum.product()
+  end
+
+  def solve2(ranges, to, wfs) do
+    [df | rules] = Enum.reverse(wfs[to])
+    rules = Enum.reverse(rules)
+
+    {fr, cnt} =
+      rules
+      |> Enum.reduce({ranges, 0}, fn {{key, cmp, num}, nxt}, {racc, cnt} ->
+        {t, f} = split_range(racc[key], num, cmp)
+
+        {
+          false_ranges(racc, key, f),
+          cnt + count_true(racc, key, t, nxt, wfs)
+        }
+      end)
+
+    cnt + solve2(fr, df, wfs)
+  end
+
+  def split_range(l..h, num, "<"), do: {l..(num - 1), num..h}
+  def split_range(l..h, num, ">"), do: {(num + 1)..h, l..num}
+
+  def count_true(ranges, key, l..h, to, wfs) when l <= h do
+    nr = Map.put(ranges, key, l..h)
+    solve2(nr, to, wfs)
+  end
+
+  def count_true(_ranges, _key, _nr, _to, _wfs), do: 0
+
+  def false_ranges(ranges, key, l..h) when l <= h, do: Map.put(ranges, key, l..h)
+  def false_ranges(ranges, _key, _nr), do: ranges
+end
+
+td = """
+px{a<2006:qkq,m>2090:A,rfg}
+pv{a>1716:R,A}
+lnx{m>1548:A,A}
+rfg{s<537:gd,x>2440:R,A}
+qs{s>3448:A,lnx}
+qkq{x<1416:A,crn}
+crn{x>2662:A,R}
+in{s<1351:px,qqz}
+qqz{s>2770:qs,m<1801:hdj,R}
+gd{a>3333:R,R}
+hdj{m>838:A,pv}
+
+{x=787,m=2655,a=1222,s=2876}
+{x=1679,m=44,a=2067,s=496}
+{x=2036,m=264,a=79,s=2244}
+{x=2461,m=1339,a=466,s=291}
+{x=2127,m=1623,a=2188,s=1013}
+"""
+
+# 19114, 167409079868000
+td |> Day19.run(:p1) |> Day19.out("p1")
+td |> Day19.run(:p2) |> Day19.out("p2")
+
+# 480738, 131550418841958
+data |> Day19.run(:p1) |> Day19.out("p1")
+data |> Day19.run(:p2) |> Day19.out("p2")
+```

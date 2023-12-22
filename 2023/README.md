@@ -25,6 +25,9 @@ https://adventofcode.com/2023
 | 16 - The Floor Will Be Lava          | [✓][16ex] |
 | 17 - Clumsy Crucible                 | [✓][17ex] |
 | 18 - Lavaduct Lagoon                 | [✓][18ex] |
+| 19 - Aplenty                         | [✓][19ex] |
+| 20 - Pulse Propagation               | [✓][20ex] |
+
 
 [01ex]: elixir/day1.livemd
 [02ex]: elixir/day2.livemd
@@ -44,3 +47,5 @@ https://adventofcode.com/2023
 [16ex]: elixir/day16.livemd
 [17ex]: elixir/day17.livemd
 [18ex]: elixir/day18.livemd
+[19ex]: elixir/day19.livemd
+[20ex]: elixir/day20.livemd
