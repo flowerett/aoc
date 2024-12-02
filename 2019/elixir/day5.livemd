@@ -1,0 +1,175 @@
+# Day5
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2019", "5", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day5 do
+  def parse(input) do
+    input
+    |> String.trim()
+    |> String.split(",")
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  def task1(input), do: input |> parse() |> run(0, 1)
+  def task2(input), do: input |> parse() |> run(0, 5)
+
+  def get_modes(instr) do
+    cmd = rem(instr, 100)
+
+    modes =
+      instr
+      |> div(100)
+      |> Integer.to_string()
+      |> String.pad_leading(3, "0")
+      |> String.split("")
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.reverse()
+
+    {cmd, modes}
+  end
+
+  def get_args(args, modes, acc) do
+    larg = length(args)
+    norm_modes = Enum.take(modes, larg)
+
+    norm_modes
+    |> Enum.zip(args)
+    |> Enum.map(&get_arg(&1, acc))
+  end
+
+  def get_arg({"0", x}, acc), do: Enum.at(acc, x)
+  def get_arg({"1", x}, _acc), do: x
+
+  def run(acc, idx, inp) do
+    {processed, rest} = Enum.split(acc, idx + 1)
+
+    instr = List.last(processed)
+    {cmd, modes} = get_modes(instr)
+
+    op(cmd, modes, acc, rest, idx, inp)
+  end
+
+  # ADD
+  def op(1, modes, acc, [x, y, adr | _], idx, inp) do
+    [xx, yy] = get_args([x, y], modes, acc)
+
+    acc
+    |> List.replace_at(adr, xx + yy)
+    |> run(idx + 4, inp)
+  end
+
+  # MULTIPLY
+  def op(2, modes, acc, [x, y, adr | _], idx, inp) do
+    [xx, yy] = get_args([x, y], modes, acc)
+
+    acc
+    |> List.replace_at(adr, xx * yy)
+    |> run(idx + 4, inp)
+  end
+
+  # IN - takes input and saves it to the position given by parameter
+  def op(3, _modes, acc, [adr | _], idx, inp) do
+    acc
+    |> List.replace_at(adr, inp)
+    |> run(idx + 2, inp)
+  end
+
+  # OUT - outputs value of its only parameter
+  # 0 - test sequence - success
+  def op(4, modes, acc, [adr | _], idx, inp) do
+    [val] = get_args([adr], modes, acc)
+
+    val != 0 && IO.puts("OUT: #{val}")
+
+    run(acc, idx + 2, inp)
+  end
+
+  # JUMP IF TRUE
+  def op(5, modes, acc, [cond, goto | _], idx, inp) do
+    [xcond, xgoto] = get_args([cond, goto], modes, acc)
+
+    if xcond == 0 do
+      run(acc, idx + 3, inp)
+    else
+      run(acc, xgoto, inp)
+    end
+  end
+
+  # JUMP IF FALSE
+  def op(6, modes, acc, [cond, goto | _], idx, inp) do
+    [xcond, xgoto] = get_args([cond, goto], modes, acc)
+
+    if xcond == 0 do
+      run(acc, xgoto, inp)
+    else
+      run(acc, idx + 3, inp)
+    end
+  end
+
+  # LESS THAN (adr is not param)
+  def op(7, modes, acc, [a, b, adr | _], idx, inp) do
+    [xa, xb] = get_args([a, b], modes, acc)
+
+    if xa < xb do
+      acc
+      |> List.replace_at(adr, 1)
+      |> run(idx + 4, inp)
+    else
+      acc
+      |> List.replace_at(adr, 0)
+      |> run(idx + 4, inp)
+    end
+  end
+
+  # EQUALS (adr is not param)
+  def op(8, modes, acc, [a, b, adr | _], idx, inp) do
+    [xa, xb] = get_args([a, b], modes, acc)
+
+    if xa == xb do
+      acc
+      |> List.replace_at(adr, 1)
+      |> run(idx + 4, inp)
+    else
+      acc
+      |> List.replace_at(adr, 0)
+      |> run(idx + 4, inp)
+    end
+  end
+
+  def op(99, _modes, acc, _cmd, _idx, _inp) do
+    IO.puts("halt")
+    acc
+  end
+
+  def op(opcode, _modes, acc, _cmd, idx, _inp) do
+    IO.inspect({idx, acc}, label: "halt  >>>")
+
+    raise("unknown code #{opcode}, halt!")
+  end
+end
+
+# 999, 1000, 1001
+tfull = """
+3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99
+"""
+
+tfull |> Day5.parse() |> Day5.run(0, 1)
+tfull |> Day5.parse() |> Day5.run(0, 8)
+tfull |> Day5.parse() |> Day5.run(0, 99)
+Day5.task1(data)
+Day5.task2(data)
+:ok
+```
