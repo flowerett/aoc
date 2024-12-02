@@ -1,0 +1,74 @@
+# Day2
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "2", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day2 do
+  def parse(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn r -> r |> String.split() |> Enum.map(&String.to_integer/1) end)
+  end
+
+  def solve(data) do
+    dd = parse(data)
+    task1(dd) |> IO.inspect(label: "res 1")
+    task2(dd) |> IO.inspect(label: "res 2")
+  end
+
+  def check(row) do
+    cr = Enum.chunk_every(row, 2, 1, :discard)
+    Enum.all?(cr, fn [a, b] -> a >= b && d3(a,b) end) ||
+    Enum.all?(cr, fn [a, b] -> a <= b && d3(a,b) end)
+  end
+
+  def d3(a, b) do
+    d3 = abs(a - b)
+    d3 <=3 && d3 >= 1
+  end
+
+  def task1(data) do
+    Enum.count(data, fn row -> check(row) end)
+  end
+
+  def task2(data) do
+    data
+    |> Enum.count(fn row ->
+      0..length(row)-1
+      |> Enum.any?(fn i ->
+        nr = List.delete_at(row, i)
+        check(nr)
+      end)
+    end)
+  end
+
+  def permutations(row) do
+    0..length(row)-1
+  end
+end
+
+tdata =
+"""
+7 6 4 2 1
+1 2 7 8 9
+9 7 6 2 1
+1 3 2 4 5
+8 6 4 4 1
+1 3 6 7 9
+"""
+
+Day2.solve(tdata)
+Day2.solve(data)
+```
