@@ -1,0 +1,155 @@
+# Day9
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:elixir_ds, "~> 0.1.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2018", "9", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+# can be also done with queue
+# https://hexdocs.pm/elixir_ds/0.1.0/ElixirDS.Deque.html#rotate/2
+defmodule Circle do
+  defmodule Node do
+    defstruct id: nil, r: nil, l: nil
+
+    def new(data \\ 0) do
+      %__MODULE__{id: data}
+    end
+  end
+
+  defstruct current: nil, nodes: nil
+
+  def new(data \\ 0) do
+    node = data |> Node.new() |> Map.put(:r, data) |> Map.put(:l, data)
+    nodes = %{node.id => node}
+    %__MODULE__{current: node.id, nodes: nodes}
+  end
+
+  # cur <-> new <-> right
+  def put_right(c, data) do
+    cur_id = c.current
+    r_id = get_in(c, [Access.key(:nodes), Access.key(cur_id), Access.key(:r)])
+    n = data |> Node.new() |> Map.put(:l, cur_id) |> Map.put(:r, r_id)
+
+    c
+    |> put_in([Access.key(:nodes), Access.key(n.id)], n)
+    |> put_in([Access.key(:nodes), Access.key(cur_id), Access.key(:r)], n.id)
+    |> put_in([Access.key(:nodes), Access.key(r_id), Access.key(:l)], n.id)
+    |> put_in([Access.key(:current)], n.id)
+  end
+
+  # left <-> new <-> cur
+  def put_left(c, data) do
+    cur_id = c.current
+    l_id = get_in(c, [Access.key(:nodes), Access.key(cur_id), Access.key(:l)])
+    n = data |> Node.new() |> Map.put(:l, l_id) |> Map.put(:r, cur_id)
+
+    c
+    |> put_in([Access.key(:nodes), Access.key(n.id)], n)
+    |> put_in([Access.key(:nodes), Access.key(cur_id), Access.key(:l)], n.id)
+    |> put_in([Access.key(:nodes), Access.key(l_id), Access.key(:r)], n.id)
+    |> put_in([Access.key(:current)], n.id)
+  end
+
+  # new_left <-> left ^ <-> cur
+  def pop_left(c) do
+    cur_id = c.current
+    lpop_id = c.nodes[c.current].l
+    new_lid = c.nodes[lpop_id].l
+    c
+    |> put_in([Access.key(:nodes), Access.key(cur_id), Access.key(:l)], new_lid)
+    |> put_in([Access.key(:nodes), Access.key(new_lid), Access.key(:r)], cur_id)
+    |> pop_in([Access.key(:nodes), Access.key(lpop_id)])
+  end
+
+  def cw(c, n \\ 1)
+  def cw(c, 0), do: c
+
+  def cw(c, n) do
+    c
+    |> Map.put(:current, c.nodes[c.current].r)
+    |> cw(n-1)
+  end
+
+  def ccw(c, n \\ 1)
+  def ccw(c, 0), do: c
+
+  def ccw(c, n) do
+    c
+    |> Map.put(:current, c.nodes[c.current].l)
+    |> ccw(n-1)
+  end
+
+  def size(c), do: length(c.nodes.keys)
+
+  def inspect(c) do
+    do_inspect(c, c.current, c.nodes[c.current].r, [c.current])
+  end
+
+  def do_inspect(_c, idx, idx, acc), do: Enum.reverse(acc)
+  def do_inspect(c, st, cur, acc) do
+    do_inspect(c, st, c.nodes[cur].r, [cur | acc])
+  end
+end
+:initialized
+```
+
+```elixir
+defmodule Day9 do
+  def parse(data) do
+    Regex.scan(~r/\d+/, data)
+    |> List.flatten()
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  def solve(data, t \\ :t1) do
+    [pl, num] = parse(data)
+    num = t == :t2 && num*100 || num
+    game(pl, num)
+  end
+
+  def game(pl, num) do
+    c = Circle.new(0)
+    sc = %{}
+
+    Enum.reduce((1..num), {c, sc}, fn i, {c, sc} ->
+      if rem(i, 23) == 0 do
+        cur_pl = rem(i, pl)
+
+        {n, c} = c |> Circle.ccw(6) |> Circle.pop_left()
+
+        sum = i + n.id
+        sc = Map.update(sc, cur_pl, sum, fn d -> d + sum end)
+
+        {c, sc}
+      else
+        {c |> Circle.cw() |> Circle.put_right(i), sc}
+      end
+    end)
+    |> elem(1)
+    |> Map.values()
+    |> Enum.max()
+  end
+end
+
+t0 = "9 players; last marble is worth 25 points"
+t1 = "10 players; last marble is worth 1618 points"
+t2 = "13 players; last marble is worth 7999 points"
+t3 = "17 players; last marble is worth 1104 points"
+t4 = "21 players; last marble is worth 6111 points"
+t5 = "30 players; last marble is worth 5807 points"
+
+Day9.solve(t2) |> IO.inspect(label: "test 2")
+Day9.solve(data) # 398371
+# Day9.solve(data, :t2) #3212830280 ~20s
+```
