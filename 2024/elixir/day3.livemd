@@ -1,0 +1,57 @@
+# Day3
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "3", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day3 do
+  @rr ~r/(mul\((\d+),(\d+)\)|don't\(\))|do\(\)/
+
+  def parse(data) do
+    @rr
+    |> Regex.scan(data)
+    |> Enum.map(&parse_row/1)
+  end
+
+  def parse_row([_, _, a, b]), do: {String.to_integer(a), String.to_integer(b)}
+  def parse_row([_, "don't()"]), do: :off
+  def parse_row(["do()"]), do: :on
+
+  def solve(data) do
+    pd = parse(data)
+    task(pd, :t1) |> IO.inspect(label: "t1 >>>")
+    task(pd, :t2) |> IO.inspect(label: "t2 >>>")
+  end
+
+  def task(data, task) do
+    data
+    |> Enum.reduce({[], :on, task}, &do_mul/2)
+    |> elem(0)
+    |> Enum.sum()
+  end
+
+  def do_mul(:on, {acc, _cmd, task}), do: {acc, :on, task}
+  def do_mul(:off, {acc, _cmd, task}), do: {acc, :off, task}
+  def do_mul({a, b}, {acc, cmd, :t1}), do: {[a*b | acc], cmd, :t1}
+  def do_mul({a, b}, {acc, :on, :t2}), do: {[a*b | acc], :on, :t2}
+  def do_mul({_a, _b}, {acc, :off, :t2}), do: {acc, :off, :t2}
+end
+
+tdata = """
+xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
+"""
+
+Day3.solve(tdata)
+Day3.solve(data)
+```
