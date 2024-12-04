@@ -1,0 +1,86 @@
+# Day4
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "4", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day4 do
+  @h   [{0,0}, {0,1}, {0,2}, {0,3}]
+  @v   [{0,0}, {1,0}, {2,0}, {3,0}]
+  @ddn [{0,0}, {1,1}, {2,2}, {3,3}]
+  @dup [{0,0}, {-1,1}, {-2,2}, {-3,3}]
+
+  @x [{0,0}, {1,1}, {2,2}, {2,0}, {1,1}, {0,2}]
+
+  def parse(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn r -> String.split(r, "", trim: true) end)
+  end
+
+  def to_grid(data) do
+    rm = length(data)
+    cm = data |> List.first() |> length()
+    g = for {row, ri} <- Enum.with_index(data),
+        {c, ci} <- Enum.with_index(row), into: %{}, do: {{ri, ci}, c}
+    {g, rm, cm}
+  end
+
+  def solve(data) do
+    {g, rm, cm} = data |> parse() |> to_grid()
+
+    for r <- (0..rm-1), c <- (0..cm-1), reduce: {0,0} do
+      {t1, t2} -> {t1 + check(g, r, c, :t1), t2 + check(g, r, c, :t2)}
+    end
+  end
+
+  def check(g, r, c, :t2) do
+    label(g, r, c, @x) in ~w(MASMAS MASSAM SAMMAS SAMSAM) && 1 || 0
+  end
+
+  def check(g, r, c, :t1) do
+    labels(g, r, c)
+    |> Enum.filter(fn label -> label in ~w(XMAS SAMX) end)
+    |> Enum.count()
+  end
+
+  def labels(g, r, c) do
+    for dir <- [@h, @v, @ddn, @dup], do: label(g, r, c, dir)
+  end
+
+  def label(g, r, c, dir) do
+    for {dr, dc} <- dir, reduce: "" do
+      str ->
+        c = g[{r+dr, c+dc}]
+        to_string(c) <> str
+    end
+  end
+end
+
+tdata = """
+MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX
+"""
+
+Day4.solve(tdata) |> IO.inspect(label: "test>>>")
+Day4.solve(data)
+```
