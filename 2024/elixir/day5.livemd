@@ -1,0 +1,111 @@
+# Day5
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "5", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day5 do
+  def parse(data) do
+    [ord, p] = String.split(data, "\n\n", trim: true)
+    {split_with(ord, "|"), split_with(p, ",")}
+  end
+
+  def split_with(str, with) do
+    str
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn r ->
+      r |> String.split(with, trim: true) |> Enum.map(&String.to_integer/1)
+    end)
+  end
+
+  def solve(data) do
+    {ord, updates} = parse(data)
+
+    {good, bad} =
+      updates
+      |> Enum.map(fn upd -> {upd, do_sort(upd, ord)} end)
+      |> Enum.split_with(fn {orig, sorted} -> orig == sorted end)
+
+    {get_res(good, :t1), get_res(bad, :t2)}
+  end
+
+  def do_sort(row, ord) do
+    rank =
+      ord
+      |> Enum.filter(fn [a, b] -> a in row && b in row end)
+      |> Enum.reduce(%{}, fn [a, b], acc ->
+        acc
+        |> Map.update(a, 0, fn v -> v end)
+        |> Map.update(b, 1, fn v -> v + 1 end)
+      end)
+
+    row
+    |> Enum.with_index()
+    |> Enum.sort_by(fn {d, i} -> {rank[d], i} end)
+    |> Enum.map(fn {d, _} -> d end)
+  end
+
+  def get_res(updates, :t1) do
+    updates |> Enum.map(fn {orig, _} -> orig end) |> get_sum()
+  end
+
+  def get_res(updates, :t2) do
+    updates |> Enum.map(fn {_, sorted} -> sorted end) |> get_sum()
+  end
+
+  def get_sum(updates) do
+    updates
+    |> Enum.map(fn upd ->
+      mid = upd |> length() |> div(2)
+      Enum.at(upd, mid)
+    end)
+    |> Enum.sum()
+  end
+end
+
+tdata = """
+47|53
+97|13
+97|61
+97|47
+75|29
+61|13
+75|53
+29|13
+97|29
+53|29
+61|53
+97|53
+61|29
+47|13
+75|47
+97|75
+47|61
+75|61
+47|29
+75|13
+53|13
+
+75,47,61,53,29
+97,61,53,29,13
+75,29,13
+75,97,47,61,53
+61,13,29
+97,13,75,29,47
+"""
+
+
+Day5.solve(tdata) |> IO.inspect(label: "test >>>")
+Day5.solve(data) # {4185, 4480}
+```
