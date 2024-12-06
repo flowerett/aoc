@@ -12,6 +12,7 @@ https://adventofcode.com/2024
 | 03 - Mull It Over                    | [✓][03ex] | regex                   |
 | 04 - Ceres Search                    | [✓][04ex] | 2D grid, reduce/compr   |
 | 05 - Print Queue                     | [✓][05ex] | sort                    |
+| 06 - Guard Gallivant                 | [✓][06ex] | 2D grid, 2D moves       |
 
 
 [01ex]: elixir/day1.livemd
@@ -19,3 +20,4 @@ https://adventofcode.com/2024
 [03ex]: elixir/day3.livemd
 [04ex]: elixir/day4.livemd
 [05ex]: elixir/day5.livemd
+[06ex]: elixir/day6.livemd

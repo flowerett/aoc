@@ -1,0 +1,134 @@
+# Day6
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "6", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day6 do
+  @up {-1, 0}
+
+  def parse(data) do
+    split_with(data, "")
+  end
+
+  def split_with(str, with) do
+    str
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn r ->
+      r |> String.split(with, trim: true)
+    end)
+  end
+
+  def to_grid(data) do
+    rm = length(data)
+    cm = data |> List.first() |> length()
+
+    g = data
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {row, ri}, g ->
+        row
+        |> Enum.with_index()
+        |> Enum.reduce(g, fn {c, ci}, g -> Map.put(g, {ri,ci}, c) end)
+      end)
+    {{rm, cm}, g}
+  end
+
+  def plot(grid, {mr, mc}) do
+    Enum.map(0..mr-1, fn r ->
+      Enum.reduce(0..mc-1, "", fn c, acc -> acc <> grid[{r, c}] end)
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+  end
+
+  def get_st(g), do: g |> Enum.find(fn {_k, v} -> v == "^" end) |> elem(0)
+
+  def cw({r, c}), do: {c, -r}
+  def step({r, c}, {dr, dc}), do: {r+dr, c+dc}
+
+  def dots(g) do
+    g
+    |> Enum.filter(fn {_pos, v} -> v == "." end)
+    |> Enum.map(&elem(&1, 0))
+  end
+
+  def do_run(g, max, st) do
+    seen = MapSet.new([{st,@up}])
+    {g, seen, is_loop} = go(g, max, st, @up, seen)
+    {g, seen, is_loop}
+  end
+
+  def go(g, {rm, cm}, {r, c}, _dir, seen) when r in [-1, rm] or c in [-1, cm] do
+    {g, seen, :end}
+  end
+
+  def go(g, max, pos, dir, seen) do
+    nxt = step(pos, dir)
+    if g[nxt] == "#" do
+      dir = cw(dir)
+      go(g, max, pos, dir, seen)
+    else
+      # g = g |> Map.put(pos, "x") # for fun
+      if {nxt, dir} in seen do
+        {g, seen, :loop}
+      else
+        seen = MapSet.put(seen, {pos, dir})
+        go(g, max, nxt, dir, seen)
+      end
+    end
+  end
+
+  def solve(data) do
+    {max, g} = data |> parse() |> to_grid()
+    st = get_st(g)
+
+    {task1(g, max, st), task2(g, max, st)}
+  end
+
+  def task1(g, max, st) do
+    {_g, seen, :end} = do_run(g, max, st)
+
+    seen
+    |> Enum.map(fn {pos, _d} -> pos end)
+    |> Enum.uniq()
+    |> Enum.count()
+  end
+
+  def task2(g, max, st) do
+    g
+    |> dots()
+    |> Enum.reduce(0, fn dot, acc ->
+      g = Map.put(g, dot, "#")
+      {_g, _seen, is_loop} = do_run(g, max, st)
+      if is_loop == :loop, do: acc + 1, else: acc
+    end)
+  end
+end
+
+tdata = """
+....#.....
+.........#
+..........
+..#.......
+.......#..
+..........
+.#..^.....
+........#.
+#.........
+......#...
+"""
+
+Day6.solve(tdata)
+# Day6.solve(data) #{5269, 1957} runs 1m
+```
