@@ -1,0 +1,140 @@
+# Day8
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "8", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day8 do
+  defguard in_grid(rm, cm, r, c) when r in (0..rm-1//1) and c in (0..cm-1//1)
+
+  def parse(data) do
+    data
+    |> split_with(fn r -> String.split(r, "", trim: true) end)
+  end
+
+  def split_with(str, fun) do
+    str
+    |> String.split("\n", trim: true)
+    |> Enum.map(&fun.(&1))
+  end
+
+  def to_grid(data) do
+    rm = length(data)
+    cm = data |> List.first() |> length()
+
+    g = data
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {row, ri}, g ->
+        row
+        |> Enum.with_index()
+        |> Enum.reduce(g, fn {c, ci}, g -> Map.put(g, {ri,ci}, c) end)
+      end)
+    {{rm, cm}, g}
+  end
+
+  def plot(grid, {mr, mc}) do
+    Enum.map(0..mr-1, fn r ->
+      Enum.reduce(0..mc-1, "", fn c, acc -> acc <> grid[{r, c}] end)
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+    grid
+  end
+
+  def solve(data) do
+    {max, g} = data |> parse() |> to_grid()
+    gr = g |> Enum.filter(fn {_p, v} -> v != "." end) |> Enum.group_by(fn {_p, v} -> v end)
+
+    {r1, r2} = Enum.reduce(gr, {MapSet.new(), MapSet.new()}, fn {_k, v}, {t1, t2} ->
+      {r1, r2} = antinodes(max, v)
+      {MapSet.union(t1, r1), MapSet.union(t2, r2)}
+    end)
+
+    # debug
+    # Enum.reduce(r2, g, fn an, g ->
+    #   if g[an] == "." do
+    #     Map.put(g, an, "#")
+    #   else
+    #     g
+    #   end
+    # end)
+    # |> plot(max)
+
+    {MapSet.size(r1), MapSet.size(r2)}
+  end
+
+  def antinodes(max, gr) do
+    pos = Enum.map(gr, fn {p, _v} -> p end)
+
+    for a <- pos, b <- pos, a != b do
+      {ra, ca} = a
+      {rb, cb} = b
+      dr = ra - rb
+      dc = ca - cb
+
+      {
+        nodes(max, ra, ca, dr, dc, MapSet.new(), :t1),
+        nodes(max, rb, cb, dr, dc, dr, dc, MapSet.new(), :t2)
+      }
+    end
+    |> Enum.reduce({MapSet.new(), MapSet.new()}, fn {r1, r2}, {t1, t2} ->
+      {MapSet.union(t1, r1), MapSet.union(t2, r2)}
+    end)
+  end
+
+  def nodes({rm, cm}, r, c, dr, dc, ddr, ddc, acc, :t2) when in_grid(rm, cm, r+ddr, c+ddc) do
+    acc = MapSet.put(acc, {r+ddr, c+ddc})
+    nodes({rm, cm}, r, c, dr, dc, ddr+dr, ddc+dc, acc, :t2)
+  end
+
+  def nodes(_max, _r, _c, _dr, _dc, _ddr, _ddc, acc, :t2), do: acc
+
+  def nodes({rm, cm}, r, c, dr, dc, acc, :t1) when in_grid(rm, cm, r+dr, c+dc) do
+    MapSet.put(acc, {r+dr, c+dc})
+  end
+
+  def nodes(_max, _r, _c, _dr, _dc, acc, :t1), do: acc
+end
+
+tdata = """
+............
+........0...
+.....0......
+.......0....
+....0.......
+......A.....
+............
+............
+........A...
+.........A..
+............
+............
+"""
+
+tdata2 = """
+T.........
+...T......
+.T........
+..........
+..........
+..........
+..........
+..........
+..........
+..........
+"""
+
+Day8.solve(tdata) |> IO.inspect()
+Day8.solve(data) # {252, 839}
+```

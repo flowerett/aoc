@@ -1,0 +1,99 @@
+# Day7
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:permutation, "~> 0.1.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "7", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day7 do
+  def parse(data) do
+    data
+    |> split_with(fn r ->
+      Regex.scan(~r/\d+/, r) |> List.flatten() |> Enum.map(&String.to_integer/1)
+    end)
+    |> Enum.map(fn [f | r] -> {f, r} end)
+  end
+
+  def split_with(str, fun) do
+    str
+    |> String.split("\n", trim: true)
+    |> Enum.map(&fun.(&1))
+  end
+
+  def solve(data) do
+    dd = parse(data)
+    {task1(dd), task2(dd)}
+  end
+
+  def task1(data) do
+    Enum.reduce(data, 0, fn {v, _} = row, sum ->
+      is_valid(row, :t1) && sum + v || sum
+    end)
+  end
+
+  def task2(data) do
+    Enum.reduce(data, 0, fn {v, _} = row, sum ->
+      is_valid(row, :t2) && sum + v || sum
+    end)
+  end
+
+  def is_valid({check, nums}, t) do
+    nops = length(nums) - 1
+    ops_var = t |> ops() |> permute(nops)
+
+    Enum.any?(ops_var, fn ops -> calc(nums, ops) == check end)
+  end
+
+  def calc([h | rest], ops) do
+    ops
+    |> Enum.zip(rest)
+    |> Enum.reduce(h, &do_calc/2)
+  end
+
+  def do_calc({"+", num}, sum), do: sum + num
+  def do_calc({"*", num}, sum), do: sum * num
+  def do_calc({"||", num}, sum), do: String.to_integer(to_string(sum) <> to_string(num))
+  def do_calc({op,_}, _), do: raise "bad op>>> #{op}"
+
+  def ops(:t1), do: ~w(* +)
+  def ops(:t2), do: ~w(* + ||)
+
+  # sdtlib doesn't have it
+  # https://docs.python.org/3/library/itertools.html#itertools.product
+  def permute(list, n) do
+    list
+    |> List.duplicate(n)
+    |> Enum.reduce([[]], fn clist, acc ->
+      for el <- clist, tmp <- acc do
+        [el | tmp]
+      end
+    end)
+  end
+end
+
+tdata = """
+190: 10 19
+3267: 81 40 27
+83: 17 5
+156: 15 6
+7290: 6 8 6 15
+161011: 16 10 13
+192: 17 8 14
+21037: 9 7 18 13
+292: 11 6 16 20
+"""
+
+Day7.solve(tdata) |> IO.inspect(label: "test >>>")
+# Day7.solve(data) # {3351424677624, 204976636995111}
+```
