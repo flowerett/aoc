@@ -15,6 +15,8 @@ https://adventofcode.com/2024
 | 06 - Guard Gallivant                 | [✓][06ex] | 2D grid, 2D moves       |
 | 07 - Bridge Repair                   | [✓][07ex] | permutations            |
 | 08 - Resonant Collinearity           | [✓][08ex] | 2D grid, reduce, perm   |
+| 09 - Disk Fragmenter                 | [✓][09ex] | list, pointers, array   |
+| 10 - Hoof It                         | [✓][10ex] | 2D grid, queue, bfs     |
 
 
 [01ex]: elixir/day1.livemd
@@ -25,3 +27,5 @@ https://adventofcode.com/2024
 [06ex]: elixir/day6.livemd
 [07ex]: elixir/day7.livemd
 [08ex]: elixir/day8.livemd
+[09ex]: elixir/day9.livemd
+[10ex]: elixir/day10.livemd

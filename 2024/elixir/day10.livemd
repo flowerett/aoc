@@ -1,0 +1,143 @@
+# Day10
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+  # {:queue, "~> 0.1.0"}
+  # {:heap, "~> 3.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "10", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day10 do
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @moves [@up, @down, @left, @right]
+
+  def parse(data) do
+    data
+    |> String.trim()
+    |> split_with("\n", fn row ->
+      row |> String.split("", trim: true) |> Enum.map(&String.to_integer/1)
+    end)
+  end
+
+  def split_with(str, sep, fun) do
+    str
+    |> String.split(sep, trim: true)
+    |> Enum.map(&fun.(&1))
+  end
+
+  def to_grid(data) do
+    my = length(data)
+    mx = data |> hd() |> length()
+
+    g = data
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {row, ri}, g ->
+        row
+        |> Enum.with_index()
+        |> Enum.reduce(g, fn {v, ci}, g -> Map.put(g, {ri,ci}, v) end)
+      end)
+    %{g: g, my: my-1, mx: mx-1}
+  end
+
+  def starts(aoc) do
+    aoc.g
+    |> Enum.filter(fn {_p, h} -> h == 0 end)
+    |> Enum.map(fn {k, _} -> k end)
+  end
+
+  def solve(data) do
+    aoc = data |> parse() |> to_grid()
+
+    starts(aoc)
+    |> Enum.map(fn st -> dfs({[st], %{}}, aoc) end)
+    |> calc_res()
+  end
+
+  def calc_res(maps) do
+    maps
+    |> Enum.map(fn m ->
+      t1 = Enum.count(m)
+      t2 = Map.values(m) |> Enum.sum()
+      {t1, t2}
+    end)
+    |> Enum.reduce({0, 0}, fn {t1, t2}, {r1, r2} ->
+      {r1+t1, r2+t2}
+    end)
+  end
+
+  def dfs({[], res}, _), do: res
+
+  def dfs({q, res}, aoc) do
+    [h | q] = q
+
+    next_moves(h, 1, aoc)
+    |> Enum.reduce({q, res}, fn p, {q, res} ->
+      if aoc.g[p] == 9 do
+        res = Map.update(res, p, 1, fn v -> v+1 end)
+        {q, res}
+      else
+        {[p | q], res}
+      end
+    end)
+    |> dfs(aoc)
+  end
+
+  def next_moves({y, x}, step, aoc) do
+    @moves
+    |> Enum.map(fn {dy, dx} -> {y + dy, x + dx} end)
+    |> Enum.filter(fn {y2, x2} ->
+      in_grid?({y2, x2}, aoc) and
+        (aoc.g[{y2, x2}] - aoc.g[{y,x}] == step)
+    end)
+  end
+
+  def in_grid?({y, x}, aoc) do
+    y >= 0 and y <= aoc.my and x >= 0 and x <= aoc.mx
+  end
+end
+
+tdata = """
+0123
+1234
+8765
+9876
+"""
+
+tdata2 = """
+89010123
+78121874
+87430965
+96549874
+45678903
+32019012
+01329801
+10456732
+"""
+
+tdata3 = """
+012345
+123456
+234567
+345678
+416789
+567891
+"""
+
+Day10.solve(tdata)  |> IO.inspect(label: "t1")
+Day10.solve(tdata2) |> IO.inspect(label: "t2")
+Day10.solve(tdata3) |> IO.inspect(label: "t3")
+Day10.solve(data) # {682, 1511}
+```
