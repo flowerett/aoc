@@ -1,0 +1,156 @@
+# Day9
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "9", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day9 do
+  import Integer, only: [is_odd: 1, is_even: 1]
+
+  def parse(data) do
+    data
+    |> String.trim()
+    # |> String.split("", trim: true)
+    |> split_with("", &String.to_integer/1)
+  end
+
+  def split_with(str, sep, fun) do
+    str
+    |> String.split(sep, trim: true)
+    |> Enum.map(&fun.(&1))
+  end
+
+  def solve(data, v \\ false) do
+    disk = to_disk(data)
+    map = file_map(data)
+
+    if v, do: plot(disk)
+
+    {task1(disk, v), task2(disk, map, v)}
+  end
+
+  def task1(disk, v) do
+    en = Enum.count(disk)-1
+
+    disk = dd(disk, 0, en)
+    if v, do: plot(disk)
+    checksum(disk)
+  end
+
+  def task2(disk, {f, s}, v) do
+    {disk, _s} =
+      Enum.reduce(f, {disk, s}, fn {_, fsize, fpos} = f, {_disk, s} = acc ->
+        s |> find_space(fsize, fpos) |> do_bswap(f, acc)
+      end)
+    if v, do: plot(disk)
+    checksum(disk)
+  end
+
+  # --- T1
+  def to_block(i) when is_even(i), do: i |> div(2)
+  def to_block(i) when is_odd(i), do: "."
+
+  def to_disk(data) do
+    parse(data)
+    |> Enum.with_index(fn n, i -> {n, i} end)
+    |> Enum.map(fn {n, i} ->
+      i |> to_block() |> List.duplicate(n)
+    end)
+    |> List.flatten()
+    |> Enum.with_index(fn el, i -> {i, el} end)
+    |> Enum.into(%{})
+  end
+
+  def plot(d) do
+    d
+    |> Enum.sort_by(fn {k, _v} -> k end)
+    |> Enum.map(fn {_, v} -> v end)
+    |> Enum.join()
+    |> IO.puts()
+  end
+
+  def dd(disk, st, en) when st == en, do: disk
+
+  def dd(d, st, en) do
+    a = d[st]
+    b = d[en]
+    {a, b, stx, enx} = swap(a, b, st, en)
+    d = d |> Map.put(st, a) |> Map.put(en, b)
+    dd(d, stx, enx)
+  end
+
+  def swap(a, b, st, en) when is_integer(a), do: {a, b, st+1, en}
+  def swap(a, b, st, en) when b == ".", do: {a, b, st, en-1}
+
+  def swap(a, b, st, en) when a == "." and is_integer(b), do: {b, a, st+1, en-1}
+  def swap(_, _, _, _), do: raise "unknown state"
+
+  def checksum(d) do
+    d
+    |> Enum.reject(fn {_k, v} -> v == "." end)
+    |> Enum.sort_by(fn {k, _v} -> k end)
+    |> Enum.reduce(0, fn {k, v}, sum -> k*v + sum end)
+  end
+
+  # --- T2
+  def file_map(data) do
+    [files, spaces] = parse(data)
+    |> Enum.with_index(fn n, i -> {n, i} end)
+    |> Enum.map(fn {n, i} -> {to_block(i), n} end)
+    |> Enum.reduce({[], 0}, fn {fname, fsize}, {acc, pos} ->
+      {[{fname, fsize, pos} | acc], pos+fsize}
+    end)
+    |> elem(0)
+    |> Enum.reject(fn {_, size, _} -> size == 0 end)
+    |> Enum.group_by(fn {f, _, _} -> f == "." end)
+    |> Map.values()
+
+    spaces = spaces
+      |> Enum.reverse()
+      |> Enum.map(fn {_, sz, pos} -> {sz, pos} end)
+      |> Enum.with_index(fn el, ind -> {ind, el} end)
+      |> Map.new()
+    {files, spaces}
+  end
+
+  def find_space(s, fsize, fpos) do
+    s
+    |> Enum.filter(fn {_i, {ssize, spos}} -> ssize >= fsize && spos < fpos end)
+    |> Enum.min_by(fn {i, {_, _}} -> i end, fn -> false end)
+  end
+
+  def bswap(d, _st, _en, 0), do: d
+  def bswap(d, st, en, n) do
+    {a, b} = {d[st], d[en]}
+    d |> Map.put(st, b) |> Map.put(en, a) |> bswap(st+1, en-1, n-1)
+  end
+
+  def do_bswap(false, _f, acc), do: acc
+
+  def do_bswap({ind, {ssize, spos}}, {_fname, fsize, fpos}, {d, s}) do
+    st = spos
+    en = fpos+fsize-1
+    d = bswap(d, st, en, fsize)
+    s = Map.put(s, ind, {ssize-fsize, spos+fsize})
+    {d, s}
+  end
+end
+
+tdata = """
+2333133121414131402
+"""
+
+Day9.solve(tdata, true) |> IO.inspect(label: "test")
+# Day9.solve(data) # {6430446922192, 6460170593016}
+```
