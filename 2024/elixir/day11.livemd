@@ -1,0 +1,166 @@
+# Day11
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+  # {:queue, "~> 0.1.0"}
+  # {:heap, "~> 3.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "11", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+### Pebble patterns
+
+* Any number will be eventually converted to number with even num of digits
+
+* even number will be eventually split into single digit numbers or 16192
+
+* single digit numbers or 16192 follow next patterns
+
+* we can use cache to catch this cycles
+
+* digit: "0"
+
+  * round 1: ["1"]
+  * round 2: ["2024"]
+  * round 3: ["20", "24"]
+  * round 4: ["2", "0", "2", "4"]
+
+* digit: "1"
+
+  * round 1: ["2024"]
+  * round 2: ["20", "24"]
+  * round 3: ["2", "0", "2", "4"]
+
+* digit: "2"
+
+  * round 1: ["4048"]
+  * round 2: ["40", "48"]
+  * round 3: ["4", "0", "4", "8"]
+
+* digit: "3"
+
+  * round 1: ["6072"]
+  * round 2: ["60", "72"]
+  * round 3: ["6", "0", "7", "2"]
+
+* digit: "4"
+
+  * round 1: ["8096"]
+  * round 2: ["80", "96"]
+  * round 3: ["8", "0", "9", "6"]
+
+* digit: "5"
+
+  * round 1: ["10120"]
+  * round 2: ["20482880"]
+  * round 3: ["2048", "2880"]
+  * round 4: ["20", "48", "28", "80"]
+  * round 5: ["2", "0", "4", "8", "2", "8", "8", "0"]
+
+* digit: "6"
+
+  * round 1: ["12144"]
+  * round 2: ["24579456"]
+  * round 3: ["2457", "9456"]
+  * round 4: ["24", "57", "94", "56"]
+  * round 5: ["2", "4", "5", "7", "9", "4", "5", "6"]
+
+* digit: "7"
+
+  * round 1: ["14168"]
+  * round 2: ["28676032"]
+  * round 3: ["2867", "6032"]
+  * round 4: ["28", "67", "60", "32"]
+  * round 5: ["2", "8", "6", "7", "6", "0", "3", "2"]
+
+* digit: "8"
+
+  * round 1: ["16192"]
+  * round 2: ["32772608"]
+  * round 3: ["3277", "2608"]
+  * round 4: ["32", "77", "26", "8"]
+  * round 5: ["3", "2", "7", "7", "2", "6", "16192"]
+
+* digit: "9"
+
+  * round 1: ["18216"]
+  * round 2: ["36869184"]
+  * round 3: ["3686", "9184"]
+  * round 4: ["36", "86", "91", "84"]
+  * round 5: ["3", "6", "8", "6", "9", "1", "8", "4"]
+
+* num: "16192"
+
+  * round 1: ["32772608"]
+  * round 2: ["3277", "2608"]
+  * round 3: ["32", "77", "26", "8"]
+  * round 4: ["3", "2", "7", "7", "2", "6", "16192"]
+
+## Solve
+
+```elixir
+defmodule Day11 do
+  import Integer, only: [is_even: 1]
+  # usual %{} for cache will be slow
+  # moving the map between calls and updating it is expensive
+
+  def parse(data) do
+    data |> String.trim() |> String.split(" ")
+  end
+
+  def solve(data, n) do
+    data
+    |> parse()
+    |> Enum.reduce(0, fn st, sum -> sum + count(st, n) end)
+  end
+
+  def count(_st, 0), do: 1
+
+  def count(st, n) do
+    case :ets.lookup(:cache, {st, n}) do
+      [{_key, res}] ->
+        res
+      [] ->
+        res = next_stone(st) |> handle_next(n)
+        :ets.insert(:cache, {{st, n}, res})
+        res
+    end
+  end
+
+  def next_stone("0"), do: "1"
+
+  def next_stone(st) do
+    len = String.length(st)
+    if is_even(len) do
+      {a, b} = String.split_at(st, div(len, 2))
+      b = b |> String.to_integer() |> to_string()
+      {a, b}
+    else
+      to_string(String.to_integer(st) * 2024)
+    end
+  end
+
+  def handle_next({a, b}, n), do: count(a, n-1) + count(b, n-1)
+  def handle_next(st, n), do: count(st, n-1)
+end
+
+tdata = """
+125 17
+"""
+
+:ets.new(:cache, [:set, :protected, :named_table])
+
+Day11.solve(tdata, 25) |> IO.inspect(label: "t1 test")
+Day11.solve(tdata, 75) |> IO.inspect(label: "t2 test")
+Day11.solve(data, 25)  |> IO.inspect(label: "t1")
+Day11.solve(data, 75)  |> IO.inspect(label: "t2") # 202_019, 239_321_955_280_205
+Day11.solve(tdata, 500)  |> IO.inspect(label: "test 500")
+
+:ets.delete(:cache) && :ok
+```

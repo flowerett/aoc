@@ -17,6 +17,7 @@ https://adventofcode.com/2024
 | 08 - Resonant Collinearity           | [✓][08ex] | 2D grid, reduce, perm   |
 | 09 - Disk Fragmenter                 | [✓][09ex] | list, pointers, array   |
 | 10 - Hoof It                         | [✓][10ex] | 2D grid, queue, bfs     |
+| 11 - Plutonian Pebbles               | [✓][11ex] | patterns, cache, ETS    |
 
 
 [01ex]: elixir/day1.livemd
@@ -29,3 +30,4 @@ https://adventofcode.com/2024
 [08ex]: elixir/day8.livemd
 [09ex]: elixir/day9.livemd
 [10ex]: elixir/day10.livemd
+[11ex]: elixir/day11.livemd
