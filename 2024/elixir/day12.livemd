@@ -1,0 +1,269 @@
+# Day12
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+  # {:queue, "~> 0.1.0"}
+  # {:heap, "~> 3.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "12", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Helpers
+
+```elixir
+defmodule Aoc.Grid do
+  @type aoc_grid :: %{grid: map(), mx: non_neg_integer(), my: non_neg_integer()}
+  @type data :: String.t()
+
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @moves [@up, @down, @left, @right]
+  @dirs %{@up => :n, @down => :s, @left => :w, @right => :e}
+
+  @spec parse(data()) :: aoc_grid()
+  def parse(data), do: parse(data, &(&1))
+
+  @spec parse(data(), fun()) :: aoc_grid()
+  def parse(data, fun) do
+    raw =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+
+    my = length(raw)
+    mx = raw |> hd() |> length()
+
+    grid =
+      for {row, y} <- Enum.with_index(raw),
+          {sym, x} <- Enum.with_index(row),
+          into: %{} do
+        {{y, x}, fun.(sym)}
+      end
+
+    %{grid: grid, mx: mx - 1, my: my - 1}
+  end
+
+  def in_grid?({y, x}, aoc) do
+    y >= 0 and y <= aoc.my and x >= 0 and x <= aoc.mx
+  end
+
+  def next_moves({y, x}, aoc) do
+    @moves
+    |> Enum.filter(fn {dy, dx} -> in_grid?({y + dy, x + dx}, aoc) end)
+    |> Enum.map(fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def all_moves({y, x}) do
+    Enum.map(@moves, fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def moves, do: @moves
+  def dirs, do: @dirs
+end
+```
+
+## Solve
+
+```elixir
+defmodule Day12 do
+  import Aoc.Grid
+
+  def solve(data) do
+    aoc = parse(data)
+
+    aoc
+    |> get_regions()
+    |> Enum.map(fn {k, v} ->
+      a = area(v)
+      p = perimeter(v)
+      p2 = perimeter2(v)
+      {k, a, p, p2, a * p, a * p2}
+    end)
+    |> print_res()
+  end
+
+  def print_res(res) do
+    res
+    # |> IO.inspect()
+    |> Enum.reduce({0,0}, fn {_, _, _, _, r1, r2}, {s1, s2} ->
+      {s1 + r1, s2 + r2}
+    end)
+  end
+
+  def get_regions(aoc) do
+    Enum.reduce(aoc.grid, %{}, fn {pos, v} = _n, regions ->
+      if Map.has_key?(regions, pos) do
+        regions
+      else
+        key = {v, pos}
+        do_flood([pos], key, aoc, regions)
+      end
+    end)
+    |> Enum.group_by(fn {_k, v} -> v end)
+    |> Enum.map(fn {k, list} ->
+      v = list |> Enum.map(fn {v, _} -> v end) |> MapSet.new()
+      {k, v}
+    end)
+    |> Enum.into(%{})
+  end
+
+  def do_flood([], _, _, regions), do: regions
+  def do_flood(q, key, aoc, regions) do
+    [pos | r] = q
+
+    nr = Map.put(regions, pos, key)
+
+    q = next_moves(pos, aoc)
+        |> Enum.reject(fn nxt ->
+          Map.has_key?(regions, nxt) || aoc.grid[nxt] != elem(key, 0)
+        end)
+        |> Enum.reduce(r, fn nxt, acc -> [nxt | acc] end)
+
+    do_flood(q, key, aoc, nr)
+  end
+
+  def area(points), do: MapSet.size(points)
+
+  def perimeter(points) do
+    points
+    |> Enum.reduce(0, fn p, sum ->
+      all_moves(p)
+      |> Enum.reduce(sum, fn nxt, sum ->
+        nxt in points && sum || sum + 1
+      end)
+    end)
+  end
+
+  def perimeter2(points) do
+    points
+    |> perimeter_with_dirs()
+    |> Enum.reduce(%{}, fn {dir, p}, acc ->
+      Map.update(acc, dir, [p], fn pts -> [p | pts] end)
+    end)
+    |> Enum.map(&dir_sorter/1)
+    |> Enum.map(fn {dir, [h | t]} -> compact(dir, h, t, 0) end)
+    |> Enum.sum()
+  end
+
+  def perimeter_with_dirs(points) do
+    Enum.reduce(points, [], fn {y, x}, acc ->
+      moves()
+      |> Enum.reduce(acc, fn {dy, dx} = dir, acc ->
+        nxt = {y + dy, x + dx}
+        if nxt in points do
+          acc
+        else
+          d = dirs()[dir]
+          [{d, nxt} | acc]
+        end
+      end)
+    end)
+  end
+
+  def dir_sorter({dir, vals}) when dir in [:n, :s] do
+    {dir, Enum.sort_by(vals, fn {y, x} -> {y, x} end)}
+  end
+
+  def dir_sorter({dir, vals}) when dir in [:w, :e] do
+    {dir, Enum.sort_by(vals, fn {y, x} -> {x, y} end)}
+  end
+
+  def compact(_dir, _s, [], acc), do: acc + 1
+
+  def compact(dir, {ya, xa}, rest, acc) when dir in [:n, :s] do
+    [{yb, xb} | t] = rest
+    if yb == ya and xb-xa == 1 do
+      compact(dir, {yb, xb}, t, acc)
+    else
+      compact(dir, {yb, xb}, t, acc + 1)
+    end
+  end
+
+  def compact(dir, {ya, xa}, rest, acc) when dir in [:w, :e] do
+    [{yb, xb} | t] = rest
+    if xb == xa and yb-ya == 1 do
+      compact(dir, {yb, xb}, t, acc)
+    else
+      compact(dir, {yb, xb}, t, acc + 1)
+    end
+  end
+end
+
+t1 = """
+AAAA
+BBCD
+BBCC
+EEEC
+"""
+
+t2 = """
+OOOOO
+OXOXO
+OOOOO
+OXOXO
+OOOOO
+"""
+
+t3 = """
+RRRRIICCFF
+RRRRIICCCF
+VVRRRCCFFF
+VVRCCCJFFF
+VVVVCJJCFE
+VVIVCCJJEE
+VVIIICJJEE
+MIIIIIJJEE
+MIIISIJEEE
+MMMISSJEEE
+"""
+
+t4 = """
+EEEEE
+EXXXX
+EEEEE
+EXXXX
+EEEEE
+"""
+
+t5 = """
+AAAAAA
+AAABBA
+AAABBA
+ABBAAA
+ABBAAA
+AAAAAA
+"""
+
+t6 = """
+IIIIIIII
+IIOOOOII
+IIOOOOII
+IIOOXOII
+IIOOXOII
+IIOOOOII
+IIOOOOII
+IIIIIIII
+"""
+
+# test1: {140, 80}
+# test2: {772, 436}
+# test3: {1930, 1206}
+# test4: {692, 236}
+# test5: {1184, 368}
+# test6: {2664, 504}
+Day12.solve(t1) |> IO.inspect(label: "test1")
+Day12.solve(t2) |> IO.inspect(label: "test2")
+Day12.solve(t3) |> IO.inspect(label: "test3")
+Day12.solve(t4) |> IO.inspect(label: "test4")
+Day12.solve(t5) |> IO.inspect(label: "test5")
+Day12.solve(t6) |> IO.inspect(label: "test6")
+Day12.solve(data) # {1415378, 862714}
+```
