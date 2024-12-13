@@ -1,0 +1,134 @@
+# Day13
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "13", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day13 do
+  @button_re ~r/X\+(\d+), Y\+(\d+)/
+  @prize_re  ~r/X=(\d+), Y=(\d+)/
+
+  def parse(input, offset) do
+    input
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> Enum.chunk_every(3)
+    |> Enum.map(&parse_machine(&1, offset))
+  end
+
+  def parse_machine([a, b, prize], offset) do
+    %{
+      a: parse_line(a, @button_re),
+      b: parse_line(b, @button_re),
+      prize: parse_line(prize, @prize_re, offset)
+    }
+  end
+
+  def parse_line(line, re, offset \\ 0) do
+    [x, y] = Regex.run(re, line, capture: :all_but_first)
+    {String.to_integer(x) + offset, String.to_integer(y) + offset}
+  end
+
+  def solve(data, offset \\ 10_000_000_000_000) do
+    data
+    |> parse(offset)
+    |> Enum.map(&solve_machine/1)
+    |> Enum.reduce({0, 0}, fn
+      {:ok, {a, b}}, {total, count} ->
+        {total + calc_tokens(a, b), count + 1}
+
+      :no_solution, acc ->
+        acc
+    end)
+    |> then(fn {total, count} ->
+      IO.puts("solvable: #{count}")
+      IO.puts("tokens needed: #{total}")
+      String.duplicate("-", 30) |> IO.puts()
+      total
+    end)
+  end
+
+  @doc """
+  Cramer's rule - https://www.purplemath.com/modules/cramers.htm
+
+  Or can be solved without ☝️ knowledge by looking into equations:
+  A * ax + B * bx = px
+  A * ay + B * by = py
+
+  and finding A & B:
+  A = (by * px - bx * py) / (ax * by - ay * bx)
+  B = (py - ay * a) / by
+
+  there is no solution:
+  - if (ax * by - ay * bx) is zero
+  or
+  - if A & B are rationals or negative or both zero
+  (number of times to push a button can't be negative or rational)
+  """
+  def solve_machine(%{a: {ax, ay}, b: {bx, by}, prize: {px, py}}) do
+    # calculate determinant of the coefficient matrix
+    det = ax * by - ay * bx
+
+    # det == 0 means that the system of equations has no unique solution
+    if det == 0 do
+      :no_solution
+    else
+      # calculate determinants for each equation
+      da = px * by - py * bx
+      db = ax * py - ay * px
+
+      # dividing variable's determinant by the coefficient determinant
+      # using integer division
+      a = div(da, det)
+      b = div(db, det)
+
+      # verify solution is valid
+      if a >= 0 and b >= 0 and
+         ax * a + bx * b == px and
+         ay * a + by * b == py do
+        {:ok, {a, b}}
+      else
+        :no_solution
+      end
+    end
+  end
+
+  def calc_tokens(a_presses, b_presses), do: 3 * a_presses + b_presses
+end
+
+
+tdata = """
+Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400
+
+Button A: X+26, Y+66
+Button B: X+67, Y+21
+Prize: X=12748, Y=12176
+
+Button A: X+17, Y+86
+Button B: X+84, Y+37
+Prize: X=7870, Y=6450
+
+Button A: X+69, Y+23
+Button B: X+27, Y+71
+Prize: X=18641, Y=10279
+"""
+
+Day13.solve(tdata, 0) # 480
+Day13.solve(tdata)    # 875318608908
+Day13.solve(data, 0)  # 29187
+Day13.solve(data)     # 99968222587852
+:ok
+```

@@ -19,6 +19,7 @@ https://adventofcode.com/2024
 | 10 - Hoof It                         | [✓][10ex] | 2D grid, queue, bfs     |
 | 11 - Plutonian Pebbles               | [✓][11ex] | patterns, cache, ETS    |
 | 12 - Garden Groups                   | [✓][12ex] | 2D grid, bfs, perimeter |
+| 13 - Claw Contraption                | [✓][13ex] | math, equations         |
 
 
 [01ex]: elixir/day1.livemd
@@ -33,3 +34,4 @@ https://adventofcode.com/2024
 [10ex]: elixir/day10.livemd
 [11ex]: elixir/day11.livemd
 [12ex]: elixir/day12.livemd
+[13ex]: elixir/day13.livemd
