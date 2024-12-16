@@ -1,0 +1,242 @@
+# Day16
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:heap, "~> 3.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "16", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Helpers
+
+```elixir
+defmodule Aoc.Grid do
+  @type aoc_grid :: %{grid: map(), mx: non_neg_integer(), my: non_neg_integer()}
+  @type data :: String.t()
+
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @moves [@up, @down, @left, @right]
+  @dirs %{n: @up, s: @down, w: @left, e: @right}
+
+  @spec parse(data()) :: aoc_grid()
+  def parse(data), do: parse(data, &(&1))
+
+  @spec parse(data(), fun()) :: aoc_grid()
+  def parse(data, fun) do
+    raw =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+
+    my = length(raw)
+    mx = raw |> hd() |> length()
+
+    grid =
+      for {row, y} <- Enum.with_index(raw),
+          {sym, x} <- Enum.with_index(row),
+          into: %{} do
+        {{y, x}, fun.(sym)}
+      end
+
+    %{grid: grid, mx: mx - 1, my: my - 1}
+  end
+
+  def in_grid?({y, x}, aoc) do
+    y >= 0 and y <= aoc.my and x >= 0 and x <= aoc.mx
+  end
+
+  def can_move?({y, x}, aoc) do
+    in_grid?({y, x}, aoc) and aoc.grid[{y, x}] != "#"
+  end
+
+  def next_moves({y, x}, aoc) do
+    @moves
+    |> Enum.filter(fn {dy, dx} -> in_grid?({y + dy, x + dx}, aoc) end)
+    |> Enum.map(fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def all_moves({y, x}) do
+    Enum.map(@moves, fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def moves, do: @moves
+  def dirs, do: @dirs
+
+  def cw({r, c}), do: {c, -r}
+  def ccw({r, c}), do: {-c, r}
+  def fwd({y, x}, {dy, dx}), do: {y + dy, x + dx}
+
+  def plot(grid, my, mx) do
+    Enum.map(0..my, fn y ->
+      Enum.reduce(0..mx, "", fn x, acc -> acc <> grid[{y, x}] end)
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+  end
+end
+```
+
+## Solve
+
+```elixir
+defmodule Day16 do
+  alias Aoc.Grid, as: G
+
+  def solve(data, verbose \\ false) do
+    aoc = G.parse(data)
+    {st, "S"} = find(aoc, "S")
+    {en, "E"} = find(aoc, "E")
+    dir = G.dirs[:e]
+
+    # {pos, dir, score, path}
+    q = Heap.new(&(elem(&1, 2) < elem(&2, 2)))
+    q = Heap.push(q, {st, dir, 0, MapSet.new()})
+
+    bfs(q, aoc)
+
+    [cost, path] =
+      :cache
+      |> :ets.match({{en, :_}, :"$2", :"$3"})
+      |> Enum.min_by(fn [cost, _] -> cost end)
+
+    if verbose do
+      path
+      |> Enum.reduce(aoc.grid, &Map.put(&2, &1, "O"))
+      |> G.plot(aoc.my, aoc.mx)
+      IO.puts("----------")
+    end
+
+    {cost, MapSet.size(path)}
+  end
+
+  def find(%{grid: g}, el) do
+    Enum.find(g, fn {_p, k} -> k == el end)
+  end
+
+  # dijkstra
+  def bfs(q, aoc) do
+    unless Heap.empty?(q) do
+      {pos, dir, sc, path} = Heap.root(q)
+      persist(pos, dir, sc, path)
+
+      # next moves:
+      [
+        {G.fwd(pos, dir), dir, sc+1}, # forward
+        {pos, G.cw(dir), sc+1000},    # cw
+        {pos, G.ccw(dir), sc+1000}    # ccw
+      ]
+      |> Enum.map(fn {pos, dir, sc} -> {pos, dir, sc, MapSet.put(path, pos)} end)
+      |> Enum.filter(fn {npos, ndir, nsc, _npath} ->
+        G.can_move?(npos, aoc) && keep?(npos, ndir, nsc)
+      end)
+      |> Enum.reduce(Heap.pop(q), fn el, acc -> Heap.push(acc, el) end)
+      |> bfs(aoc)
+    end
+  end
+
+  def persist(pos, dir, sc, path) do
+    case :ets.lookup(:cache, {pos, dir}) do
+      [] ->
+        :ets.insert(:cache, {{pos, dir}, sc, path})
+
+      [{_key, val, _p}] when sc < val ->
+        :ets.insert(:cache, {{pos, dir}, sc, path})
+
+      [{_key, val, ways}] when sc == val ->
+        :ets.insert(:cache, {{pos, dir}, sc, MapSet.union(ways, path) })
+
+      _ -> :noop
+    end
+  end
+
+  def keep?(pos, dir, sc) do
+    case :ets.lookup(:cache, {pos, dir}) do
+      [] ->
+        true
+      [{_key, val, _}] ->
+        sc <= val
+    end
+  end
+end
+
+t3 = """
+#################################
+#...#...#...#...#...#...#...#..E#
+#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#.#.#.#.###.#.#.#
+#...#.#.#.....#.#...#.#.#.....#.#
+#.#.#.#.#.#####.#.#.#.#.#.#####.#
+#.#...#.#.#.......#...#.#.#.....#
+#.#.#####.#.###.#.#.#####.#.###.#
+#.#.#.......#...#.#.#.......#...#
+#.#.###.#####.###.#.###.#####.###
+#.#.#...#.....#.#.#.#...#.....#.#
+#.#.#.#####.###.#.#.#.#####.###.#
+#.#.#.........#.#.#.#.........#.#
+#.#.#.#########.#.#.#.#########.#
+#S#.............#...............#
+#################################
+"""
+
+t2 = """
+#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################
+"""
+
+t1 = """
+###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############
+"""
+
+# :ets.delete(:cache) && :ok
+:ets.new(:cache, [:set, :protected, :named_table])
+Day16.solve(t1, true) |> IO.inspect(label: "t1>>>")
+:ets.delete_all_objects(:cache)
+
+Day16.solve(t2) |> IO.inspect(label: "t2>>>")
+:ets.delete_all_objects(:cache)
+
+Day16.solve(t3) |> IO.inspect(label: "t3>>>")
+:ets.delete_all_objects(:cache)
+
+# Day16.solve(data) |> IO.inspect(label: "data >>>") # {98484, 531} runs 50s
+:ets.delete(:cache) && :ok
+```

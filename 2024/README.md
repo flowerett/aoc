@@ -20,6 +20,9 @@ https://adventofcode.com/2024
 | 11 - Plutonian Pebbles               | [✓][11ex] | patterns, cache, ETS    |
 | 12 - Garden Groups                   | [✓][12ex] | 2D grid, bfs, perimeter |
 | 13 - Claw Contraption                | [✓][13ex] | math, equations         |
+| 14 - Restroom Redoubt                | [✓][14ex] | 2D grid, picture, bfs   |
+| 15 - Warehouse Woes                  |           | 2D grid, bfs            |
+| 16 - Reindeer Maze                   | [✓][16ex] | 2D grid, dijkstra       |
 
 
 [01ex]: elixir/day1.livemd
@@ -35,3 +38,5 @@ https://adventofcode.com/2024
 [11ex]: elixir/day11.livemd
 [12ex]: elixir/day12.livemd
 [13ex]: elixir/day13.livemd
+[14ex]: elixir/day14.livemd
+[16ex]: elixir/day16.livemd
