@@ -1,0 +1,200 @@
+# Day15
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  # {:heap, "~> 3.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "15", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Helpers
+
+```elixir
+defmodule Aoc.Grid do
+  @type aoc_grid :: %{grid: map(), mx: non_neg_integer(), my: non_neg_integer()}
+  @type data :: String.t()
+
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @moves [@up, @down, @left, @right]
+  @dirs %{"^" => @up, "v" => @down, "<" => @left, ">" => @right}
+
+  @spec parse(data()) :: aoc_grid()
+  def parse(data), do: parse(data, &(&1))
+
+  @spec parse(data(), fun()) :: aoc_grid()
+  def parse(data, fun) do
+    raw =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+
+    my = length(raw)
+    mx = raw |> hd() |> length()
+
+    grid =
+      for {row, y} <- Enum.with_index(raw),
+          {sym, x} <- Enum.with_index(row),
+          into: %{} do
+        {{y, x}, fun.(sym)}
+      end
+
+    %{grid: grid, mx: mx - 1, my: my - 1}
+  end
+
+  def in_grid?({y, x}, aoc) do
+    y >= 0 and y <= aoc.my and x >= 0 and x <= aoc.mx
+  end
+
+  def can_move?({y, x}, aoc) do
+    in_grid?({y, x}, aoc) and aoc.grid[{y, x}] != "#"
+  end
+
+  def next_moves({y, x}, aoc) do
+    @moves
+    |> Enum.filter(fn {dy, dx} -> in_grid?({y + dy, x + dx}, aoc) end)
+    |> Enum.map(fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def all_moves({y, x}) do
+    Enum.map(@moves, fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def moves, do: @moves
+  def dirs, do: @dirs
+
+  def cw({r, c}), do: {c, -r}
+  def ccw({r, c}), do: {-c, r}
+  def fwd({y, x}, {dy, dx}), do: {y + dy, x + dx}
+
+  def plot(aoc) do
+    Enum.map(0..aoc.my, fn y ->
+      Enum.reduce(0..aoc.mx, "", fn x, acc -> acc <> aoc.grid[{y, x}] end)
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+  end
+end
+```
+
+## Solve
+
+```elixir
+defmodule Day15 do
+  alias Aoc.Grid, as: G
+
+  def parse(data) do
+    [grid, cmds] = data |> String.trim() |> String.split("\n\n", trim: true)
+
+    aoc = G.parse(grid)
+    cmds = cmds
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn row -> String.split(row, "", trim: true) end)
+      |> List.flatten()
+    {aoc, cmds}
+  end
+
+  def solve(data, verbose \\ false) do
+    {aoc, cmds} = parse(data)
+    {r, "@"} = find(aoc, "@")
+    {aoc, _r} = move(cmds, r, aoc)
+
+    verbose && G.plot(aoc)
+    calc_coord(aoc)
+  end
+
+  def calc_coord(aoc) do
+    Enum.reduce(aoc.grid, 0, fn
+      {{y, x}, "O"}, acc ->
+        (100 * y + x) + acc
+      _, acc ->
+        acc
+    end)
+  end
+
+  def move([], r, aoc), do: {aoc, r}
+
+  def move([cmd | t], r, aoc) do
+    dir = G.dirs[cmd]
+
+    case can_move([r], dir, aoc) do
+      {false, _} -> move(t, r, aoc)
+      {true, acc} ->
+        [r | boxes] = Enum.reverse(acc)
+        nr = G.fwd(r, dir)
+        aoc =
+          Enum.reduce(boxes, aoc, fn pos, aoc ->
+            nxt = G.fwd(pos, dir)
+            put_in(aoc, [:grid, nxt], "O")
+          end)
+          |> put_in([:grid, nr], "@")
+          |> put_in([:grid, r], ".")
+
+        move(t, nr, aoc)
+    end
+  end
+
+  def can_move(acc, dir, aoc) do
+    [h | _t] = acc
+    nxt = G.fwd(h, dir)
+    case aoc.grid[nxt] do
+      "." -> {true, acc}
+      "#" -> {false, acc}
+      "O" -> can_move([nxt | acc], dir, aoc)
+    end
+  end
+
+  def find(%{grid: g}, el) do
+    Enum.find(g, fn {_p, k} -> k == el end)
+  end
+end
+
+t2 = """
+##########
+#..O..O.O#
+#......O.#
+#.OO..O.O#
+#..O@..O.#
+#O#..O...#
+#O..O..O.#
+#.OO.O.OO#
+#....O...#
+##########
+
+<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^
+vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
+><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<
+<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^
+^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><
+^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^
+>^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^
+<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>
+^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
+v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^
+"""
+
+t1 = """
+########
+#..O.O.#
+##@.O..#
+#...O..#
+#.#.O..#
+#...O..#
+#......#
+########
+
+<^^>>>vv<v>>v<<
+"""
+
+Day15.solve(t1, true) |> IO.inspect(label: "t1")
+Day15.solve(t2, true) |> IO.inspect(label: "t1")
+Day15.solve(data) #1490942
+```
