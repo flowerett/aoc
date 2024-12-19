@@ -1,0 +1,217 @@
+# Day17
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "17", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day17 do
+  import Bitwise, only: [bxor: 2, >>>: 2, <<<: 2, |||: 2]
+
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      Regex.scan(~r/(\d+)\,?/, row, capture: :all_but_first)
+      |> List.flatten()
+      |> Enum.map(&String.to_integer/1)
+    end)
+    |> Enum.map(fn
+      [el] -> el
+      list -> list
+    end)
+    |> List.to_tuple()
+  end
+
+  def solve(data) do
+    {a, b, c, prog} = parse(data)
+
+    reg = %{a: a, b: b, c: c}
+    r1 = do_run({reg, 0, []}, prog, :t1)
+
+    loop = get_loop(prog)
+    r2 = rev_run(prog, loop, 0) |> check_res(prog)
+
+
+    {r1, r2}
+  end
+
+  def check_res(results, prog) do
+    res = Enum.min(results)
+    key = Enum.join(prog, ",")
+    check = do_run({%{a: res, b: 0, c: 0}, 0, []}, prog, :t1)
+
+    if check == key, do: res, else: :no_result
+  end
+
+  def combo(_reg, val) when val in 0..3, do: val
+  def combo(reg, 4), do: reg[:a]
+  def combo(reg, 5), do: reg[:b]
+  def combo(reg, 6), do: reg[:c]
+
+  def adv({reg, i, acc}, op) do
+    res = reg.a >>> combo(reg, op)
+    {Map.put(reg, :a, res), i+2, acc}
+  end
+
+  def bxl({reg, i, acc}, val) do
+    res = bxor(reg.b, val)
+    {Map.put(reg, :b, res), i+2, acc}
+  end
+
+  def bst({reg, i, acc}, op) do
+    val = combo(reg, op)
+    res = rem(val, 8)
+    {Map.put(reg, :b, res), i+2, acc}
+  end
+
+  def jnz({reg, i, acc}, val) do
+    if reg.a == 0, do: {reg, i+2, acc}, else: {reg, val, acc}
+  end
+
+  def bxc({reg, i, acc}, _op) do
+    res = bxor(reg.b, reg.c)
+    {Map.put(reg, :b, res), i+2, acc}
+  end
+
+  def out({reg, i, acc}, op) do
+    val = combo(reg, op)
+    res = rem(val, 8)
+    {reg, i+2, [res | acc]}
+  end
+
+  def bdv({reg, i, acc}, op) do
+    res = reg.a >>> combo(reg, op)
+    {Map.put(reg, :b, res), i+2, acc}
+  end
+
+  def cdv({reg, i, acc}, op) do
+    res = reg.a >>> combo(reg, op)
+    {Map.put(reg, :c, res), i+2, acc}
+  end
+
+  def cmd(memo, {0, param}), do: adv(memo, param)
+  def cmd(memo, {1, param}), do: bxl(memo, param)
+  def cmd(memo, {2, param}), do: bst(memo, param)
+  def cmd(memo, {3, param}), do: jnz(memo, param)
+  def cmd(memo, {4, param}), do: bxc(memo, param)
+  def cmd(memo, {5, param}), do: out(memo, param)
+  def cmd(memo, {6, param}), do: bdv(memo, param)
+  def cmd(memo, {7, param}), do: cdv(memo, param)
+
+  def get_loop(prog) do
+    try do
+      [0, 3 | t] = Enum.reverse(prog) # assert last commands are JNZ 0
+      Enum.reverse(t)
+    rescue
+      e in MatchError ->
+        raise RuntimeError, "program doesn't end with JNZ 0: #{inspect(e.term)}"
+    end
+  end
+
+  def do_run({_reg, i, acc}, prog, :t1) when i == length(prog) do
+    acc |> Enum.reverse() |> Enum.join(",")
+  end
+
+  def do_run({_reg, i, acc}, prog, :t2) when i == length(prog) do
+    if length(acc) == 1, do: {:ok, hd(acc)}, else: {:error, "multiple outputs"}
+  end
+
+  def do_run({_, i, _} = memo, prog, task) do
+    params = {Enum.at(prog, i), Enum.at(prog, i+1)}
+
+    cmd(memo, params) |> do_run(prog, task)
+  end
+
+  # reverse engineer program:
+  # 2,4 - bst(A) - bst(combo(4))
+  # 1,7 - bxl(7)
+  # 7,5 - cdv(B) - cdv(combo(5))
+  # 0,3 - adv(3)
+  # 4,4 - bxc(_)
+  # 1,7 - bxl(7)
+  # 5,5 - out(B) - out(5)
+  # 3,0 - jnz(0)
+
+  # pseudocode:
+  # while A != 0 do
+  #   B = A % 8
+  #   B = B ^^^ 7
+  #   C = A >>> B
+  #   A = A >>> 3
+  #   B = B ^^^ C
+  #   B = B ^^^ 7
+  #   out B % 8
+  #
+  # - program has cycle
+  # - cycle body transforms 3 lowest bits of A
+  # - A cut by 3 bits every cycle
+  # - only one output per cycle
+
+  def rev_run([], _loop, res), do: res
+
+  def rev_run(prog, loop, res) do
+    bits = Enum.to_list(0..7)
+    target = List.last(prog)
+    next_prog = Enum.take(prog, length(prog)-1)
+
+    bits
+    |> Enum.map(fn i ->
+      # shift current res 3 bits left
+      # plus any new 3 bit combination
+      a = res <<< 3 ||| i # same as (res <<< 3) + i
+      reg = %{a: a, b: 0, c: 0}
+      memo = {reg, 0, []}
+      check = do_run(memo, loop, :t2)
+
+      {a, check, target}
+    end)
+    # take bits that produce last program number as result
+    |> Enum.filter(fn {_a, {:ok, t}, target} -> t == target end)
+    |> Enum.map(fn data -> elem(data, 0) end)
+    # continue with sub-program
+    |> Enum.map(fn a -> rev_run(next_prog, loop, a) end)
+    |> List.flatten()
+  end
+end
+
+
+t1 = """
+Register A: 729
+Register B: 0
+Register C: 0
+
+Program: 0,1,5,4,3,0
+"""
+
+t2 = """
+Register A: 2024
+Register B: 0
+Register C: 0
+
+Program: 0,3,5,4,3,0
+"""
+
+t3 = """
+Register A: 267265166222235
+Register B: 0
+Register C: 0
+
+Program: 2,4,1,7,7,5,0,3,4,4,1,7,5,5,3,0
+"""
+
+Day17.solve(t1) |> IO.inspect(label: "t1-1")
+Day17.solve(t2) |> IO.inspect(label: "t2")
+Day17.solve(data) # {"2,1,0,1,7,2,5,0,3", 267265166222235}
+```
