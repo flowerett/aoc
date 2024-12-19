@@ -2,8 +2,7 @@
 
 ```elixir
 Mix.install([
-  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
-  # {:heap, "~> 3.0"}
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
 ])
 ```
 
@@ -90,10 +89,21 @@ end
 ```elixir
 defmodule Day15 do
   alias Aoc.Grid, as: G
+  @dup %{"#" => "##", "O" => "[]", "." => "..", "@" => "@."}
 
-  def parse(data) do
+  def parse(data, dup \\ false) do
     [grid, cmds] = data |> String.trim() |> String.split("\n\n", trim: true)
 
+    grid = if dup do
+      String.replace(grid, ~w(# O . @), fn char -> @dup[char] end)
+    else
+      grid
+    end
+
+    do_parse(grid, cmds)
+  end
+
+  def do_parse(grid, cmds) do
     aoc = G.parse(grid)
     cmds = cmds
       |> String.split("\n", trim: true)
@@ -102,31 +112,95 @@ defmodule Day15 do
     {aoc, cmds}
   end
 
-  def solve(data, verbose \\ false) do
-    {aoc, cmds} = parse(data)
-    {r, "@"} = find(aoc, "@")
-    {aoc, _r} = move(cmds, r, aoc)
+  def solve(data, opts \\ []) do
+    verbose = Keyword.get(opts, :verbose, false)
+    dup = Keyword.get(opts, :dup, false)
+
+    {aoc, cmds} = parse(data, dup)
 
     verbose && G.plot(aoc)
-    calc_coord(aoc)
+
+    {r, "@"} = find(aoc, "@")
+    mfun = if dup, do: &move2/3, else: &move1/3
+
+    {aoc, _r} = mfun.(cmds, r, aoc)
+
+    verbose && G.plot(aoc)
+    calc_coord(aoc, dup)
   end
 
-  def calc_coord(aoc) do
+  def calc_coord(aoc, dup) do
+    calc_sym = dup && "[" || "O"
     Enum.reduce(aoc.grid, 0, fn
-      {{y, x}, "O"}, acc ->
+      {{y, x}, ^calc_sym}, acc ->
         (100 * y + x) + acc
       _, acc ->
         acc
     end)
   end
 
-  def move([], r, aoc), do: {aoc, r}
+  def move2([], r, aoc), do: {aoc, r}
 
-  def move([cmd | t], r, aoc) do
+  def move2([cmd | t], r, aoc) do
+    dir = G.dirs[cmd]
+
+    case can_move2(MapSet.new([r]), dir, aoc, true) do
+      {_, false} ->
+        move2(t, r, aoc)
+
+      {items, true} ->
+        old_g = aoc.grid
+        nr = G.fwd(r, dir)
+
+        # clean old
+        clean = Enum.reduce(items, aoc, fn pos, aoc ->
+          put_in(aoc, [:grid, pos], ".")
+        end)
+
+        # write new
+        new = Enum.reduce(items, clean, fn pos, aoc ->
+          nxt = G.fwd(pos, dir)
+          put_in(aoc, [:grid, nxt], old_g[pos])
+        end)
+
+        move2(t, nr, new)
+    end
+  end
+
+  def can_move2(items, dir, aoc, check) do
+    {acc, check} =
+      Enum.reduce(items, {MapSet.new(), check}, fn pos, {acc, check} ->
+        nxt = G.fwd(pos, dir)
+        case aoc.grid[nxt] do
+          "#" -> {MapSet.put(acc, pos), false}
+          "." -> {MapSet.put(acc, pos), check}
+
+          "]" -> # + [
+            l = G.fwd(nxt, {0, -1})
+            acc = acc |> MapSet.put(pos) |> MapSet.put(nxt) |> MapSet.put(l)
+            {acc, check}
+
+          "[" -> # + ]
+            r = G.fwd(nxt, {0, 1})
+            acc = acc |> MapSet.put(pos) |> MapSet.put(nxt) |> MapSet.put(r)
+            {acc, check}
+        end
+      end)
+
+    if MapSet.size(items) == MapSet.size(acc) or !check do
+      {acc, check}
+    else
+      can_move2(acc, dir, aoc, check)
+    end
+  end
+
+  def move1([], r, aoc), do: {aoc, r}
+
+  def move1([cmd | t], r, aoc) do
     dir = G.dirs[cmd]
 
     case can_move([r], dir, aoc) do
-      {false, _} -> move(t, r, aoc)
+      {false, _} -> move1(t, r, aoc)
       {true, acc} ->
         [r | boxes] = Enum.reverse(acc)
         nr = G.fwd(r, dir)
@@ -138,7 +212,7 @@ defmodule Day15 do
           |> put_in([:grid, nr], "@")
           |> put_in([:grid, r], ".")
 
-        move(t, nr, aoc)
+        move1(t, nr, aoc)
     end
   end
 
@@ -194,7 +268,25 @@ t1 = """
 <^^>>>vv<v>>v<<
 """
 
-Day15.solve(t1, true) |> IO.inspect(label: "t1")
-Day15.solve(t2, true) |> IO.inspect(label: "t1")
-Day15.solve(data) #1490942
+t3 = """
+#######
+#...#.#
+#.....#
+#..OO@#
+#..O..#
+#.....#
+#######
+
+<vv<<^^<<^^
+"""
+
+
+Day15.solve(t1) |> IO.inspect(label: "t1-1")
+Day15.solve(t2) |> IO.inspect(label: "t2-1")
+Day15.solve(t3, verbose: true, dup: true) |> IO.inspect(label: "t3-2")
+Day15.solve(t2, dup: true) |> IO.inspect(label: "t2-2")
+
+Day15.solve(data) |> IO.inspect(label: "r1") #1490942
+Day15.solve(data, dup: true) |> IO.inspect(label: "r2") # 1519202
+:ok
 ```

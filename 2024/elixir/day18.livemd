@@ -1,0 +1,223 @@
+# Day18
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:heap, "~> 3.0"}
+  # {:qex, "~> 0.5"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "18", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Helpers
+
+```elixir
+defmodule Aoc.Grid do
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @moves [@up, @down, @left, @right]
+  @dirs %{n: @up, s: @down, w: @left, e: @right}
+
+
+  def build(points, lim, {my, mx}) do
+    grid = for y <- 0..my, x <- 0..mx, into: %{}, do: {{y,x}, "."}
+    grid = points
+      |> Enum.take(lim)
+      |> Enum.reduce(grid, &Map.put(&2, &1, "#"))
+
+    %{grid: grid, mx: mx, my: my}
+  end
+
+  def in_grid?({y, x}, aoc) do
+    y >= 0 and y <= aoc.my and x >= 0 and x <= aoc.mx
+  end
+
+  def can_move?({y, x}, aoc) do
+    in_grid?({y, x}, aoc) and aoc.grid[{y, x}] != "#"
+  end
+
+  def next_moves({y, x}, aoc) do
+    @moves
+    |> Enum.map(fn {dy, dx} -> {y + dy, x + dx} end)
+    |> Enum.filter(fn pos -> can_move?(pos, aoc) end)
+  end
+
+  def all_moves({y, x}) do
+    Enum.map(@moves, fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def moves, do: @moves
+  def dirs, do: @dirs
+
+  def cw({r, c}), do: {c, -r}
+  def ccw({r, c}), do: {-c, r}
+  def fwd({y, x}, {dy, dx}), do: {y + dy, x + dx}
+
+  def plot(aoc) do
+    Enum.map(0..aoc.my, fn y ->
+      Enum.reduce(0..aoc.mx, "", fn x, acc ->
+        acc <> String.pad_leading(aoc.grid[{y, x}], 3)
+      end)
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+  end
+
+  def md(%{grid: _, my: my, mx: mx}), do: my + mx
+  def md({y, x}), do: y + x
+end
+```
+
+## Solve
+
+```elixir
+defmodule Day18 do
+  alias Aoc.Grid, as: G
+
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      [x, y] = String.split(row, ",", trim: true) |> Enum.map(&String.to_integer/1)
+      {y, x}
+    end)
+  end
+
+  def t1(blocks, lim, max) do
+    aoc = G.build(blocks, lim, max)
+
+    st = {0, 0}
+    sc = 0
+    loss = G.md(aoc) - G.md(st) + sc
+
+    # {pos, score, loss}
+    q = Heap.new(&(elem(&1, 2) < elem(&2, 2)))
+    q = Heap.push(q, {st, sc, loss})
+
+    seen = bfs(q, aoc, %{})
+
+    # g = Enum.reduce(seen, aoc.grid, fn {pos, sc}, acc -> Map.put(acc, pos, sc) end)
+    # aoc = Map.put(aoc, :grid, g)
+    # G.plot(aoc)
+
+    Map.get(seen, {aoc.my, aoc.mx}, :not_found)
+  end
+
+  def find(%{grid: g}, el) do
+    Enum.find(g, fn {_p, k} -> k == el end)
+  end
+
+  # just BFS works but slow af
+  # q = Qex.new([{st, sc}])
+  # def bfs(q, aoc, seen) do
+  #   case Qex.pop(q) do
+  #     {:empty, _} ->
+  #       seen
+
+  #     {{:value, {pos, sc}}, _q} when pos == {aoc.my, aoc.mx} ->
+  #       Map.put(seen, pos, sc)
+
+  #     {{:value, {pos, sc}}, q} ->
+  #       seen = Map.put(seen, pos, sc)
+
+  #       G.next_moves(pos, aoc)
+  #       |> Enum.reject(fn pos -> Map.has_key?(seen, pos) end)
+  #       |> Enum.map(fn pos -> {pos, sc+1} end)
+  #       |> Enum.reduce(q, fn el, acc -> Qex.push(acc, el) end)
+  #       |> bfs(aoc, seen)
+  #   end
+  # end
+
+  # A-star / dijkstra
+  def bfs(q, aoc, seen) do
+    if Heap.empty?(q) do
+      seen
+    else
+      {pos, sc, _loss} = Heap.root(q)
+      seen = Map.put(seen, pos, sc)
+
+      if pos == {aoc.my, aoc.mx} do
+        seen
+      else
+        G.next_moves(pos, aoc)
+        |> Enum.reject(fn pos -> Map.has_key?(seen, pos) end)
+        |> Enum.map(fn pos ->
+          sc = sc + 1
+          loss = G.md(aoc) - G.md(pos) + sc
+          {pos, sc, loss}
+        end)
+        |> Enum.reduce(Heap.pop(q), fn el, acc -> Heap.push(acc, el) end)
+        |> bfs(aoc, seen)
+      end
+    end
+  end
+
+  def solve(data, mode) do
+    {size, mid} = get_params(mode)
+    blocks = parse(data)
+
+    r1 = t1(blocks, mid, size)
+    r2 = bin_search(blocks, 0, length(blocks), size)
+    {r1, r2}
+  end
+
+  def get_params(:test), do: {{6, 6}, 12}
+  def get_params(:full), do: {{70, 70}, 1024}
+
+  def bin_search(blocks, min, max, _size) when min == max-1 do
+    {y, x} = Enum.at(blocks, min)
+    {x, y}
+  end
+
+  def bin_search(blocks, min, max, size) do
+    mid = min + div(max-min, 2)
+    res = t1(blocks, mid, size)
+
+    case res do
+      :not_found ->
+        bin_search(blocks, min, mid, size)
+      res when is_integer(res) ->
+        bin_search(blocks, mid, max, size)
+    end
+  end
+end
+
+t1 = """
+5,4
+4,2
+4,5
+3,0
+2,1
+6,3
+2,4
+1,5
+0,6
+3,3
+2,6
+5,1
+1,2
+5,5
+2,5
+6,5
+1,4
+0,4
+6,4
+1,1
+6,1
+1,0
+0,5
+1,6
+2,0
+"""
+
+Day18.solve(t1, :test) |> IO.inspect(label: "t1 >>>")
+Day18.solve(data, :full) # {354, {36, 17}}
+```

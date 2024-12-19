@@ -21,8 +21,10 @@ https://adventofcode.com/2024
 | 12 - Garden Groups                   | [✓][12ex] | 2D grid, bfs, perimeter |
 | 13 - Claw Contraption                | [✓][13ex] | math, equations         |
 | 14 - Restroom Redoubt                | [✓][14ex] | 2D grid, picture, bfs   |
-| 15 - Warehouse Woes                  | [✓][15ex] | 2D grid                 |
+| 15 - Warehouse Woes                  | [✓][15ex] | 2D grid, recursion      |
 | 16 - Reindeer Maze                   | [✓][16ex] | 2D grid, dijkstra       |
+| 17 - Chronospatial Computer          |           |                         |
+| 18 - RAM Run                         | [✓][18ex] | 2D grid, A*, bin-search |
 
 
 [01ex]: elixir/day1.livemd
@@ -41,3 +43,4 @@ https://adventofcode.com/2024
 [14ex]: elixir/day14.livemd
 [15ex]: elixir/day15.livemd
 [16ex]: elixir/day16.livemd
+[18ex]: elixir/day18.livemd
