@@ -1,0 +1,83 @@
+# Day19
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "19", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day19 do
+  def parse(data) do
+    [el, rows] = data |> String.trim() |> String.split("\n\n", trim: true)
+
+    parts = String.split(el, ", ", trim: true) |> MapSet.new()
+    max = parts |> Enum.map(fn p -> String.length(p) end) |> Enum.max()
+
+    {parts, String.split(rows, "\n", trim: true), max}
+  end
+
+  def solve(data) do
+    {parts, rows, max} = parse(data)
+
+    res = Enum.map(rows, &can_match?(&1, parts, max))
+
+    r1 = res |> Enum.reject(&zero?/1) |> Enum.count()
+    r2 = Enum.sum(res)
+
+    {r1, r2}
+  end
+
+  def zero?(num), do: num == 0
+
+  def can_match?("", _parts, _max), do: 1
+  def can_match?(str, parts, max) do
+    case :ets.lookup(:cache, str) do
+      [] ->
+        lim = Enum.min([String.length(str), max])
+
+        res = Enum.reduce(0..lim, 0, fn i, sum ->
+            <<head :: binary-size(i)>> <> rest = str
+            if head in parts do
+              sum + can_match?(rest, parts, max)
+            else
+              sum
+            end
+          end)
+
+        :ets.insert(:cache, {str, res})
+        res
+
+      [{_key, val}] ->
+        val
+    end
+  end
+end
+
+t1 = """
+r, wr, b, g, bwu, rb, gb, br
+
+brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb
+"""
+
+:ets.new(:cache, [:set, :protected, :named_table])
+Day19.solve(t1) |> IO.inspect(label: "t1")
+:ets.delete_all_objects(:cache)
+Day19.solve(data) |> IO.inspect(label: "data")
+:ets.delete(:cache) && :ok
+```

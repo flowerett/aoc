@@ -25,6 +25,7 @@ https://adventofcode.com/2024
 | 16 - Reindeer Maze                   | [✓][16ex] | 2D grid, dijkstra        |
 | 17 - Chronospatial Computer          | [✓][17ex] | Bitwise ops, reverse eng |
 | 18 - RAM Run                         | [✓][18ex] | 2D grid, A*, bin-search  |
+| 19 - Linen Layout                    | [✓][19ex] | strings, match, DP       |
 
 
 [01ex]: elixir/day1.livemd
@@ -45,3 +46,4 @@ https://adventofcode.com/2024
 [16ex]: elixir/day16.livemd
 [17ex]: elixir/day17.livemd
 [18ex]: elixir/day18.livemd
+[19ex]: elixir/day19.livemd
