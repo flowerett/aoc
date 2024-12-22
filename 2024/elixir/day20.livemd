@@ -1,0 +1,159 @@
+# Day20
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "20", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Helpers
+
+```elixir
+defmodule Aoc.Grid do
+  @type aoc_grid :: %{grid: map(), mx: non_neg_integer(), my: non_neg_integer()}
+  @type data :: String.t()
+
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @moves [@up, @down, @left, @right]
+
+  def parse(data), do: parse(data, &(&1))
+
+  def parse(data, fun) do
+    raw =
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+
+    my = length(raw)
+    mx = raw |> hd() |> length()
+
+    grid =
+      for {row, y} <- Enum.with_index(raw),
+          {sym, x} <- Enum.with_index(row),
+          into: %{} do
+        {{y, x}, fun.(sym)}
+      end
+
+    %{grid: grid, mx: mx - 1, my: my - 1}
+  end
+
+  def in_grid?({y, x}, aoc) do
+    y >= 0 and y <= aoc.my and x >= 0 and x <= aoc.mx
+  end
+
+  def next_moves({y, x}, aoc) do
+    @moves
+    |> Enum.filter(fn {dy, dx} -> in_grid?({y + dy, x + dx}, aoc) end)
+    |> Enum.map(fn {dy, dx} -> {y + dy, x + dx} end)
+  end
+
+  def moves, do: @moves
+
+  def find(aoc, val), do: Enum.find(aoc.grid, fn {_k, v} -> v == val end)
+
+  def plot(aoc) do
+    Enum.map(0..aoc.my, fn y ->
+      Enum.reduce(0..aoc.mx, "", fn x, acc -> acc <> aoc.grid[{y, x}] end)
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+  end
+end
+```
+
+## Solve
+
+```elixir
+defmodule Day20 do
+  alias Aoc.Grid, as: G
+
+  def solve(data, radius, save) do
+    aoc = G.parse(data)
+    {st, "S"} = G.find(aoc, "S")
+
+    seen = bfs([{st, 0}], aoc, %{})
+    points = points_in(radius)
+
+    Map.keys(seen)
+    |> Enum.flat_map(fn p -> cheats_for(p, points, save, seen) end)
+    |> Enum.count()
+  end
+
+  # won't count backtracks/duplicates
+  # as cheat save will be negative in that case
+  def cheats_for({y, x}, points, save, seen) do
+    points
+    |> Enum.map(fn {{dy, dx}, r} -> {{y, x}, {y+dy, x+dx}, r} end)
+    |> Enum.filter(fn {p1, p2, r} ->
+      Map.has_key?(seen, p2) and
+        (seen[p2] - seen[p1] - r) >= save
+    end)
+  end
+
+  # we don't need points at radius 1
+  # as they will be on a path or on a wall
+  # for radius 2 will produce:
+  # . . x . .
+  # . x . x .
+  # x . . . x
+  # . x . x .
+  # . . x . .
+  def points_in(radius) do
+    for r <- 2..radius,
+        dy <- 0..r,
+        sy <- [-1,1],
+        sx <- [-1,1],
+        uniq: true do
+      dx = r-dy
+      {{sy*dy, sx*dx}, r}
+    end
+  end
+
+  def bfs([], _aoc, seen), do: seen
+  def bfs(q, aoc, seen) do
+    [h | t] = q
+    {pos, sc} = h
+
+    seen = Map.put(seen, pos, sc)
+
+    G.next_moves(pos, aoc)
+    |> Enum.reject(fn pos -> Map.has_key?(seen, pos) end)
+    |> Enum.reject(fn pos -> aoc.grid[pos] == "#" end)
+    |> Enum.map(fn pos -> {pos, sc+1} end)
+    |> Enum.reduce(t, fn el, acc -> [el | acc] end)
+    |> bfs(aoc, seen)
+  end
+end
+
+t1 = """
+###############
+#...#...#.....#
+#.#.#.#.#.###.#
+#S#...#.#.#...#
+#######.#.#.###
+#######.#.#...#
+#######.#.###.#
+###..E#...#...#
+###.#######.###
+#...###...#...#
+#.#####.#.###.#
+#.#...#.#.#...#
+#.#.#.#.#.#.###
+#...#...#...###
+###############
+"""
+
+Day20.solve(t1, 2, 20)     |> IO.inspect(label: "t1") # 5
+Day20.solve(t1, 20, 70)    |> IO.inspect(label: "t2") # 41
+Day20.solve(data, 2, 100)  |> IO.inspect(label: "r1") # 1417
+Day20.solve(data, 20, 100) |> IO.inspect(label: "r2") # 1014683
+```
