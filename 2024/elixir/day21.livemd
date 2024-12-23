@@ -1,0 +1,214 @@
+# Day21
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "21", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Helpers
+
+```elixir
+defmodule Aoc do
+  @up {-1, 0}
+  @down {1, 0}
+  @left {0, -1}
+  @right {0, 1}
+  @dirs [@up, @down, @left, @right]
+  @dir_key %{
+    @up => "^", @down => "v", @left => "<", @right => ">"
+  }
+
+  @num_grid %{
+    {-3,-2} => "7",
+    {-3,-1} => "8",
+    {-3,0} => "9",
+    {-2,-2} => "4",
+    {-2,-1} => "5",
+    {-2,0} => "6",
+    {-1,-2} => "1",
+    {-1,-1} => "2",
+    {-1,0} => "3",
+    {0,-1} => "0",
+    {0,0} => "A"
+  }
+
+  @dir_grid %{
+    {0,0} => "A" ,
+    {0,-1} => "^",
+    {1,0} => ">",
+    {1,-1} => "v",
+    {1,-2} => "<"
+  }
+
+  @grids %{num: @num_grid, dir: @dir_grid}
+
+  def btn_presses(from, to, kb) do
+    st = find(@grids[kb], from)
+    en = find(@grids[kb], to)
+    q = [{st,[]}]
+    seen = MapSet.new()
+
+    variants = bfs(q, en, kb, seen, [])
+    Enum.map(variants, fn var -> var ++ ["A"] end)
+  end
+
+  def find(grid, key) do
+    {p, _k} = Enum.find(grid, fn {_p, k} -> k == key end)
+    p
+  end
+
+  def bfs([], _en, _kb, _seen, paths) do
+    Enum.map(paths, &Enum.reverse(&1))
+  end
+
+  def bfs(q, en, kb, seen, paths) do
+    [{p, path} | t] = q
+
+    seen = MapSet.put(seen, p)
+
+    if p == en do
+      bfs(t, en, kb, seen, [path | paths])
+    else
+      {y, x} = p
+      t = Enum.reverse(t)
+      @dirs
+      |> Enum.map(fn {dy, dx} ->
+        k = @dir_key[{dy, dx}]
+        {{y+dy, x+dx}, [k | path]}
+      end)
+      |> Enum.filter(fn {nk, _} ->
+        Map.has_key?(@grids[kb], nk) and !MapSet.member?(seen, nk)
+      end)
+      |> Enum.reduce(t, fn np, acc -> [np | acc] end)
+      |> Enum.reverse()
+      |> bfs(en, kb, seen, paths)
+    end
+  end
+end
+```
+
+## Solve
+
+```elixir
+defmodule Day21 do
+  import Aoc, only: [btn_presses: 3]
+
+  @num_keys ~w(A 0 1 2 3 4 5 6 7 8 9)
+  @dir_keys ~w(A ^ v < >)
+
+  @num_moves (for n1 <- @num_keys,
+      n2 <- @num_keys,
+      into: %{} do
+      {{n1, n2}, btn_presses(n1, n2, :num)}
+  end)
+
+  @dir_moves (for n1 <- @dir_keys,
+      n2 <- @dir_keys,
+      into: %{} do
+      {{n1, n2}, btn_presses(n1, n2, :dir)}
+  end)
+
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      String.split(row, "", trim: true)
+    end)
+  end
+
+  def num_moves, do: @num_moves
+  def dir_moves, do: @dir_moves
+
+  def solve(data) do
+    dd = parse(data)
+
+    # code = ~w(0 2 9 A)
+    # code = ~w(3 7 9 A)
+
+    with_count(dd)
+  end
+
+  def with_count(data) do
+    data
+    |> Enum.map(fn row ->
+      v = row |> to_press() |> hd()
+      {a,b,_} = {num_part(row), length(v), Enum.join(v)} |> IO.inspect()
+      a * b
+    end)
+    |> Enum.sum()
+  end
+
+  def to_press(row) do
+    vars = row
+      |> then(fn nums -> ["A" | nums] end)
+      |> Enum.chunk_every(2,1, :discard)
+      |> Enum.map(fn [from, to] -> @num_moves[{from, to}] end)
+      |> permutations()
+
+    Enum.reduce(1..2, vars, fn _i, acc ->
+      do_robot_push(acc)
+    end)
+  end
+
+  def permutations(list) do
+    Enum.reduce(list, [[]], fn clist, acc ->
+      for el <- clist, tmp <- acc do
+        # [el | tmp]
+        tmp ++ el
+      end
+    end)
+    # |> Enum.map(fn var ->
+    #   var |> Enum.reverse() |> List.flatten()
+    # end)
+  end
+
+  def pp(list) do
+    Enum.map(list, &Enum.join/1)
+  end
+
+  def do_robot_push(vars) do
+    vars
+    |> Enum.map(fn keys -> robot_push(keys) end)
+    |> Enum.reduce(%{}, fn vars, acc ->
+      list_of_vars = permutations(vars)
+      Enum.reduce(list_of_vars, acc, fn v, acc ->
+        Map.update(acc, length(v), [v], fn gr -> [v | gr] end)
+      end)
+    end)
+    |> Enum.min_by(fn {k, _v} -> k end)
+    |> elem(1)
+  end
+
+  def robot_push(keys) do
+    keys
+    |> then(fn keys -> ["A" | keys] end)
+    |> Enum.chunk_every(2,1, :discard)
+    |> Enum.map(fn [from, to] -> @dir_moves[{from, to}] end)
+  end
+
+  def num_part(row) do
+    row |> Enum.take(3) |> Enum.join("") |> String.to_integer()
+  end
+end
+
+t1 = """
+029A
+980A
+179A
+456A
+379A
+"""
+
+# Day21.solve(data) # r1 - 211930
+Day21.solve(t1)
+# Day21.num_moves()
+# Day21.dir_moves()
+```
