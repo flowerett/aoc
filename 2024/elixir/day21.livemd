@@ -115,6 +115,11 @@ defmodule Day21 do
       {{n1, n2}, btn_presses(n1, n2, :dir)}
   end)
 
+  @dir_lengths (for {k, v} <- @dir_moves,
+      into: %{} do
+      {k, length(hd(v))}
+  end)
+
   def parse(data) do
     data
     |> String.trim()
@@ -127,47 +132,69 @@ defmodule Day21 do
   def num_moves, do: @num_moves
   def dir_moves, do: @dir_moves
 
-  def solve(data) do
+  def dir_lengths, do: @dir_lengths
+
+  def solve(data, n \\ 2) do
     dd = parse(data)
 
     # code = ~w(0 2 9 A)
     # code = ~w(3 7 9 A)
 
-    with_count(dd)
+    for code <- dd, reduce: 0 do
+      acc ->
+        vars = code
+          |> then(fn nums -> ["A" | nums] end)
+          |> Enum.chunk_every(2,1, :discard)
+          |> Enum.map(fn [from, to] -> @num_moves[{from, to}] end)
+          |> permutations()
+
+        complexities = Enum.map(vars, fn keys ->
+          deep_robot_push(keys, n)
+        end)
+        num_part(code) * Enum.min(complexities) + acc
+    end
+
   end
 
-  def with_count(data) do
-    data
-    |> Enum.map(fn row ->
-      v = row |> to_press() |> hd()
-      {a,b,_} = {num_part(row), length(v), Enum.join(v)} |> IO.inspect()
-      a * b
+  def deep_robot_push(keys, 1) do
+    keys
+    |> then(fn keys -> ["A" | keys] end)
+    |> Enum.chunk_every(2,1, :discard)
+    |> Enum.map(fn [from, to] ->
+      @dir_lengths[{from, to}]
     end)
     |> Enum.sum()
   end
 
-  def to_press(row) do
-    vars = row
-      |> then(fn nums -> ["A" | nums] end)
-      |> Enum.chunk_every(2,1, :discard)
-      |> Enum.map(fn [from, to] -> @num_moves[{from, to}] end)
-      |> permutations()
+  def deep_robot_push(keys, n) do
+    k = {Enum.join(keys), n}
+    case :ets.lookup(:cache, k) do
+      [] ->
+        res = keys
+          |> then(fn keys -> ["A" | keys] end)
+          |> Enum.chunk_every(2,1, :discard)
+          |> Enum.map(fn [from, to] ->
+            @dir_moves[{from, to}]
+            |> Enum.map(fn sub -> deep_robot_push(sub, n-1) end)
+            |> Enum.min()
+          end)
+          |> Enum.sum()
 
-    Enum.reduce(1..2, vars, fn _i, acc ->
-      do_robot_push(acc)
-    end)
+        :ets.insert(:cache, {k, res})
+        res
+
+      [{_key, val}] ->
+        val
+    end
   end
 
   def permutations(list) do
     Enum.reduce(list, [[]], fn clist, acc ->
       for el <- clist, tmp <- acc do
-        # [el | tmp]
+        # used only for small list, ++ is ok
         tmp ++ el
       end
     end)
-    # |> Enum.map(fn var ->
-    #   var |> Enum.reverse() |> List.flatten()
-    # end)
   end
 
   def pp(list) do
@@ -207,8 +234,16 @@ t1 = """
 379A
 """
 
-# Day21.solve(data) # r1 - 211930
-Day21.solve(t1)
-# Day21.num_moves()
-# Day21.dir_moves()
+:ets.new(:cache, [:set, :protected, :named_table])
+Day21.solve(t1) |> IO.inspect(label: "t1")
+:ets.delete_all_objects(:cache)
+Day21.solve(t1, 25) |> IO.inspect(label: "t2")
+:ets.delete_all_objects(:cache)
+# {126384, 154115708116294}
+
+Day21.solve(data) |> IO.inspect(label: "r1")
+:ets.delete_all_objects(:cache)
+Day21.solve(data, 25) |> IO.inspect(label: "r2")
+:ets.delete(:cache) && :ok
+# {211930, 263492840501566}
 ```

@@ -27,6 +27,7 @@ https://adventofcode.com/2024
 | 18 - RAM Run                         | [✓][18ex] | 2D grid, A*, bin-search   |
 | 19 - Linen Layout                    | [✓][19ex] | strings, match, DP        |
 | 20 - Race Condition                  | [✓][20ex] | 2D, bfs, search in radius |
+| 21 - Keypad Conundrum                | [✓][21ex] | bfs, permutations, DP     |
 
 
 [01ex]: elixir/day1.livemd
@@ -49,3 +50,4 @@ https://adventofcode.com/2024
 [18ex]: elixir/day18.livemd
 [19ex]: elixir/day19.livemd
 [20ex]: elixir/day20.livemd
+[21ex]: elixir/day21.livemd
