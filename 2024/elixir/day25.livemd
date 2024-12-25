@@ -1,0 +1,98 @@
+# Day25
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "25", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day25 do
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n\n")
+    |> Enum.reduce({[], []}, &parse_block/2)
+  end
+
+  def parse_block(row, {locks, keys}) do
+    data = row
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.graphemes/1)
+
+    set = for {r, y} <- Enum.with_index(data),
+              {sym, x} <- Enum.with_index(r),
+              sym == "#",
+              into: MapSet.new(),
+              do: {y, x}
+
+    if Enum.all?(hd(data), & &1 == "#") do
+      {[set | locks], keys}
+    else
+      {locks, [set | keys]}
+    end
+  end
+
+  def solve(data) do
+    {locks, keys} = parse(data)
+
+    for lock <- locks, key <- keys do
+      MapSet.intersection(lock, key)
+    end
+    |> Enum.count(fn int -> MapSet.size(int) == 0 end)
+  end
+end
+
+t1 = """
+#####
+.####
+.####
+.####
+.#.#.
+.#...
+.....
+
+#####
+##.##
+.#.##
+...##
+...#.
+...#.
+.....
+
+.....
+#....
+#....
+#...#
+#.#.#
+#.###
+#####
+
+.....
+.....
+#.#..
+###..
+###.#
+###.#
+#####
+
+.....
+.....
+.....
+#....
+#.#..
+#.#.#
+#####
+"""
+
+Day25.solve(t1) |> IO.inspect(label: "t1")
+Day25.solve(data) #3077
+```

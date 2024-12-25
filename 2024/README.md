@@ -28,6 +28,7 @@ https://adventofcode.com/2024
 | 19 - Linen Layout                    | [✓][19ex] | strings, match, DP        |
 | 20 - Race Condition                  | [✓][20ex] | 2D, bfs, search in radius |
 | 21 - Keypad Conundrum                | [✓][21ex] | bfs, permutations, DP     |
+| 25 - Code Chronicle                  | [✓][25ex] | list comparison           |
 
 
 [01ex]: elixir/day1.livemd
@@ -51,3 +52,4 @@ https://adventofcode.com/2024
 [19ex]: elixir/day19.livemd
 [20ex]: elixir/day20.livemd
 [21ex]: elixir/day21.livemd
+[25ex]: elixir/day25.livemd
