@@ -1,0 +1,110 @@
+# Day25
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:libgraph, "~> 0.16.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "25", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day25 do
+  def parse(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      [h | t] = row |> String.replace(":", "") |> String.split(" ", trim: true)
+      {h, t}
+    end)
+  end
+
+  def solve(data) do
+    g = data |> parse() |> to_graph()
+
+    {comp, top3, i} = run_cycle(g)
+    [a, b] = Enum.map(comp, &length/1)
+    {i, top3, a * b}
+  end
+
+  def run_cycle(g) do
+    sz = g |> Graph.vertices() |> length()
+    max = round(:math.pow(sz, 2) * :math.log(sz))
+
+    Enum.reduce_while(1..max, %{}, fn i, freq ->
+      g |> inc_use(freq) |> check_cut(g, i)
+    end)
+  end
+
+  def get_top3(freq) do
+    freq
+    |> Enum.sort_by(fn {_, v} -> v end, :desc)
+    |> Enum.map(fn {[from, to], _} -> {from, to} end)
+    |> Enum.take(3)
+  end
+
+  def check_cut(freq, g, i) do
+    top3 = get_top3(freq)
+
+    ng = Enum.reduce(top3, g, fn {from, to}, acc ->
+      Graph.delete_edge(acc, from, to)
+    end)
+    comp = Graph.components(ng)
+
+    if length(comp) == 2 do
+      {:halt, {comp, top3, i}}
+    else
+      {:cont, freq}
+    end
+  end
+
+  # take any random vertices
+  # find shortest path
+  # increase usage of edges on the path
+  def inc_use(g, freq) do
+    [from, to] = g |> Graph.vertices() |> Enum.take_random(2)
+
+    Graph.dijkstra(g, from, to)
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.map(fn pair -> Enum.sort(pair) end)
+    |> Enum.reduce(freq, fn pair, freq ->
+      Map.update(freq, pair, 1, fn val -> val + 1 end)
+    end)
+  end
+
+  def to_graph(data) do
+    for {from, conn} <- data,
+      to <- conn,
+      reduce: Graph.new(type: :undirected) do
+      g -> Graph.add_edge(g, from, to, weight: 1)
+    end
+  end
+end
+
+t1 =
+"""
+jqt: rhn xhk nvd
+rsh: frs pzl lsr
+xhk: hfx
+cmg: qnr nvd lhk bvb
+rhn: xhk bvb hfx
+bvb: xhk hfx
+pzl: lsr hfx nvd
+qnr: nvd
+ntq: jqt hfx bvb xhk
+nvd: lhk
+lsr: lhk
+rzs: qnr cmg lsr rsh
+frs: qnr lhk lsr
+"""
+
+Day25.solve(t1) |> IO.inspect(label: "t1")
+Day25.solve(data) # 591890
+```

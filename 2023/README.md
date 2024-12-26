@@ -5,29 +5,30 @@ https://adventofcode.com/2023
 
 ## My solutions
 
-| Title                                | elixir    |
-| -                                    | -         |
-| 01 - Trebuchet?!                     | [✓][01ex] |
-| 02 - Cube Conundrum                  | [✓][02ex] |
-| 03 - Gear Ratios                     | [✓][03ex] |
-| 04 - Scratchcards                    | [✓][04ex] |
-| 05 - If You Give A Seed A Fertilizer | [✓][05ex] |
-| 06 - Wait For It                     | [✓][06ex] |
-| 07 - Camel Cards                     | [✓][07ex] |
-| 08 - Haunted Wasteland               | [✓][08ex] |
-| 09 - Mirage Maintenance              | [✓][09ex] |
-| 10 - Pipe Maze                       | [✓][10ex] |
-| 11 - Cosmic Expansion                | [✓][11ex] |
-| 12 - Hot Springs                     | [✓][12ex] |
-| 13 - Point of Incidence              | [✓][13ex] |
-| 14 - Parabolic Reflector Dish        | [✓][14ex] |
-| 15 - Lens Library                    | [✓][15ex] |
-| 16 - The Floor Will Be Lava          | [✓][16ex] |
-| 17 - Clumsy Crucible                 | [✓][17ex] |
-| 18 - Lavaduct Lagoon                 | [✓][18ex] |
-| 19 - Aplenty                         | [✓][19ex] |
-| 20 - Pulse Propagation               | [✓][20ex] |
-| 21 - Step Counter                    | [✓][21ex] |
+| Title                                | elixir    | comments                      |
+| -                                    | -         | -                             |
+| 01 - Trebuchet?!                     | [✓][01ex] |                               |
+| 02 - Cube Conundrum                  | [✓][02ex] |                               |
+| 03 - Gear Ratios                     | [✓][03ex] |                               |
+| 04 - Scratchcards                    | [✓][04ex] |                               |
+| 05 - If You Give A Seed A Fertilizer | [✓][05ex] |                               |
+| 06 - Wait For It                     | [✓][06ex] |                               |
+| 07 - Camel Cards                     | [✓][07ex] |                               |
+| 08 - Haunted Wasteland               | [✓][08ex] |                               |
+| 09 - Mirage Maintenance              | [✓][09ex] |                               |
+| 10 - Pipe Maze                       | [✓][10ex] |                               |
+| 11 - Cosmic Expansion                | [✓][11ex] |                               |
+| 12 - Hot Springs                     | [✓][12ex] |                               |
+| 13 - Point of Incidence              | [✓][13ex] |                               |
+| 14 - Parabolic Reflector Dish        | [✓][14ex] |                               |
+| 15 - Lens Library                    | [✓][15ex] |                               |
+| 16 - The Floor Will Be Lava          | [✓][16ex] |                               |
+| 17 - Clumsy Crucible                 | [✓][17ex] |                               |
+| 18 - Lavaduct Lagoon                 | [✓][18ex] |                               |
+| 19 - Aplenty                         | [✓][19ex] |                               |
+| 20 - Pulse Propagation               | [✓][20ex] |                               |
+| 21 - Step Counter                    | [✓][21ex] |                               |
+| 25 - Snowverload                     | [✓][25ex] | graph, min cut, shortest path |
 
 
 [01ex]: elixir/day1.livemd
@@ -51,3 +52,4 @@ https://adventofcode.com/2023
 [19ex]: elixir/day19.livemd
 [20ex]: elixir/day20.livemd
 [21ex]: elixir/day21.livemd
+[25ex]: elixir/day25.livemd
