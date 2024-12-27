@@ -1,0 +1,90 @@
+# Day22
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "22", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day22 do
+  @prune 16777216
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  def solve(data) do
+    data
+    |> parse()
+    |> Enum.map(fn n -> run(n, [rem(n, 10)], 2000) end)
+    |> Enum.map(fn {n, prices} -> {n, get_sequences(prices)} end)
+    |> Enum.reduce({0, %{}}, fn {n, seq}, {sum, acc} ->
+      {n + sum, Map.merge(acc, seq, fn _k, v1, v2 -> v1 + v2 end)}
+    end)
+    |> then(fn {r1, r2} ->
+      r2 = r2 |> Enum.map(fn {_k, v} -> v end) |> Enum.max()
+      {r1, r2}
+    end)
+  end
+
+  def get_sequences(prices) do
+    [h | t] = Enum.chunk_every(prices, 4, 1, :discard)
+    acc =
+      Enum.reduce(t, {%{}, h}, fn nxt, {acc, prev} ->
+        key = prev
+              |> Enum.zip(nxt)
+              |> Enum.map(fn {p, n} -> n-p end)
+              |> List.to_tuple()
+        val = List.last(nxt)
+        acc = Map.update(acc, key, val, fn prev -> prev end)
+        {acc, nxt}
+      end)
+
+    elem(acc, 0)
+  end
+
+  def run(n, prices, 0), do: {n, Enum.reverse(prices)}
+
+  # ops are something like:
+  # n <<< 6 ^^^ n &&& 0xFFFFFF
+  # s1 >>> 5 ^^^ s1 &&& 0xFFFFFF
+  # s2 <<< 11 ^^^ s2 &&& 0xFFFFFF
+  # but this won't give any perf. gains
+  def run(n, acc, nn) do
+    s1 = (n * 64) |> Bitwise.bxor(n) |> rem(@prune)
+    s2 = div(s1, 32) |> Bitwise.bxor(s1) |> rem(@prune)
+    s3 = (s2 * 2048) |> Bitwise.bxor(s2) |> rem(@prune)
+    price = rem(s3, 10)
+    run(s3, [price | acc], nn-1)
+  end
+end
+
+t1 = """
+1
+10
+100
+2024
+"""
+
+t2 = """
+1
+2
+3
+2024
+"""
+
+Day22.solve(t1) |> IO.inspect(label: "t1")
+Day22.solve(t2) |> IO.inspect(label: "t2")
+Day22.solve(data) # {14691757043, 1831}
+```
