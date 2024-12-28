@@ -29,6 +29,7 @@ https://adventofcode.com/2024
 | 20 - Race Condition                  | [✓][20ex] | 2D, bfs, search in radius |
 | 21 - Keypad Conundrum                | [✓][21ex] | bfs, permutations, DP     |
 | 22 - Monkey Market                   | [✓][22ex] | reduce, sliding window    |
+| 23 - LAN Party                       | [✓][23ex] | graph, k_core connections |
 | 25 - Code Chronicle                  | [✓][25ex] | list comparison           |
 
 
@@ -54,4 +55,5 @@ https://adventofcode.com/2024
 [20ex]: elixir/day20.livemd
 [21ex]: elixir/day21.livemd
 [22ex]: elixir/day22.livemd
+[23ex]: elixir/day23.livemd
 [25ex]: elixir/day25.livemd

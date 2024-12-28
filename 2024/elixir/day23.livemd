@@ -1,0 +1,114 @@
+# Day23
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:libgraph, "~> 0.16.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "23", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day23 do
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row ->
+      String.split(row, "-", trim: true) |> List.to_tuple()
+    end)
+    |> to_graph()
+  end
+
+  def to_graph(data) do
+    g = Graph.new(type: :undirected)
+    Enum.reduce(data, g, fn {from ,to}, g ->
+      Graph.add_edge(g, from, to)
+    end)
+  end
+
+  def solve(data) do
+    g = parse(data)
+    {t1(g), t2(g)}
+  end
+
+  def t2(g) do
+    g
+    |>Graph.cliques()
+    |> Enum.max_by(fn cl -> length(cl) end)
+    |> Enum.sort()
+    |> Enum.join(",")
+  end
+
+  def t1(g) do
+    g
+    |> Graph.cliques()
+    |> Enum.filter(fn cl -> length(cl) >= 3 end)
+    |> Enum.reduce(MapSet.new(), fn cl, acc ->
+      add_subnets(acc, cl)
+    end)
+    |> Enum.filter(fn cl ->
+      Enum.any?(cl, fn str -> String.starts_with?(str, "t") end)
+    end)
+    |> Enum.count()
+  end
+
+  def add_subnets(acc, [a, b, c]), do: MapSet.put(acc, MapSet.new([a, b, c]))
+
+  # any combination of 3 nodes of the list
+  def add_subnets(acc, cl) do
+    for a <- cl, b <- cl, c <- cl,
+        a != b and b != c and a != c do
+      MapSet.new([a, b, c])
+    end
+    |> Enum.reduce(acc, fn cl, acc ->
+      MapSet.put(acc, MapSet.new(cl))
+    end)
+  end
+end
+
+t1 = """
+kh-tc
+qp-kh
+de-cg
+ka-co
+yn-aq
+qp-ub
+cg-tb
+vc-aq
+tb-ka
+wh-tc
+yn-cg
+kh-ub
+ta-co
+de-co
+tc-td
+tb-wq
+wh-td
+ta-ka
+td-qp
+aq-cg
+wq-ub
+ub-vc
+de-ta
+wq-aq
+wq-vc
+wh-yn
+ka-de
+kh-ta
+co-tc
+wh-qp
+tb-vc
+td-yn
+"""
+
+Day23.solve(t1) |> IO.inspect(label: "t1")
+Day23.solve(data) # {893, "cw,dy,ef,iw,ji,jv,ka,ob,qv,ry,ua,wt,xz"}
+```
