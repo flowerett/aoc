@@ -39,6 +39,9 @@ defmodule Day23 do
     {t1(g), t2(g)}
   end
 
+  # Clique is a subgraph where all vertices are interconnected
+  # Bron-Kerbosch is used for finding all maximal cliques
+  # https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
   def t2(g) do
     g
     |>Graph.cliques()
@@ -48,30 +51,25 @@ defmodule Day23 do
   end
 
   def t1(g) do
-    g
-    |> Graph.cliques()
-    |> Enum.filter(fn cl -> length(cl) >= 3 end)
-    |> Enum.reduce(MapSet.new(), fn cl, acc ->
-      add_subnets(acc, cl)
-    end)
-    |> Enum.filter(fn cl ->
-      Enum.any?(cl, fn str -> String.starts_with?(str, "t") end)
-    end)
-    |> Enum.count()
+    nets =
+      for a <- Graph.vertices(g),
+          b <- Graph.neighbors(g, a),
+          c <- Graph.neighbors(g, b),
+          is_connected(g, a, c) and is_t_net([a, b, c]),
+          reduce: MapSet.new() do
+        acc ->
+          el = MapSet.new([a, b, c])
+          MapSet.put(acc, el)
+      end
+
+    Enum.count(nets)
   end
 
-  def add_subnets(acc, [a, b, c]), do: MapSet.put(acc, MapSet.new([a, b, c]))
-
-  # any combination of 3 nodes of the list
-  def add_subnets(acc, cl) do
-    for a <- cl, b <- cl, c <- cl,
-        a != b and b != c and a != c do
-      MapSet.new([a, b, c])
-    end
-    |> Enum.reduce(acc, fn cl, acc ->
-      MapSet.put(acc, MapSet.new(cl))
-    end)
+  def is_connected(g, a, c) do
+    a != c and a in Graph.neighbors(g, c)
   end
+
+  def is_t_net(net), do: Enum.any?(net, &String.starts_with?(&1, "t"))
 end
 
 t1 = """
