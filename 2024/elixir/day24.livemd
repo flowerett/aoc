@@ -1,0 +1,425 @@
+# Day24
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
+  {:qex, "~> 0.5"}
+  # {:libgraph, "~> 0.16.0"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2024", "24", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day24 do
+  import Bitwise, only: [band: 2, bxor: 2, bor: 2]
+  @ops %{"AND" => &band/2, "OR" => &bor/2, "XOR" => &bxor/2}
+
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n\n", trim: true)
+    |> then(fn [init, cmds] ->
+      {init(init), parse_cmd(cmds)}
+    end)
+  end
+
+  def init(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row -> String.split(row, ": ", trim: true) end)
+    |> Enum.reduce(%{}, fn [key, str], acc ->
+      Map.put(acc, key, String.to_integer(str))
+    end)
+  end
+
+  def parse_cmd(cmds) do
+    cmds
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn str ->
+      [a, cmd, b, _, target] = String.split(str, " ", trim: true)
+      {a, cmd, b, target}
+    end)
+  end
+
+  def solve(data) do
+    {r, cmd} = parse(data)
+
+    {r, Qex.new(cmd)} |> run() |> get_res() |> IO.inspect(label: "res 1")
+
+    # t2 - manual
+    gr = Enum.group_by(cmd, fn el -> elem(el, 1) end)
+
+    # check ops, find anomalies
+    gr["XOR"]
+    |> Enum.sort_by(fn {a, "XOR", b, t} ->
+      k = Enum.sort([a, b]) |> Enum.join("")
+      {t, k}
+    end)
+    |> IO.inspect(limit: :infinity)
+  end
+
+  def get_res(reg) do
+    reg
+    |> Enum.filter(fn {k, _} -> String.starts_with?(k, "z") end)
+    |> Enum.sort_by(fn {k, _} -> k end)
+    |> Enum.map(fn {_, v} -> Integer.to_string(v) end)
+    |> Enum.reverse()
+    |> Enum.join("")
+    |> String.to_integer(2)
+  end
+
+  def run({reg, q}) do
+    case Qex.pop(q) do
+      {{:value, cmd}, q} ->
+        process(cmd, reg, q) |> run()
+
+      {:empty, _q} ->
+        reg
+    end
+  end
+
+  def process({a, cmd, b, tg} = el, reg, q) do
+    if Map.has_key?(reg, a) and Map.has_key?(reg, b) do
+      fun = @ops[cmd]
+      v = fun.(reg[a], reg[b])
+      {Map.put(reg, tg, v), q}
+    else
+      {reg, Qex.push(q, el)}
+    end
+  end
+end
+
+t1 = """
+x00: 1
+x01: 0
+x02: 1
+x03: 1
+x04: 0
+y00: 1
+y01: 1
+y02: 1
+y03: 1
+y04: 1
+
+ntg XOR fgs -> mjb
+y02 OR x01 -> tnw
+kwq OR kpj -> z05
+x00 OR x03 -> fst
+tgd XOR rvg -> z01
+vdt OR tnw -> bfw
+bfw AND frj -> z10
+ffh OR nrd -> bqk
+y00 AND y03 -> djm
+y03 OR y00 -> psh
+bqk OR frj -> z08
+tnw OR fst -> frj
+gnj AND tgd -> z11
+bfw XOR mjb -> z00
+x03 OR x00 -> vdt
+gnj AND wpb -> z02
+x04 AND y00 -> kjc
+djm OR pbm -> qhw
+nrd AND vdt -> hwm
+kjc AND fst -> rvg
+y04 OR y02 -> fgs
+y01 AND x02 -> pbm
+ntg OR kjc -> kwq
+psh XOR fgs -> tgd
+qhw XOR tgd -> z09
+pbm OR djm -> kpj
+x03 XOR y03 -> ffh
+x00 XOR y04 -> ntg
+bfw OR bqk -> z06
+nrd XOR fgs -> wpb
+frj XOR qhw -> z04
+bqk OR frj -> z07
+y03 OR x01 -> nrd
+hwm AND bqk -> z03
+tgd XOR rvg -> z12
+tnw OR pbm -> gnj
+"""
+
+Day24.solve(data)
+
+# t2 - found after manual check
+# z00 - ok
+# z10-gpr
+# z21-nks
+# z33-ghp
+# krs-cmp - z39
+# z45 - ok
+
+# 51107420031718 - r1
+~w(cpm krs z33 ghp z21 nks z10 gpr) |> Enum.sort |> Enum.join(",")
+```
+
+### Sum analysis:
+
+```
+  101 (A)
++ 011 (B)
+------
+
+reg 1
+A = 1, B = 1, C = 0
+S = 1 XOR 1 = 0
+Z = 0 XOR 0 = 0
+N1 = 1 AND 1
+N2 = 0 AND 0
+C_next = N1 (1) OR N2 (0) = 1
+
+correct sum operation:
+x00 XOR y00 -> s00
+s00 XOR c00 -> z00
+x00 AND y00 -> n001
+s00 AND c00 -> n002
+n001 OR n002 -> c01
+
+r0:
+x00 XOR y00 -> z00
+x00 AND y00 -> c01
+
+rlast:
+nxx1 OR nxx2 - zxx
+```
+
+```
+[
+  {"jvd", "OR", "bbr", "nkp"},
+  {"bkw", "OR", "qmp", "gft"},
+  {"ktv", "OR", "brh", "wcr"},
+  {"rpg", "OR", "brs", "pcf"},
+  {"bwn", "OR", "tqr", "vdv"},
+  {"fhd", "OR", "bws", "nwt"},
+  {"krb", "OR", "cpm", "jhd"},
+  {"ctw", "OR", "nbs", "kkb"},
+  {"dbf", "OR", "dwh", "fnb"},
+  {"dpd", "OR", "gnb", "shk"},
+  {"dpm", "OR", "hkn", "hnd"},
+  {"drb", "OR", "qsh", "vjt"},
+  {"drt", "OR", "qqm", "nwb"},
+  {"drw", "OR", "tfc", "jmk"},
+  {"dtg", "OR", "gjs", "scj"}, #carry over 20
+  {"dws", "OR", "fgk", "qfd"},
+  {"fbc", "OR", "smr", "nwk"},
+  {"fnw", "OR", "sdj", "mvc"},
+  {"kdb", "OR", "fpk", "dfm"},
+  {"wpg", "OR", "frb", "ftb"}, #c44
+  {"fsf", "OR", "gpr", "tdj"},
+  {"gbn", "OR", "qcm", "dcd"},
+  {"wgj", "OR", "gmq", "twg"},
+  {"qdc", "OR", "gnm", "qgm"},
+  {"gpg", "OR", "tjg", "jjs"},
+  {"rtc", "OR", "hhg", "bvg"},
+  {"hnp", "OR", "mbt", "bgn"},
+  {"hsk", "OR", "jhh", "jrj"},
+  {"knd", "OR", "hsv", "pdq"}, #c02
+  {"hwr", "OR", "khh", "rtj"},
+  {"jtg", "OR", "trf", "z33"},
+  {"mgp", "OR", "vrc", "fkn"},
+  {"mkh", "OR", "ppq", "wdr"},
+  {"mnv", "OR", "vdc", "tfg"},
+  {"mph", "OR", "sqw", "mhr"},
+  {"mwr", "OR", "ngk", "mgr"},
+  {"wtc", "OR", "ndp", "z45"},
+  {"ngv", "OR", "qtp", "sdf"},
+  {"rhk", "OR", "nks", "hhc"},
+  {"qrw", "OR", "nkw", "vhs"},
+  {"nvr", "OR", "srq", "prt"},
+  {"qkb", "OR", "sbj", "sdk"},
+  {"tnd", "OR", "vjj", "whd"},
+  {"tqn", "OR", "tvk", "nsj"}
+]
+
+[
+  {"bcs", "AND", "vjt", "tfc"},
+  {"bgn", "AND", "gdp", "vjj"},
+  {"bjh", "AND", "wcr", "bwn"},
+  {"cdh", "AND", "bwd", "hsv"}, #n02
+  {"cmn", "AND", "dcd", "qkb"},
+  {"cpp", "AND", "fkn", "smr"},
+  {"dfm", "AND", "ggv", "bws"},
+  {"dqw", "AND", "jmk", "vrc"},
+  {"fnb", "AND", "tsj", "drt"},
+  {"ghp", "AND", "hbg", "khh"},
+  {"hnd", "AND", "sqt", "brs"},
+  {"hrr", "AND", "hhc", "jvd"},
+  {"jhd", "AND", "vvm", "gbn"},
+  {"jrj", "AND", "bnn", "qtp"},
+  {"jsg", "AND", "tfg", "gmq"},
+  {"kkb", "AND", "bqv", "gnb"},
+  {"kpf", "AND", "jjs", "qsh"},
+  {"mgr", "AND", "dnb", "nkw"},
+  {"mhr", "AND", "krs", "krb"},
+  {"mvc", "AND", "tkq", "trf"},
+  {"nwb", "AND", "wpw", "fgk"},
+  {"nwk", "AND", "fjt", "tvk"},
+  {"nwt", "AND", "qnj", "sdj"},
+  {"nwv", "AND", "sdf", "brh"},
+  {"pcf", "AND", "mrq", "nbs"},
+  {"pdq", "AND", "ctr", "jhh"},
+  {"prt", "AND", "skt", "ppq"},
+  {"ptd", "AND", "scj", "z21"}, # nks-z21
+  {"ptf", "AND", "qgm", "frb"},
+  {"rcn", "AND", "nsj", "dwh"},
+  {"rqp", "AND", "vdv", "vdc"},
+  {"rtj", "AND", "wgw", "nvr"},
+  {"sdk", "AND", "pcg", "qdc"},
+  {"sfc", "AND", "nkp", "rtc"},
+  {"srf", "AND", "wdr", "qmp"},
+  {"tdq", "AND", "tdj", "tjg"},
+  {"tff", "AND", "qfd", "gjs"},
+  {"twg", "AND", "rtn", "hnp"},
+  {"vhs", "AND", "kwq", "fpk"},
+  {"vmv", "AND", "gft", "sqw"},
+  {"wdg", "AND", "ftb", "ndp"}, #s44 & c44
+  {"wfc", "AND", "bvg", "dpm"},
+  {"whd", "AND", "htv", "fsf"},
+  {"wmr", "AND", "shk", "mwr"},
+
+  {"x02", "AND", "y02", "hsk"},
+  {"x04", "AND", "y04", "ktv"},
+  {"x05", "AND", "y05", "tqr"},
+  {"x06", "AND", "y06", "mnv"},
+  {"x08", "AND", "y08", "mbt"},
+  {"x10", "AND", "y10", "z10"}, # z10-gpr
+  {"x11", "AND", "y11", "gpg"},
+  {"x12", "AND", "y12", "drb"},
+  {"x13", "AND", "y13", "drw"},
+  {"x16", "AND", "y16", "tqn"},
+  {"x18", "AND", "y18", "qqm"},
+  {"x19", "AND", "y19", "dws"},
+  {"x20", "AND", "y20", "dtg"},
+  {"x22", "AND", "y22", "bbr"},
+  {"x24", "AND", "y24", "hkn"},
+  {"x26", "AND", "y26", "ctw"},
+  {"x27", "AND", "y27", "dpd"},
+  {"x30", "AND", "y30", "kdb"},
+  {"x37", "AND", "y37", "bkw"},
+  {"x38", "AND", "y38", "mph"},
+  {"x40", "AND", "y40", "qcm"},
+  {"x44", "AND", "y44", "wtc"}, #n441
+  {"y00", "AND", "x00", "bwd"}, #n01 - c01 ?
+  {"y01", "AND", "x01", "knd"},
+  {"y03", "AND", "x03", "ngv"},
+  {"y07", "AND", "x07", "wgj"},
+  {"y09", "AND", "x09", "tnd"},
+  {"y14", "AND", "x14", "mgp"},
+  {"y15", "AND", "x15", "fbc"},
+  {"y17", "AND", "x17", "dbf"},
+  {"y21", "AND", "x21", "rhk"},
+  {"y23", "AND", "x23", "hhg"},
+  {"y25", "AND", "x25", "rpg"},
+  {"y28", "AND", "x28", "ngk"},
+  {"y29", "AND", "x29", "qrw"},
+  {"y31", "AND", "x31", "fhd"},
+  {"y32", "AND", "x32", "fnw"},
+  {"y33", "AND", "x33", "jtg"}, # n331
+  {"y34", "AND", "x34", "hwr"},
+  {"y35", "AND", "x35", "srq"},
+  {"y36", "AND", "x36", "mkh"},
+  {"y39", "AND", "x39", "krs"}, # n391
+  {"y41", "AND", "x41", "sbj"},
+  {"y42", "AND", "x42", "gnm"},
+  {"y43", "AND", "x43", "wpg"}
+]
+
+[
+  {"x13", "XOR", "y13", "bcs"},
+  {"x05", "XOR", "y05", "bjh"},
+  {"y03", "XOR", "x03", "bnn"},
+  {"y27", "XOR", "x27", "bqv"},
+  {"x01", "XOR", "y01", "cdh"}, #s01
+  {"x41", "XOR", "y41", "cmn"},
+    {"x39", "XOR", "y39", "cpm"}, # krs-cpm z39
+  {"x15", "XOR", "y15", "cpp"},
+  {"x02", "XOR", "y02", "ctr"},
+  {"x29", "XOR", "y29", "dnb"},
+  {"x14", "XOR", "y14", "dqw"},
+  {"x16", "XOR", "y16", "fjt"},
+  {"x09", "XOR", "y09", "gdp"}, #s09
+  {"y31", "XOR", "x31", "ggv"},
+  {"tkq", "XOR", "mvc", "ghp"}, # z33-ghp????
+  {"htv", "XOR", "whd", "gpr"}, # z10-gpr
+  {"x34", "XOR", "y34", "hbg"},
+  {"y22", "XOR", "x22", "hrr"},
+  {"y10", "XOR", "x10", "htv"}, #s10
+  {"x07", "XOR", "y07", "jsg"},
+  {"x12", "XOR", "y12", "kpf"},
+  {"y30", "XOR", "x30", "kwq"},
+  {"y26", "XOR", "x26", "mrq"},
+  {"scj", "XOR", "ptd", "nks"}, # z21 - nks-z21
+  {"y04", "XOR", "x04", "nwv"},
+  {"y42", "XOR", "x42", "pcg"},
+  {"y21", "XOR", "x21", "ptd"},
+  {"y43", "XOR", "x43", "ptf"},
+  {"y32", "XOR", "x32", "qnj"},
+  {"y17", "XOR", "x17", "rcn"},
+  {"x06", "XOR", "y06", "rqp"},
+  {"x08", "XOR", "y08", "rtn"},
+  {"y23", "XOR", "x23", "sfc"},
+  {"y36", "XOR", "x36", "skt"},
+  {"y25", "XOR", "x25", "sqt"},
+  {"y37", "XOR", "x37", "srf"},
+  {"x11", "XOR", "y11", "tdq"},
+  {"y20", "XOR", "x20", "tff"},
+  {"y33", "XOR", "x33", "tkq"}, #s33
+  {"x18", "XOR", "y18", "tsj"},
+  {"x38", "XOR", "y38", "vmv"},
+  {"x40", "XOR", "y40", "vvm"},
+  {"x44", "XOR", "y44", "wdg"}, #S44
+  {"y24", "XOR", "x24", "wfc"},
+  {"x35", "XOR", "y35", "wgw"},
+  {"y28", "XOR", "x28", "wmr"},
+  {"y19", "XOR", "x19", "wpw"},
+  {"y00", "XOR", "x00", "z00"}, #ok ?
+  {"cdh", "XOR", "bwd", "z01"}, #s01, c01
+  {"ctr", "XOR", "pdq", "z02"},
+  {"bnn", "XOR", "jrj", "z03"},
+  {"nwv", "XOR", "sdf", "z04"},
+  {"wcr", "XOR", "bjh", "z05"},
+  {"rqp", "XOR", "vdv", "z06"},
+  {"tfg", "XOR", "jsg", "z07"},
+  {"twg", "XOR", "rtn", "z08"},
+  {"bgn", "XOR", "gdp", "z09"},
+  {"tdq", "XOR", "tdj", "z11"},
+  {"jjs", "XOR", "kpf", "z12"},
+  {"bcs", "XOR", "vjt", "z13"},
+  {"dqw", "XOR", "jmk", "z14"},
+  {"fkn", "XOR", "cpp", "z15"},
+  {"nwk", "XOR", "fjt", "z16"},
+  {"rcn", "XOR", "nsj", "z17"},
+  {"tsj", "XOR", "fnb", "z18"},
+  {"wpw", "XOR", "nwb", "z19"},
+  {"qfd", "XOR", "tff", "z20"},
+  {"hrr", "XOR", "hhc", "z22"},
+  {"nkp", "XOR", "sfc", "z23"},
+  {"wfc", "XOR", "bvg", "z24"},
+  {"hnd", "XOR", "sqt", "z25"},
+  {"mrq", "XOR", "pcf", "z26"},
+  {"bqv", "XOR", "kkb", "z27"},
+  {"wmr", "XOR", "shk", "z28"},
+  {"dnb", "XOR", "mgr", "z29"},
+  {"vhs", "XOR", "kwq", "z30"},
+  {"ggv", "XOR", "dfm", "z31"},
+  {"qnj", "XOR", "nwt", "z32"},
+  {"ghp", "XOR", "hbg", "z34"},
+  {"wgw", "XOR", "rtj", "z35"},
+  {"skt", "XOR", "prt", "z36"},
+  {"srf", "XOR", "wdr", "z37"},
+  {"gft", "XOR", "vmv", "z38"},
+    {"krs", "XOR", "mhr", "z39"}, #krs-cpm
+  {"vvm", "XOR", "jhd", "z40"},
+  {"dcd", "XOR", "cmn", "z41"},
+  {"sdk", "XOR", "pcg", "z42"},
+  {"qgm", "XOR", "ptf", "z43"},
+  {"ftb", "XOR", "wdg", "z44"} #c44 XOR s44
+]
+```
