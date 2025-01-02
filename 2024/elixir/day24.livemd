@@ -2,9 +2,7 @@
 
 ```elixir
 Mix.install([
-  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"},
-  {:qex, "~> 0.5"}
-  # {:libgraph, "~> 0.16.0"}
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
 ])
 ```
 
@@ -12,152 +10,6 @@ Mix.install([
 
 ```elixir
 {:ok, data} = KinoAOC.download_puzzle("2024", "24", System.fetch_env!("LB_AOC_SECRET"))
-```
-
-## Solve
-
-```elixir
-defmodule Day24 do
-  import Bitwise, only: [band: 2, bxor: 2, bor: 2]
-  @ops %{"AND" => &band/2, "OR" => &bor/2, "XOR" => &bxor/2}
-
-  def parse(data) do
-    data
-    |> String.trim()
-    |> String.split("\n\n", trim: true)
-    |> then(fn [init, cmds] ->
-      {init(init), parse_cmd(cmds)}
-    end)
-  end
-
-  def init(data) do
-    data
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn row -> String.split(row, ": ", trim: true) end)
-    |> Enum.reduce(%{}, fn [key, str], acc ->
-      Map.put(acc, key, String.to_integer(str))
-    end)
-  end
-
-  def parse_cmd(cmds) do
-    cmds
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn str ->
-      [a, cmd, b, _, target] = String.split(str, " ", trim: true)
-      {a, cmd, b, target}
-    end)
-  end
-
-  def solve(data) do
-    {r, cmd} = parse(data)
-
-    {r, Qex.new(cmd)} |> run() |> get_res() |> IO.inspect(label: "res 1")
-
-    # t2 - manual
-    gr = Enum.group_by(cmd, fn el -> elem(el, 1) end)
-
-    # check ops, find anomalies
-    gr["XOR"]
-    |> Enum.sort_by(fn {a, "XOR", b, t} ->
-      k = Enum.sort([a, b]) |> Enum.join("")
-      {t, k}
-    end)
-    |> IO.inspect(limit: :infinity)
-  end
-
-  def get_res(reg) do
-    reg
-    |> Enum.filter(fn {k, _} -> String.starts_with?(k, "z") end)
-    |> Enum.sort_by(fn {k, _} -> k end)
-    |> Enum.map(fn {_, v} -> Integer.to_string(v) end)
-    |> Enum.reverse()
-    |> Enum.join("")
-    |> String.to_integer(2)
-  end
-
-  def run({reg, q}) do
-    case Qex.pop(q) do
-      {{:value, cmd}, q} ->
-        process(cmd, reg, q) |> run()
-
-      {:empty, _q} ->
-        reg
-    end
-  end
-
-  def process({a, cmd, b, tg} = el, reg, q) do
-    if Map.has_key?(reg, a) and Map.has_key?(reg, b) do
-      fun = @ops[cmd]
-      v = fun.(reg[a], reg[b])
-      {Map.put(reg, tg, v), q}
-    else
-      {reg, Qex.push(q, el)}
-    end
-  end
-end
-
-t1 = """
-x00: 1
-x01: 0
-x02: 1
-x03: 1
-x04: 0
-y00: 1
-y01: 1
-y02: 1
-y03: 1
-y04: 1
-
-ntg XOR fgs -> mjb
-y02 OR x01 -> tnw
-kwq OR kpj -> z05
-x00 OR x03 -> fst
-tgd XOR rvg -> z01
-vdt OR tnw -> bfw
-bfw AND frj -> z10
-ffh OR nrd -> bqk
-y00 AND y03 -> djm
-y03 OR y00 -> psh
-bqk OR frj -> z08
-tnw OR fst -> frj
-gnj AND tgd -> z11
-bfw XOR mjb -> z00
-x03 OR x00 -> vdt
-gnj AND wpb -> z02
-x04 AND y00 -> kjc
-djm OR pbm -> qhw
-nrd AND vdt -> hwm
-kjc AND fst -> rvg
-y04 OR y02 -> fgs
-y01 AND x02 -> pbm
-ntg OR kjc -> kwq
-psh XOR fgs -> tgd
-qhw XOR tgd -> z09
-pbm OR djm -> kpj
-x03 XOR y03 -> ffh
-x00 XOR y04 -> ntg
-bfw OR bqk -> z06
-nrd XOR fgs -> wpb
-frj XOR qhw -> z04
-bqk OR frj -> z07
-y03 OR x01 -> nrd
-hwm AND bqk -> z03
-tgd XOR rvg -> z12
-tnw OR pbm -> gnj
-"""
-
-Day24.solve(data)
-
-# t2 - found after manual check
-# z00 - ok
-# z10-gpr
-# z21-nks
-# z33-ghp
-# krs-cmp - z39
-# z45 - ok
-
-# 51107420031718 - r1
-~w(cpm krs z33 ghp z21 nks z10 gpr) |> Enum.sort |> Enum.join(",")
 ```
 
 ### Sum analysis:
@@ -422,4 +274,275 @@ nxx1 OR nxx2 - zxx
   {"qgm", "XOR", "ptf", "z43"},
   {"ftb", "XOR", "wdg", "z44"} #c44 XOR s44
 ]
+```
+
+## Solve
+
+```elixir
+defmodule Day24 do
+  import Bitwise, only: [band: 2, bxor: 2, bor: 2]
+  @ops %{"AND" => &band/2, "OR" => &bor/2, "XOR" => &bxor/2}
+
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n\n", trim: true)
+    |> then(fn [init, cmds] ->
+      {init(init), parse_cmd(cmds)}
+    end)
+  end
+
+  def init(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn row -> String.split(row, ": ", trim: true) end)
+    |> Enum.reduce(%{}, fn [key, str], acc ->
+      Map.put(acc, key, String.to_integer(str))
+    end)
+  end
+
+  def parse_cmd(cmds) do
+    cmds
+    |> String.split("\n", trim: true)
+    |> Enum.reduce(%{}, fn str, acc ->
+      [a, cmd, b, _, gate] = String.split(str, " ", trim: true)
+      Map.put(acc, gate, {a, cmd, b})
+    end)
+  end
+
+  def solve(data, test \\ false) do
+    {reg, gates} = parse(data)
+    n = test && 12 || 45
+    t1(reg, gates, n) |> IO.inspect(label: "t1")
+    !test && t2(reg, gates) |> IO.inspect(label: "t2")
+  end
+
+  def t1(reg, gates, n \\ 45) do
+    (0..n)
+    |> Enum.reduce(reg, fn x, acc -> calc_z(acc, x, gates) end)
+    |> z_to_i()
+  end
+
+  def calc_z(reg, n, gates) do
+    max = map_size(gates)
+    t = "z" <> String.pad_leading("#{n}", 2, "0")
+    {_, reg} = run(t, reg, gates, max)
+    reg
+  end
+
+  def run(target, reg, _gates, 0) do
+    {"NaN", Map.put(reg, target, "NaN")}
+  end
+
+  def run(target, reg, gates, n) do
+    if Map.has_key?(reg, target) do
+      {reg[target], reg}
+    else
+      {a, cmd, b} = gates[target]
+      {ra, reg} = run(a, reg, gates, n-1)
+      {rb, reg} = run(b, reg, gates, n-1)
+      if ra != "NaN" and rb != "NaN" do
+        fun = @ops[cmd]
+        res = fun.(ra, rb)
+        reg = Map.put(reg, target, res)
+        {res, reg}
+      else
+        {"NaN", Map.put(reg, target, "NaN")}
+      end
+    end
+  end
+
+  def z_to_i(reg) do
+    reg
+    |> Enum.filter(fn {k, _} -> String.starts_with?(k, "z") end)
+    |> Enum.sort_by(fn {k, _} -> k end)
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.reverse()
+    |> to_i()
+  end
+
+  def to_i(list) do
+    if Enum.any?(list, fn el -> el == "NaN" end) do
+      -1
+    else
+      list |> Enum.join() |> String.to_integer(2)
+    end
+  end
+
+  def t2(_reg, gates) do
+    lev_gates =
+      Enum.reduce(0..44, %{seen: MapSet.new()}, fn l, acc ->
+        to_level_gates(gates, l, acc)
+      end)
+
+    Enum.reduce(1..44, {gates, []}, fn l, {gates, swapped} ->
+      fix_level(l, gates, lev_gates, swapped)
+    end)
+    |> elem(1)
+    |> Enum.flat_map(fn {a, b} -> [a, b] end)
+    |> Enum.sort()
+    |> Enum.join(",")
+  end
+
+  def to_level_gates(gates, lev, acc) do
+    ones = List.duplicate(1, lev)
+    gates =
+      init_reg(lev, ones, ones)
+      |> calc_z(lev, gates)
+      |> filter_init_reg()
+      |> Enum.map(fn {gate, _} -> gate end)
+      |> Enum.reject(fn gate -> MapSet.member?(acc[:seen], gate) end)
+      |> MapSet.new()
+
+    acc
+    |> Map.put(lev, gates)
+    |> Map.update(:seen, gates, fn seen -> MapSet.union(seen, gates) end)
+  end
+
+  def filter_init_reg(reg) do
+    Enum.filter(reg, fn {k, _} ->
+      !String.starts_with?(k, "x") and !String.starts_with?(k, "y")
+    end)
+  end
+
+  def init_reg(n, x, y) do
+    x = Enum.reverse(x)
+    y = Enum.reverse(y)
+
+    num = Enum.zip(x, y)
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {{xi, yi}, i}, acc ->
+        pos = i |> Integer.to_string() |> String.pad_leading(2, "0")
+        acc
+        |> Map.put("x"<>pos, xi)
+        |> Map.put("y"<>pos, yi)
+      end)
+    Enum.reduce(n..44, num, fn i, acc ->
+      pos = i |> Integer.to_string() |> String.pad_leading(2, "0")
+      acc
+      |> Map.put("x"<>pos, 0)
+      |> Map.put("y"<>pos, 0)
+    end)
+  end
+
+  def fix_level(l, gates, lev_gates, swapped) do
+    if check_level(gates, l) do
+      {gates, swapped}
+    else
+      swaps = for a <- lev_gates[l], b <- lev_gates[l+1] do
+        {a, b}
+      end
+
+      Enum.reduce_while(swaps, {gates, swapped}, fn {a, b}, {gates, swapped} ->
+        {ga, gb} = {gates[a], gates[b]}
+        gates = Map.put(gates, a, gb) |> Map.put(b, ga)
+
+        if check_level(gates, l) do
+          {:halt, {gates, [{a, b} | swapped]}}
+        else
+          gates = Map.put(gates, a, ga) |> Map.put(b, gb)
+          {:cont, {gates, swapped}}
+        end
+      end)
+    end
+  end
+
+  def check_level(gates, l) do
+    ones = List.duplicate(1, l)
+    i = to_i(ones)
+
+    reg = init_reg(l, ones, ones)
+    res = t1(reg, gates)
+
+    arch = check_level_arch(gates, l)
+
+    arch and res == i*2
+  end
+
+  def reg_name(name, n), do: name <> String.pad_leading("#{n}", 2, "0")
+
+  def check_level_arch(gates, 1) do
+    [x, y, z] = Enum.map(~w(x y z), &reg_name(&1, 1))
+    {scn1l, op, scn2l} = gates[z]
+    {_,scn1op,_} = gates[scn1l]
+    {_,scn2op,_} = gates[scn2l]
+
+    is_nil(gates[x]) and is_nil(gates[y]) and op == "XOR" and
+      (scn1op == "XOR" and scn2op == "AND") or
+      (scn1op == "AND" and scn2op == "XOR")
+  end
+
+  def check_level_arch(gates, n) do
+    [x, y, z] = Enum.map(~w(x y z), &reg_name(&1, n))
+    gx = gates[x]
+    gy = gates[y]
+    {scn1l, op, scn2l} = gates[z]
+    scn1 = gates[scn1l]
+    scn2 = gates[scn2l]
+
+    pre_check = is_nil(gx) and is_nil(gy) and op == "XOR" and
+            is_tuple(scn1) and is_tuple(scn2)
+
+    pre_check &&
+      ((elem(scn1, 1) == "XOR" and elem(scn2, 1) == "OR") or
+       (elem(scn1, 1) == "OR" and elem(scn2, 1) == "XOR"))
+
+  end
+end
+
+t1 = """
+x00: 1
+x01: 0
+x02: 1
+x03: 1
+x04: 0
+y00: 1
+y01: 1
+y02: 1
+y03: 1
+y04: 1
+
+ntg XOR fgs -> mjb
+y02 OR x01 -> tnw
+kwq OR kpj -> z05
+x00 OR x03 -> fst
+tgd XOR rvg -> z01
+vdt OR tnw -> bfw
+bfw AND frj -> z10
+ffh OR nrd -> bqk
+y00 AND y03 -> djm
+y03 OR y00 -> psh
+bqk OR frj -> z08
+tnw OR fst -> frj
+gnj AND tgd -> z11
+bfw XOR mjb -> z00
+x03 OR x00 -> vdt
+gnj AND wpb -> z02
+x04 AND y00 -> kjc
+djm OR pbm -> qhw
+nrd AND vdt -> hwm
+kjc AND fst -> rvg
+y04 OR y02 -> fgs
+y01 AND x02 -> pbm
+ntg OR kjc -> kwq
+psh XOR fgs -> tgd
+qhw XOR tgd -> z09
+pbm OR djm -> kpj
+x03 XOR y03 -> ffh
+x00 XOR y04 -> ntg
+bfw OR bqk -> z06
+nrd XOR fgs -> wpb
+frj XOR qhw -> z04
+bqk OR frj -> z07
+y03 OR x01 -> nrd
+hwm AND bqk -> z03
+tgd XOR rvg -> z12
+tnw OR pbm -> gnj
+"""
+
+Day24.solve(t1, true)
+Day24.solve(data)
+:ok
+# t1: 51107420031718
+# t2: "cpm,ghp,gpr,krs,nks,z10,z21,z33"
 ```

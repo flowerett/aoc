@@ -30,7 +30,7 @@ https://adventofcode.com/2024
 | 21 - Keypad Conundrum                | [✓][21ex] | bfs, permutations, DP     |
 | 22 - Monkey Market                   | [✓][22ex] | reduce, sliding window    |
 | 23 - LAN Party                       | [✓][23ex] | graph, k_core connections |
-| 24 - Crossed Wires                   | [ ][24ex] | bitwise ops, sum          |
+| 24 - Crossed Wires                   | [✓][24ex] | bitwise ops, bitwise sum  |
 | 25 - Code Chronicle                  | [✓][25ex] | list comparison           |
 
 
