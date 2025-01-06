@@ -1,0 +1,131 @@
+# Day22
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2023", "22", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Solve
+
+```elixir
+defmodule Day22 do
+  def parse(data) do
+    data
+    |> String.trim()
+    |> String.split("\n")
+    |> Enum.map(&parse_row/1)
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {block, id} ->
+      block |> to_cubes() |> Enum.map(fn cube -> {cube, id} end)
+    end)
+  end
+
+  def parse_row(row) do
+    row
+    |> String.replace("~", ",")
+    |> String.split(",", trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> then(fn [xa, ya, za, xb, yb, zb] ->
+      {{xa, ya, za}, {xb, yb, zb}}
+    end)
+  end
+
+  def to_cubes({{x, y, z}, {x, y, z}}), do: [{x, y, z}]
+  def to_cubes({{xa, y, z}, {xb, y, z}}) when xb > xa, do: Enum.map(xa..xb, fn xx -> {xx, y, z} end)
+  def to_cubes({{x, ya, z}, {x, yb, z}}) when yb > ya, do: Enum.map(ya..yb, fn yy -> {x, yy, z} end)
+  def to_cubes({{x, y, za}, {x, y, zb}}) when zb > za, do: Enum.map(za..zb, fn zz -> {x, y, zz} end)
+  def to_cubes({from, to}), do: raise(ArgumentError, message: "invalid block: #{from} -> #{to}")
+
+  def cubes_by_id(data) do
+    Enum.reduce(data, %{}, fn {cube, id}, acc ->
+      Map.update(acc, id, [cube], fn cubes -> [cube | cubes] end)
+    end)
+    |> Enum.map(fn {id, line} ->
+      {id, Enum.sort_by(line, fn {_, _, z} -> z end)}
+    end)
+    |> Enum.sort_by(fn {_id, b} -> b |> hd() |> elem(2) end)
+  end
+
+  def solve(data) do
+    blocks = data |> parse() |> cubes_by_id()
+
+    by_coord = do_fall(blocks, %{})
+    fallen = cubes_by_id(by_coord)
+
+    all = Enum.map(fallen, &elem(&1, 0)) |> MapSet.new()
+
+    base = Enum.reduce(fallen, MapSet.new(), fn {id, block}, acc ->
+      case supported_by(id, block, by_coord) do
+        [base] ->
+          MapSet.put(acc, base)
+        _ -> acc
+      end
+    end)
+
+    r1 = MapSet.difference(all, base) |> MapSet.size()
+
+    r2 = base
+      |> Enum.map(fn b -> chain_factor(b, fallen) end)
+      |> Enum.sum()
+
+    {r1, r2}
+  end
+
+  def chain_factor(bid, fallen) do
+    blocks = Enum.reject(fallen, fn {id, _} -> id == bid end)
+    k1 = to_key(blocks)
+    k2 = do_fall(blocks, %{}) |> cubes_by_id() |> to_key()
+
+    Enum.count(k2, fn {id, v} -> k1[id] != v end)
+  end
+
+  def to_key(blocks) do
+    Enum.map(blocks, fn {k, line} -> {k, line |> hd() |> elem(2)} end) |> Map.new()
+  end
+
+  def supported_by(id, block, cubes) do
+    block
+    |> Enum.map(fn {x, y, z} -> Map.get(cubes, {x, y, z-1}) end)
+    |> Enum.reject(fn sid -> is_nil(sid) or sid == id end)
+    |> Enum.uniq()
+  end
+
+  def do_fall([], acc), do: acc
+  def do_fall([{id, line} | t], acc) do
+    if is_stable(line, acc) do
+      # can't fall - save
+      acc = Enum.reduce(line, acc, fn cube, acc -> Map.put(acc, cube, id) end)
+      do_fall(t, acc)
+    else
+      # fall 1 level down
+      line = Enum.map(line, fn {x, y, z} -> {x, y, z-1} end)
+      do_fall([{id, line} | t], acc)
+    end
+  end
+
+  def is_stable([{_, _, 1} | _cubes], _), do: true
+  def is_stable(line, acc) do
+    Enum.any?(line, fn {x, y, z} -> Map.has_key?(acc, {x,y,z-1}) end)
+  end
+end
+
+t1 = """
+1,0,1~1,2,1
+0,0,2~2,0,2
+0,2,3~2,2,3
+0,0,4~0,2,4
+2,0,5~2,2,5
+0,1,6~2,1,6
+1,1,8~1,1,9
+"""
+
+Day22.solve(t1) |> IO.inspect(label: "t1")
+Day22.solve(data) # {457, 79122}
+```

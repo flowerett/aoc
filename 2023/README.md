@@ -28,6 +28,7 @@ https://adventofcode.com/2023
 | 19 - Aplenty                         | [✓][19ex] |                               |
 | 20 - Pulse Propagation               | [✓][20ex] |                               |
 | 21 - Step Counter                    | [✓][21ex] |                               |
+| 22 - Sand Slabs                      | [✓][22ex] | 3D grid                       |
 | 25 - Snowverload                     | [✓][25ex] | graph, min cut, shortest path |
 
 
@@ -52,4 +53,5 @@ https://adventofcode.com/2023
 [19ex]: elixir/day19.livemd
 [20ex]: elixir/day20.livemd
 [21ex]: elixir/day21.livemd
+[22ex]: elixir/day22.livemd
 [25ex]: elixir/day25.livemd
