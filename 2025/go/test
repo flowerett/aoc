@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: test <day_number>"
+    echo "Example: test 2"
+    exit 1
+fi
+
+DAY=$1
+
+go test -v day${DAY}_test.go day${DAY}.go minitest.go

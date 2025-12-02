@@ -1,0 +1,5 @@
+Running tests:
+
+go test -v dayX_test.go dayX.go minitest.go
+
+

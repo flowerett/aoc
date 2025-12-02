@@ -11,17 +11,19 @@ const testData = `
 11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124
 `
 
-func makeRange(first, last int) []int {
-	var result []int
-	for i := first; i <= last; i++ {
-		result = append(result, i)
-	}
-	return result
+type NumberRange struct {
+	Start int
+	End   int
 }
 
-func parse(rawData string) [][]string {
+type Result struct {
+	Part1 int
+	Part2 int
+}
+
+func parse(rawData string) []NumberRange {
 	rows := strings.Split(rawData, ",")
-	var data [][]string
+	var ranges []NumberRange
 
 	for _, row := range rows {
 		trimmed := strings.TrimSpace(row)
@@ -29,17 +31,11 @@ func parse(rawData string) [][]string {
 
 		first, _ := strconv.Atoi(elems[0])
 		last, _ := strconv.Atoi(elems[1])
-		numbers := makeRange(first, last)
 
-		var strNums []string
-		for _, num := range numbers {
-			strNums = append(strNums, strconv.Itoa(num))
-		}
-
-		data = append(data, strNums)
+		ranges = append(ranges, NumberRange{Start: first, End: last})
 	}
 
-	return data
+	return ranges
 }
 
 func matchPart1(s string) bool {
@@ -89,33 +85,32 @@ func sum(nums []int) int {
 	return total
 }
 
-func solve(data [][]string) {
+func solve(ranges []NumberRange) Result {
 	var res1 []int
 	var res2 []int
-	// pattern1 := regexp.MustCompile(`^(.+)\1$`) bummer doesn't work in Go
+	// pattern1 := regexp.MustCompile(`^(.+)\1$`) bummer, backreferences doesn't work in Go
 
-	for _, row := range data {
-		// fmt.Printf("Processing range: %v\n", row)
-		for _, digit := range row {
-			if matchPart1(digit) {
-				num, _ := strconv.Atoi(digit)
-				res1 = append(res1, num)
+	for _, r := range ranges {
+		// fmt.Printf("Processing range: %d-%d\n", r.Start, r.End)
+		for i := r.Start; i <= r.End; i++ {
+			numStr := strconv.Itoa(i)
+			if matchPart1(numStr) {
+				res1 = append(res1, i)
 			}
-			if matchPart2(digit) {
-				num, _ := strconv.Atoi(digit)
-				res2 = append(res2, num)
+			if matchPart2(numStr) {
+				res2 = append(res2, i)
 			}
 		}
 	}
 
-	fmt.Printf("Res, p1: %d\n", sum(res1))
-	fmt.Printf("Res, p2: %d\n", sum(res2))
+	return Result{Part1: sum(res1), Part2: sum(res2)}
 }
 
 func main() {
 	tdata := parse(testData)
-	// 1227775554, 4174379265
-	solve(tdata)
+	tres := solve(tdata)
+	fmt.Printf("Part 1 (test): %d\n", tres.Part1)
+	fmt.Printf("Part 2 (test): %d\n", tres.Part2)
 
 	data, err := os.ReadFile("../inputs/day2")
 	if err != nil {
@@ -123,5 +118,7 @@ func main() {
 		return
 	}
 	parsedData := parse(string(data))
-	solve(parsedData)
+	res := solve(parsedData)
+	fmt.Printf("Part 1: %d\n", res.Part1)
+	fmt.Printf("Part 2: %d\n", res.Part2)
 }
