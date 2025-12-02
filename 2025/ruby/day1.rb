@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-td = """
+td = <<~TDATA
 L68
 L30
 R48
@@ -11,11 +11,11 @@ L1
 L99
 R14
 L82
-"""
+TDATA
 
 data = File.read("../inputs/day1").strip
 
-def solve(data) 
+def solve(data)
   start = 50
   res = data.split.map do |d|
     sign = d[0] == "L" ? -1 : 1
