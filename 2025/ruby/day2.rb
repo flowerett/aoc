@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# frozen_string_literal: true
+
 # TIL ^(.+)\1+$ is a greedy match pattern
 # (.+) - Capture group that matches one or more characters (the substring)
 # \1+ - repeated two or more times
@@ -25,31 +27,32 @@
 # Attempt 2: "1"  + "11"  → ✅ (11 = 1 + 1)
 
 td = <<~TDATA
-11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124
+  11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124
 TDATA
 
-data = File.read("../inputs/day2").strip
+data = File.read('../inputs/day2').strip
 
 def solve(data)
-  (r1, r2) = data.split(",").reduce(([[], []])) do |(r1, r2), str|
-    first, last = str.split("-").map(&:to_i)
+  data.split(',').reduce([[], []]) do |(r1, r2), str|
+    first, last = str.split('-').map(&:to_i)
     puts "Processing range: #{first}-#{last}"
     digits = (first..last).to_a.map(&:to_s)
 
-    digits.reduce(([r1, r2])) do |(sub1, sub2), digit|
-      if digit.match?(/^(.+)\1$/)
-        sub1 << digit
-      end
-      if digit.match?(/^(.+)\1+$/)
-        sub2 << digit
-      end
+    digits.reduce([r1, r2]) do |(sub1, sub2), digit|
+      digit.match?(/^(.+)\1$/) && sub1 << digit
+
+      digit.match?(/^(.+)\1+$/) && sub2 << digit
+
       [sub1, sub2]
     end
   end
-
-  puts "R1: #{r1.map(&:to_i).reduce(:+)}"
-  puts "R2: #{r2.map(&:to_i).sum}"
 end
 
-solve(td)
-solve(data)
+def format(result)
+  part1, part2 = result
+  puts "R1: #{part1.map(&:to_i).reduce(:+)}"
+  puts "R2: #{part2.map(&:to_i).sum}"
+end
+
+format(solve(td))
+format(solve(data))
