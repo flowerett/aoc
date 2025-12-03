@@ -72,6 +72,17 @@ func findMaxInRange(row []int, start, end int) digitPos {
 
 	return maxDigit
 }
+// edge case for struct with two fields
+// for more complex cases, we can use function like:
+// (max by x, min by y, min by z)
+// func (a Pos) isBetter(b Pos) bool {
+//     if a.x != b.x { return a.x > b.x }
+//     if a.y != b.y { return a.y < b.y }
+//     return a.z < b.z
+// }
+// sort.Slice(positions, func(i, j int) bool {
+//     return positions[i].isBetter(positions[j])
+// })
 
 func main() {
 	// 357
