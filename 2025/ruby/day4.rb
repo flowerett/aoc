@@ -3,16 +3,16 @@
 # frozen_string_literal: true
 
 tdata = <<~TDATA
-..@@.@@@@.
-@@@.@.@.@@
-@@@@@.@.@@
-@.@@@@..@.
-@@.@@@@.@@
-.@@@@@@@.@
-.@.@.@.@@@
-@.@@@.@@@@
-.@@@@@@@@.
-@.@.@@@.@.
+  ..@@.@@@@.
+  @@@.@.@.@@
+  @@@@@.@.@@
+  @.@@@@..@.
+  @@.@@@@.@@
+  .@@@@@@@.@
+  .@.@.@.@@@
+  @.@@@.@@@@
+  .@@@@@@@@.
+  @.@.@@@.@.
 TDATA
 
 data = File.read('../inputs/day4').strip
@@ -26,7 +26,7 @@ DIRS = [
   [1, -1],
   [1, 0],
   [1, 1]
-]
+].freeze
 
 def parse(data)
   papers = Set.new
@@ -49,7 +49,7 @@ def solve(papers)
     break if count == 0
   end
 
-  {r1: lifted[0], r2: lifted.sum}
+  { r1: lifted[0], r2: lifted.sum }
 end
 
 def lift(papers)

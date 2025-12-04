@@ -1,0 +1,8 @@
+Style/NumericPredicate:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Naming/MethodParameterName:
+  Enabled: false
