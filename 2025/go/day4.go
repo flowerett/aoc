@@ -41,6 +41,8 @@ func parse(data string) map[Point]struct{} {
 	for i, row := range rows {
 		for j, char := range row {
 			if char == '@' {
+				// struct{}{} is an empty struct
+				// more memory efficient than using bool
 				papers[Point{i, j}] = struct{}{}
 			}
 		}

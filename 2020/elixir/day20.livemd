@@ -1,0 +1,285 @@
+# Day20
+
+```elixir
+Mix.install([
+  {:kino_aoc, git: "https://github.com/ljgago/kino_aoc"}
+])
+```
+
+## Setup
+
+```elixir
+{:ok, data} = KinoAOC.download_puzzle("2020", "20", System.fetch_env!("LB_AOC_SECRET"))
+```
+
+## Helpers
+
+```elixir
+defmodule Aoc.Grid do
+  @size 9
+  @hsize div(@size, 2)
+
+  def parse(data), do: parse(data, &(&1))
+
+  def parse(data, fun) do
+    raw = Enum.map(data, &String.graphemes/1)
+
+    for {row, y} <- Enum.with_index(raw),
+        {sym, x} <- Enum.with_index(row),
+        into: %{} do
+      {{y, x}, fun.(sym)}
+    end
+  end
+
+  def mv(b) do
+    for y <- 0..@hsize, x <- 0..@size, reduce: %{} do
+      acc ->
+        acc
+        |> Map.put({y,x}, b[{@size-y, x}])
+        |> Map.put({@size-y,x}, b[{y,x}])
+    end
+  end
+
+  def mh(b) do
+    for y <- 0..@size, x <- 0..@hsize, reduce: %{} do
+      acc ->
+        acc
+        |> Map.put({y,x}, b[{y, @size-x}])
+        |> Map.put({y,@size-x}, b[{y,x}])
+    end
+  end
+
+  def cw(b) do
+    for y <- 0..@size, x <- 0..@size, reduce: %{} do
+      acc ->
+        Map.put(acc, {x, @size-y}, b[{y, x}])
+    end
+  end
+
+  def cw2(b) do
+    for y <- 0..@size, x <- 0..@size, reduce: %{} do
+      acc ->
+        Map.put(acc, {@size-y, @size-x}, b[{y, x}])
+    end
+  end
+
+  def ccw(b) do
+    for y <- 0..@size, x <- 0..@size, reduce: %{} do
+      acc ->
+        Map.put(acc, {@size-x, y}, b[{y, x}])
+    end
+  end
+
+  def m1(b), do: b |> cw() |> mh()
+  def m2(b), do: b |> cw() |> mv()
+  # def m3(b), do: b |> ccw() |> mh() # same as m2
+  # def m4(b), do: b |> ccw() |> mv() # same as m1
+  # def m5(b), do: b |> cw2() |> mh() # same as mv
+  # def m6(b), do: b |> cw2() |> mv() # same as mh
+  
+
+  def cp(b), do: b
+
+  def plot(grid, {my, mx} \\ {@size, @size}) do
+    Enum.map(0..my, fn y ->
+      Enum.reduce(0..mx, "", fn x, acc -> acc <> grid[{y, x}] end)
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+  end
+end
+```
+
+```elixir
+t1 = """
+Tile 2311:
+..##.#..#.
+##..#.....
+#...##..#.
+####.#...#
+##.##.###.
+##...#.###
+.#.#.#..##
+..#....#..
+###...#.#.
+..###..###
+
+Tile 1951:
+#.##...##.
+#.####...#
+.....#..##
+#...######
+.##.#....#
+.###.#####
+###.##.##.
+.###....#.
+..#.#..#.#
+#...##.#..
+
+Tile 1171:
+####...##.
+#..##.#..#
+##.#..#.#.
+.###.####.
+..###.####
+.##....##.
+.#...####.
+#.##.####.
+####..#...
+.....##...
+
+Tile 1427:
+###.##.#..
+.#..#.##..
+.#.##.#..#
+#.#.#.##.#
+....#...##
+...##..##.
+...#.#####
+.#.####.#.
+..#..###.#
+..##.#..#.
+
+Tile 1489:
+##.#.#....
+..##...#..
+.##..##...
+..#...#...
+#####...#.
+#..#.#.#.#
+...#.#.#..
+##.#...##.
+..##.##.##
+###.##.#..
+
+Tile 2473:
+#....####.
+#..#.##...
+#.##..#...
+######.#.#
+.#...#.#.#
+.#########
+.###.#..#.
+########.#
+##...##.#.
+..###.#.#.
+
+Tile 2971:
+..#.#....#
+#...###...
+#.#.###...
+##.##..#..
+.#####..##
+.#..####.#
+#..#.#..#.
+..####.###
+..#.#.###.
+...#.#.#.#
+
+Tile 2729:
+...#.#.#.#
+####.#....
+..#.#.....
+....#..#.#
+.##..##.#.
+.#.####...
+####.#.#..
+##.####...
+##..#.##..
+#.##...##.
+
+Tile 3079:
+#.#.#####.
+.#..######
+..#.......
+######....
+####.#..#.
+.#...#.##.
+#.#####.##
+..#.###...
+..#.......
+..#.###...
+"""
+```
+
+## Solve
+
+```elixir
+defmodule Day20 do
+  alias Aoc.Grid, as: G
+  @size 9
+
+  @mut [
+    &G.cp/1, &G.mv/1, &G.mh/1, 
+    &G.cw/1, &G.cw2/1, &G.ccw/1,
+    &G.m1/1, &G.m2/1
+  ]
+
+  def parse(data) do
+    data
+    |> String.split("\n\n", trim: true)
+    |> Enum.map(fn block ->
+      [title | grid] = String.split(block, "\n", trim: true)
+      num = Regex.run(~r/\d+/, title, capture: :first) |> hd() |> String.to_integer()
+      {num, G.parse(grid)}
+    end)
+  end
+
+  def sides(block) do
+    t = Enum.map(0..@size, fn x -> block[{0,x}] end) |> Enum.join("")
+    b = Enum.map(0..@size, fn x -> block[{@size,x}] end) |> Enum.join("")
+    l = Enum.map(0..@size, fn y -> block[{y, 0}] end) |> Enum.join("")
+    r = Enum.map(0..@size, fn y -> block[{y, @size}] end) |> Enum.join("")
+
+    {t, b, l, r}
+  end
+
+  def compare(b1, b2) do
+    s1 = sides(b1)
+      
+    for mut <- @mut, reduce: [] do
+      acc ->
+        s2 = b2 |> mut.() |> sides()
+        case match(s1, s2) do
+          {:ok, match} -> [{mut, match} | acc]
+          {:error, _} -> acc
+        end
+    end
+  end
+
+  def match({m,_,_,_}, {_,m,_,_}), do: {:ok, :tb}
+  def match({_,m,_,_}, {m,_,_,_}), do: {:ok, :bt}
+  def match({_,_,m,_}, {_,_,_,m}), do: {:ok, :lr}
+  def match({_,_,_,m}, {_,_,m,_}), do: {:ok, :rl}
+  def match(_,_), do: {:error, :no_match}
+
+  def solve(data) do
+    blocks = parse(data)
+    matches = get_matches(blocks)
+    t1(matches) |> IO.inspect(label: "t1")
+  end
+
+  def get_matches(blocks) do
+    for {n1, b1} <- blocks,
+        {n2, b2} <- blocks,
+        n1 != n2, reduce: %{} do
+      acc -> 
+        case compare(b1, b2) do
+          [] -> acc
+          _m ->
+            Map.update(acc, n1, [n2], fn matches -> [n2 | matches] end)
+        end
+    end
+  end
+ 
+  def t1(matches) do
+    matches
+    |> IO.inspect(limit: :infinity)
+    |> Enum.filter(fn {_n, v} -> length(v) == 2 end)
+    |> Enum.map(&elem(&1, 0))
+    |> Enum.product()
+  end
+end
+
+Day20.solve(t1)
+```
