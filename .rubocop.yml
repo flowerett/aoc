@@ -6,3 +6,7 @@ Metrics/AbcSize:
 
 Naming/MethodParameterName:
   Enabled: false
+
+# omg ruby you really prefer magic over being clear and explicit
+Style/EachWithObject:
+  Enabled: false
