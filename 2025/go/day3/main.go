@@ -72,6 +72,7 @@ func findMaxInRange(row []int, start, end int) digitPos {
 
 	return maxDigit
 }
+
 // edge case for struct with two fields
 // for more complex cases, we can use function like:
 // (max by x, min by y, min by z)

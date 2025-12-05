@@ -8,4 +8,4 @@ fi
 
 DAY=$1
 
-go test -v day${DAY}_test.go day${DAY}.go minitest.go
+go test ./day${DAY}/... -v

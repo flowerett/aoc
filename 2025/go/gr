@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Run solution for day <day_number>"
+    echo "Usage: gr <day_number>"
+    echo "Example: gr 1"
+    exit 1
+fi
+
+DAY=$1
+
+go run day${DAY}/main.go
