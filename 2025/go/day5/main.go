@@ -120,9 +120,9 @@ func main() {
 	tres := solve(tdata)
 	fmt.Printf("Part 1 (test): %d\n", tres.Part1)
 	fmt.Printf("Part 2 (test): %d\n", tres.Part2)
-	fmt.Printf("Debug: %v\n", tres.Debug)
+	// fmt.Printf("Debug: %v\n", tres.Debug)
 
-	data, err := os.ReadFile("../inputs/day5")
+	data, err := os.ReadFile("../../inputs/day5")
 	if err != nil {
 		fmt.Printf("Error reading file: %v\n", err)
 		return

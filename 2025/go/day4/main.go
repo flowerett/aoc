@@ -109,7 +109,7 @@ func main() {
 	fmt.Printf("Part 1 (test): %d\n", tres.Part1)
 	fmt.Printf("Part 2 (test): %d\n", tres.Part2)
 
-	data, err := os.ReadFile("../inputs/day4")
+	data, err := os.ReadFile("../../inputs/day4")
 	if err != nil {
 		fmt.Printf("Error reading file: %v\n", err)
 		return

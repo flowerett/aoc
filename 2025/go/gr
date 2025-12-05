@@ -9,4 +9,4 @@ fi
 
 DAY=$1
 
-go run day${DAY}/main.go
+cd day${DAY} && go run main.go

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Run all AoC solutions
+# Usage: ./run_all [max_day]
+#   max_day: optional, defaults to 12
+
+MAX_DAY=${1:-12}
+
+go run run_all.go $MAX_DAY
