@@ -6,6 +6,7 @@ import "fmt"
 func AssertOne[T comparable](res T, solution T, name string) {
 	testRes := "."
 	if res != solution {
+		fmt.Printf("Expected %v, got %v\n", solution, res)
 		testRes = "X"
 	}
 	fmt.Printf("%s: %s\n", name, testRes)
@@ -24,6 +25,7 @@ func AssertAll[T comparable](results []T, solutions []T, name string) {
 		if r == solutions[i] {
 			testResults = append(testResults, ".")
 		} else {
+			fmt.Printf("Expected %v, got %v", solutions[i], r)
 			testResults = append(testResults, "X")
 		}
 	}

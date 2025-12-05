@@ -18,7 +18,12 @@ L99
 R14
 L82`
 
-func solve(data string) {
+type Result struct {
+	Part1 int
+	Part2 int
+}
+
+func solve(data string) Result {
 	start := 50
 	pos := start
 	zeros := 0
@@ -54,8 +59,7 @@ func solve(data string) {
 		wraps = newWraps
 	}
 
-	fmt.Printf("Zeros (T1): %d\n", zeros)
-	fmt.Printf("Wraps (T2): %d\n", wraps)
+	return Result{Part1: zeros, Part2: wraps}
 }
 
 // Go's modulo operator returns negative values, we need next function to
@@ -72,12 +76,16 @@ func pmod(x, d int) int {
 }
 
 func main() {
-	solve(testData)
+	tres := solve(testData)
+	fmt.Printf("Test (P1): %d\n", tres.Part1)
+	fmt.Printf("Test (P2): %d\n", tres.Part2)
 
 	data, err := os.ReadFile("../inputs/day1")
 	if err != nil {
 		fmt.Printf("Error reading file: %v\n", err)
 		return
 	}
-	solve(string(data))
+	res := solve(string(data))
+	fmt.Printf("P1: %d\n", res.Part1)
+	fmt.Printf("P2: %d\n", res.Part2)
 }
