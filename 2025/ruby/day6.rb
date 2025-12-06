@@ -36,7 +36,9 @@ def solve2(raw)
     .map(&:chars)
     .transpose
     .map { |col| col.join.to_i } # column delimiters are all blank ' '.to_i -> 0
-    .slice_before(0) # we split by 0 and then reject 0s
+    .slice_before(0) # we split by 0
+    # reject 0s, it works as I don't have zeros in the input
+    # othewise we should use chunk method but it will require more manipulations
     .map { |block| block.reject(&:zero?) }
 
   calc_sum(blocks, ops)
