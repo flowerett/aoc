@@ -32,7 +32,7 @@ func main() {
 			continue
 		}
 
-		fmt.Printf("\n Day %d:\n", day)
+		fmt.Printf("\n Day %d:", day)
 
 		start := time.Now()
 		cmd := exec.Command("go", "run", "main.go")
