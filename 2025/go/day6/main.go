@@ -53,7 +53,13 @@ func parse1(data Input) []Column {
 
 	for _, row := range data.Data {
 		for i, num := range strings.Fields(row) {
-			pnum, _ := strconv.Atoi(num)
+			if i >= len(parsed) {
+				panic(fmt.Sprintf("more rows than ops: %d", i))
+			}
+			pnum, err := strconv.Atoi(num)
+			if err != nil {
+				panic(fmt.Sprintf("invalid number in input: %s", num))
+			}
 			parsed[i] = append(parsed[i], pnum)
 		}
 	}
@@ -62,33 +68,36 @@ func parse1(data Input) []Column {
 }
 
 func parse2(data Input) []Column {
-	vNums := make([]string, len(data.Data[0]))
+	cols := len(data.Data[0])
+	numTmp := make([]strings.Builder, cols)
 
 	for _, row := range data.Data {
-		chars := strings.Split(row, "")
-		slices.Reverse(chars)
-		for i, sym := range chars {
-			vNums[i] += sym
+		for i := 0; i < len(row); i++ {
+			// lookup in reversed order
+			charIdx := len(row) - i - 1
+			numTmp[i].WriteByte(row[charIdx])
 		}
 	}
 
-	// fmt.Printf("vNums: %q\n", vNums)
 	parsed := make([][]int, len(data.Ops))
 
 	i := 0
-	for _, vNum := range vNums {
-		vNum = strings.TrimSpace(vNum)
-		pnum, _ := strconv.Atoi(vNum)
-		if pnum == 0 {
+	for _, tmp := range numTmp {
+		numStr := strings.TrimSpace(tmp.String())
+		if numStr == "" {
 			i++
 			continue
-		} else {
-			parsed[i] = append(parsed[i], pnum)
 		}
+
+		num, err := strconv.Atoi(numStr)
+		if err != nil {
+			panic(fmt.Sprintf("invalid number in input: %q", numStr))
+		}
+
+		parsed[i] = append(parsed[i], num)
 	}
 
 	slices.Reverse(parsed)
-	// fmt.Printf("parsed: %v\n", parsed)
 
 	return zipColumns(parsed, data.Ops)
 }
