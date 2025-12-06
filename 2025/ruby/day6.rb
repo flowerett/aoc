@@ -22,33 +22,28 @@ end
 def solve1(raw)
   data, ops = parse(raw)
 
-  parsed = data.map { |row| row.split.map(&:to_i) }.transpose.zip(ops)
+  blocks = data
+    .map { |row| row.split.map(&:to_i) }
+    .transpose
 
-  calc_sum(parsed)
+  calc_sum(blocks, ops)
 end
 
 def solve2(raw)
   data, ops = parse(raw)
 
-  parsed = data.map { |row| row.split('').reverse }
+  blocks = data
+    .map(&:chars)
     .transpose
-    .map { |col| col.join.to_i }
-    .reduce([[],[]]) do |(acc, cur), num|
-      if num == 0
-        [acc << cur, []]
-      else
-        [acc, cur << num]
-      end
-    end
-    .then { |(acc, cur)| acc << cur }
-    .reverse
-    .zip(ops)
+    .map { |col| col.join.to_i } # column delimiters are all blank ' '.to_i -> 0
+    .slice_before(0) # we split by 0 and then reject 0s
+    .map { |block| block.reject(&:zero?) }
 
-  calc_sum(parsed)
+  calc_sum(blocks, ops)
 end
 
-def calc_sum(blocks)
-  blocks.map { |nums, op| nums.reduce(op.to_sym) }.sum
+def calc_sum(blocks, ops)
+  blocks.zip(ops).map { |nums, op| nums.reduce(op.to_sym) }.sum
 end
 
 pp solve1(tdata)
