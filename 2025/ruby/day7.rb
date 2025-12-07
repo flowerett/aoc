@@ -3,56 +3,57 @@
 # frozen_string_literal: true
 
 tdata = <<~TDATA
-.......S.......
-...............
-.......^.......
-...............
-......^.^......
-...............
-.....^.^.^.....
-...............
-....^.^...^....
-...............
-...^.^...^.^...
-...............
-..^...^.....^..
-...............
-.^.^.^.^.^...^.
-...............
+  .......S.......
+  ...............
+  .......^.......
+  ...............
+  ......^.^......
+  ...............
+  .....^.^.^.....
+  ...............
+  ....^.^...^....
+  ...............
+  ...^.^...^.^...
+  ...............
+  ..^...^.....^..
+  ...............
+  .^.^.^.^.^...^.
+  ...............
 TDATA
 
 data = File.read('../inputs/day7').strip
 
 def parse(raw)
-  raw.split("\n").map { |row| row.chars.map { |c| c == "." ? 0 : c } }
+  raw.split("\n").map(&:chars)
 end
 
 def solve(raw)
   dd = parse(raw)
-  h = dd.size-1
-
+  h = dd.size - 1
   st = dd.first.index('S')
-  cur = Set.new([[0, st]])
-  splits = 0
-  dd[0][st] = 1
 
-  (1..h).reduce(cur) do |acc, i|
-    acc.reduce(Set.new) do |acc, (y, x)|
-      if dd[i][x] == "^"
-        dd[i][x-1] += dd[i-1][x]
-        dd[i][x+1] += dd[i-1][x]
-        acc << [i, x-1]
-        acc << [i, x+1]
-        splits += 1
-      else
-        dd[i][x] += dd[i-1][x]
-        acc << [i, x]
-      end
-      acc
+  splits = 0
+  times = Hash.new(0).tap { |t| t[st] = 1 }
+
+  (1..h).each do |i|
+    splits, times = step(dd, i, splits, times)
+  end
+
+  [splits, times.values.sum]
+end
+
+def step(dd, i, splits, times)
+  next_times = times.each_with_object(Hash.new(0)) do |(x, t), acc|
+    if dd[i][x] == '^'
+      splits += 1
+      acc[x + 1] += t
+      acc[x - 1] += t
+    else
+      acc[x] += t
     end
   end
 
-  [splits, dd[h].sum]
+  [splits, next_times]
 end
 
 pp solve(tdata)
