@@ -102,23 +102,21 @@ func (d DSU) size3largest() int {
 		sizes = append(sizes, size)
 	}
 
-	sort.Sort(sort.Reverse(sort.IntSlice(sizes)))
+	sort.Slice(sizes, func(i, j int) bool {
+		return sizes[i] > sizes[j]
+	})
 
-	res := 1
-	for i := 0; i < 3 && i < len(sizes); i++ {
-		res *= sizes[i]
-	}
-	return res
+	return sizes[0] * sizes[1] * sizes[2]
 }
 
 func solve(points []Point, n int) Result {
-	// making pairs with triange matrix traversal
+	// making pairs with triangle matrix traversal
 	// . x x x
 	//   . x x
 	//     . x
 	//       .
 	var pairs []Pair
-	for i := 0; i < len(points); i++ {
+	for i := range points {
 		for j := i + 1; j < len(points); j++ {
 			p1 := points[i]
 			p2 := points[j]
@@ -136,13 +134,8 @@ func solve(points []Point, n int) Result {
 	totalPoints := len(points)
 
 	for step, pair := range pairs {
-		if _, ok := dsu[pair.P1]; !ok {
-			dsu[pair.P1] = pair.P1
-		}
-		if _, ok := dsu[pair.P2]; !ok {
-			dsu[pair.P2] = pair.P2
-		}
-
+		// we don't need to initialize points in dsu
+		// find inside union will do that
 		dsu.union(pair.P1, pair.P2)
 
 		if step == n-1 {

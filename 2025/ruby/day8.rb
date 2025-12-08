@@ -33,14 +33,6 @@ def parse(input)
                .combination(2)
                .sort_by { |p1, p2| dist(p1, p2) }
 
-  # pairs = []
-  # dd.each_with_index do |p1, i|
-  #   ((i + 1)...dd.length).each do |j|
-  #     p2 = dd[j]
-  #     pairs << [dist(p1, p2), p1, p2]
-  #   end
-  # end
-
   [pairs, input.lines.length]
 end
 
