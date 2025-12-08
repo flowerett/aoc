@@ -27,76 +27,71 @@ TDATA
 
 data = File.read('../inputs/day8').strip
 
-def parse(raw)
-  dd = raw.split("\n").map { |row| row.split(',').map(&:to_i) }
-  pairs = []
-  dd.each_with_index do |p1, i|
-    ((i + 1)...dd.length).each do |j|
-      p2 = dd[j]
-      pairs << [dist(p1, p2), p1, p2]
-    end
-  end
-  [pairs.sort_by! { |d, _, _| d }, dd.length]
+def parse(input)
+  pairs = input.split("\n")
+               .map { |row| row.split(',').map(&:to_i) }
+               .combination(2)
+               .sort_by { |p1, p2| dist(p1, p2) }
+
+  # pairs = []
+  # dd.each_with_index do |p1, i|
+  #   ((i + 1)...dd.length).each do |j|
+  #     p2 = dd[j]
+  #     pairs << [dist(p1, p2), p1, p2]
+  #   end
+  # end
+
+  [pairs, input.lines.length]
 end
 
 def solve(raw, n)
   pairs, len = parse(raw)
+  r1 = nil
 
-  connected = {}
-  id = 0
-  r1, r2 = nil
+  # Disjoint Set Union (Union-Find) with path compression
+  # https://www.hackerearth.com/practice/notes/disjoint-set-union-union-find/
+  dsu = {}
 
-  pairs.each_with_index do |(_d, a, b), step|
-    id_a = connected[a]
-    id_b = connected[b]
+  pairs.each_with_index do |(a, b), step|
+    dsu[a] ||= a
+    dsu[b] ||= b
 
-    case
-    when id_a && id_a == id_b
-      # already connected to the same net, do nothing count as 'step'
-      :noop
-    when id_a && id_b
-      # both connected and different nets: merge two nets
-      connected.each { |k, v| connected[k] = id_a if v == id_b }
-    when id_a
-      # connect b to a's net
-      connected[b] = id_a
-    when id_b
-      # connect a to b's net
-      connected[a] = id_b
-    else
-      # new net
-      id += 1
-      connected[a] = id
-      connected[b] = id
-    end
+    union(dsu, a, b)
 
-    if step == n - 1
-      # pp "step: #{step+1}, #{connected.length}"
-      r1 = l3_mul(connected)
-    end
+    r1 = size3largest(dsu) if step == n - 1
 
-    next if connected.length != len
-
-    # pp "step: #{step+1}, #{connected.length}"
-    r2 = a[0] * b[0]
-    break
+    return r1, a[0] * b[0] if dsu.length == len
   end
-
-  [r1, r2]
-end
-
-def l3_mul(nets)
-  nets.group_by { |_, id| id }
-      .map { |_k, v| v.length }
-      .sort_by(&:-@)[..2]
-      # .tap { |l3| pp l3 }
-      .reduce(:*)
 end
 
 def dist(a, b)
   x1, y1, z1 = a
   x2, y2, z2 = b
   (x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2
+end
+
+def find(dsu, x)
+  return x if dsu[x] == x
+
+  # path compression
+  dsu[x] = find(dsu, dsu[x])
+end
+
+def union(dsu, a, b)
+  root_a = find(dsu, a)
+  root_b = find(dsu, b)
+  dsu[root_b] = root_a if root_a != root_b
+end
+
+def sizes(dsu)
+  dsu.keys.each_with_object(Hash.new(0)) do |node, acc|
+    root = find(dsu, node)
+    acc[root] += 1
+  end
+end
+
+def size3largest(dsu)
+  sizes(dsu).values.sort_by(&:-@)[..2].reduce(:*)
 end
 
 pp solve(tdata, 10)
