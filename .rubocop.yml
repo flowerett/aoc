@@ -1,3 +1,5 @@
+# disable some cops that are too opinionated
+# and make code less readable
 Style/NumericPredicate:
   Enabled: false
 
@@ -7,6 +9,8 @@ Metrics/AbcSize:
 Naming/MethodParameterName:
   Enabled: false
 
-# omg ruby you really prefer magic over being clear and explicit
 Style/EachWithObject:
+  Enabled: false
+
+Style/EmptyCaseCondition:
   Enabled: false
