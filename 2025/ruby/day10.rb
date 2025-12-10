@@ -2,6 +2,8 @@
 # rubocop:disable all
 # frozen_string_literal: true
 
+# brew install z3
+# gem install z3
 require 'z3'
 
 tdata = <<~TDATA
@@ -80,6 +82,7 @@ def task2_slow(target, buttons)
 end
 
 # Gaussian elimination + null space search (ILP)
+# see ../python/day10.md
 def task2_ilp(target, buttons)
   n_rows = target.length
   n_cols = buttons.length
