@@ -25,7 +25,6 @@ def parse(input)
 end
 
 def task1(diagram, buttons)
-  n = diagram.length
   # convert diagram to bitmask (1 = on, 0 = off)
   initial_state = diagram.each_with_index.sum { |on, i| on ? (1 << i) : 0 }
   target = 0 # all off
