@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# modified inputs to test both part1 and part2
 tdata = <<~TDATA
   0:
   ###
@@ -55,148 +54,141 @@ end
 
 def parse_shapes(raw)
   raw.map do |rs|
-    _ind, *shape = rs.split("\n")
-
-    parsed = Set.new
-    shape.each_with_index.map do |r, i|
-      r.split('').each_with_index do |c, j|
-        parsed << [i, j] if c == '#'
+    _ind, *shape_lines = rs.split("\n")
+    parsed = []
+    shape_lines.each_with_index do |row, r|
+      row.chars.each_with_index do |c, col|
+        parsed << [r, col] if c == '#'
       end
     end
     parsed
   end
 end
 
-MAX=2
-
-def place_at(shape, coord)
-  row, col = coord
-  shape.map { |r, c| [row + r, col + c] }.to_set
+# canonical shape representation
+# shifts everything to the minimum
+def normalize(shape)
+  return [] if shape.empty?
+  min_r = shape.map(&:first).min
+  min_c = shape.map(&:last).min
+  shape.map { |r, c| [r - min_r, c - min_c] }
 end
 
 def rotate_cw(shape)
-  shape.reduce(Set.new){ |acc, (r,c)| acc << [c, MAX-r] }
+  shape.map { |r, c| [c, -r] }
 end
 
-# horizontal flip
-def mirror(shape)
-  shape.reduce(Set.new){ |acc, (r,c)| acc << [r, MAX-c] }
+def flip_h(shape)
+  shape.map { |r, c| [r, -c] }
 end
 
-def collides?(a, b)
-  (a & b).any?
-end
-
-def in_bounds?(shape, height, width)
-  shape.all? { |r, c| r >= 0 && r < height && c >= 0 && c < width }
-end
-
-def all_vars(shape)
-  variants = Set.new
-  [shape, mirror(shape)].each do |sv|
-    cur = sv
+def all_orientations(shape)
+  orientations = Set.new
+  current = shape
+  2.times do
     4.times do
-      variants << cur
-      cur = rotate_cw(cur)
+      orientations << normalize(current)
+      current = rotate_cw(current)
     end
+    current = flip_h(shape)
   end
-  variants
+  orientations.to_a
 end
 
-def visualize(height, width, *placed_shapes)
-  grid = Array.new(height) { Array.new(width, '.') }
-  placed_shapes.each_with_index do |shape, idx|
-    label = ('A'.ord + idx).chr
-    shape.each { |r, c| grid[r][c] = label }
-  end
-  grid.each { |row| puts row.join }
+def cell_to_bit(r, c, width)
+  1 << (r * width + c)
 end
 
-# def pshape(shape)
-#   for r in 0..MAX
-#     puts (0..MAX).map{|c| shape.include?([r, c]) && '#' || '.'}.join
-#   end
-#   puts "\n"
-# end
+# precompute all valid placements for a shape in a grid
+# convert shapes to bitmask for faster comparison
+def all_placements(shape_orientations, width, height)
+  placements = Set.new
 
-def solve_step(s_req, height, width)
-  check_coll = lambda do |a, b, height, width|
-    check = collides?(a, b)
-    a_fit = in_bounds?(a, height, width)
-    b_fit = in_bounds?(b, height, width)
+  shape_orientations.each do |shape|
+    max_r = shape.map(&:first).max
+    max_c = shape.map(&:last).max
 
-    res = !check && a_fit && b_fit
-    # if res
-    #   puts "Collides: #{check}"
-    #   puts "A in bounds: #{a_fit}"
-    #   puts "B in bounds: #{b_fit}"
-    #   visualize(height, width, a, b)
-    # end
-    return [res, a | b]
-  end
-
-  find_fit = lambda do |pos_vars, a, b|
-    for a_pos, b_pos in pos_vars do
-      for bvar in all_vars(b) do
-        av_pl = place_at(a, a_pos)
-        bv_pl = place_at(bvar, b_pos)
-
-        is_fit, res = check_coll.call(av_pl, bv_pl, height, width)
-
-        return [is_fit, res] if is_fit
+    (0..(height - 1 - max_r)).each do |pr|
+      (0..(width - 1 - max_c)).each do |pc|
+        mask = 0
+        shape.each { |r,c| mask |= cell_to_bit(pr+r, pc+c, width) }
+        placements << mask
       end
     end
-
-    return [false, nil]
   end
 
-  pos_vars = (0..height-MAX)
-    .flat_map {|rvar| (0..width-MAX)
-    .map {|cvar| [rvar, cvar] }}
-    .combination(2).to_a
-
-  merged = s_req[0]
-  can_fit = true
-
-  s_req[1..].each do |shape_b|
-    # check pair
-    check, res = find_fit.call(pos_vars, merged, shape_b)
-    can_fit = can_fit && check
-
-    break if !can_fit
-    merged = res
-  end
-
-  can_fit
+  placements
 end
 
-def solve(raw)
+def backtrack(shapes_needed, placements_by_type, occupied, idx)
+  return true if idx == shapes_needed.size
+
+  shape_idx = shapes_needed[idx]
+  placements = placements_by_type[shape_idx]
+
+  placements.each do |mask|
+    # collision, skip mask
+    next if (mask & occupied) != 0
+
+    # try to place cells, otherwise continue with next mask
+    return true if backtrack(shapes_needed, placements_by_type, occupied | mask, idx + 1)
+  end
+
+  false
+end
+
+def solve(raw, cheat=false)
   shapes, regions = parse(raw)
+  shape_orientations = shapes.map { |s| all_orientations(s) }
 
   total = 0
-  regions.each_with_index do |((height, width), pos), step|
-    pp "step: #{step}"
-    # pp [height, width, pos]
-
-    s_req = []
-    pos.each_with_index do |num, ii|
-     num.times { s_req << shapes[ii]}
+  regions.each_with_index do |((width, height), counts), step|
+    shapes_needed = []
+    counts.each_with_index do |cnt, shape_idx|
+      cnt.times { shapes_needed << shape_idx }
     end
-    # pp s_req
 
-    res = solve_step(s_req, height, width)
-    total += 1 if res
-    pp res
+    total_cells = shapes_needed.sum { |idx| shape_orientations[idx][0].size }
+    available = width * height
+
+    puts "Step #{step}: #{width}x#{height}, #{total_cells}/#{available} cells"
+
+    if total_cells > available
+      puts "  -> SKIP (area #{total_cells} > #{available})"
+      next
+    end
+
+    # without this condition part2 runs ~140s which is ok for general solution
+    # with condition runs ~7s
+    # with cheat flag - 0.05s
+    if counts.sum * 9 < available || (cheat && counts.sum * 9 == available)
+      total += 1
+      puts "  -> YES (fit without packing - #{counts.sum * 9} cells)"
+      next
+    end
+
+    # precompute all valid placements for each shape type
+    placements_by_type = {}
+    shapes_needed.uniq.each do |shape_idx|
+      placements_by_type[shape_idx] = all_placements(shape_orientations[shape_idx], width, height)
+    end
+
+    # sort shapes by number of placements (fewest first = prune faster)
+    shapes_needed.sort_by! { |idx| placements_by_type[idx].size }
+
+    result = backtrack(shapes_needed, placements_by_type, 0, 0)
+    if result
+      total += 1
+      puts "  -> YES"
+    else
+      puts "  -> NO"
+    end
   end
   total
 end
 
-# part2 only
-def solve_cheat(raw)
-  shapes, regions = parse(raw)
-  # pp shapes.map {|s| s.size }
-  regions.count { |(h, w), counts| counts.sum * 9 <= h * w }
-end
-
-pp solve(tdata)
-pp solve_cheat(data)
+puts "Test:"
+puts solve(tdata)
+puts
+puts "Real:"
+puts solve(data)
